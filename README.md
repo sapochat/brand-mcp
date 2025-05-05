@@ -120,80 +120,187 @@ This runs a comprehensive example showing how to integrate with the MCP using th
 
 ## Customizing for Your Brand
 
-To customize the MCP for your specific brand, you need to modify the `brandSchema.js` file in the root directory:
+To customize the MCP for your specific brand, you need to modify the `brandSchema.js` file in the root directory. The schema includes comprehensive dimensions for brand guidelines:
 
-1. **Edit Brand Information**:
-   ```javascript
-   name: "YourBrandName",
-   description: "Your brand description",
-   ```
+### Brand Identity
+```javascript
+name: "YourBrandName",
+description: "Your brand description",
+```
 
-2. **Define Tone Guidelines**:
-   ```javascript
-   toneGuidelines: {
-     primaryTone: "professional", // or friendly, authoritative, etc.
-     secondaryTones: ["helpful", "clear", "concise"],
-     avoidedTones: ["sarcastic", "condescending"],
-     tonalShift: {
-       "social-media": "more casual and conversational",
-       "documentation": "more detailed and instructive"
-     },
-     examples: {
-       // Example content for different contexts
-     }
-   },
-   ```
+### Tone Guidelines
+```javascript
+toneGuidelines: {
+  primaryTone: "confident", // Main tone of your brand communications
+  secondaryTones: ["optimistic", "innovative", "approachable"], // Supporting tones
+  avoidedTones: ["pessimistic", "overly technical", "condescending"], // Tones to avoid
+  tonalShift: {
+    // How tone changes across different contexts
+    "social-media": "more casual and conversational",
+    "documentation": "more detailed and instructive",
+    "marketing": "more aspirational and inspiring"
+  },
+  examples: {
+    // Example content demonstrating appropriate tone for different contexts
+    "social": "Example of social media post tone",
+    "documentation": "Example of documentation tone",
+    "marketing": "Example of marketing content tone"
+  }
+},
+```
 
-3. **Define Voice Guidelines**:
-   ```javascript
-   voiceGuidelines: {
-     personality: "knowledgeable but approachable",
-     sentence: {
-       length: "short to medium",
-       structure: "simple and direct"
-     },
-     usesContractions: true, // or false
-     usesPronoun: {
-       firstPerson: true, // use "we", "our", etc.
-       secondPerson: true // use "you", "your", etc.
-     }
-   },
-   ```
+### Voice Guidelines
+```javascript
+voiceGuidelines: {
+  personality: "knowledgeable but accessible; a helpful expert", // Brand personality
+  sentence: {
+    length: "varied, but generally concise", // Preferred sentence length
+    structure: "clear and direct, with simple language" // Preferred structure
+  },
+  usesContractions: true, // Whether to use contractions (e.g., "we're" vs "we are")
+  usesPronoun: {
+    firstPerson: true, // Use "we", "our", etc.
+    secondPerson: true // Use "you", "your", etc.
+  },
+  examples: {
+    // Examples demonstrating the brand voice
+    "typical": "We've designed this feature with your workflow in mind."
+  }
+},
+```
 
-4. **Define Terminology Guidelines**:
-   ```javascript
-   terminologyGuidelines: {
-     avoidedGlobalTerms: ["term1", "term2"], // terms to always avoid
-     properNouns: {
-       companyName: "YourCompany (with exact capitalization)",
-       productNames: "Always capitalized (e.g., ProductName)"
-     },
-     terms: [
-       {
-         preferred: "preferred term",
-         alternatives: ["alternative1", "alternative2"],
-         contexts: ["specific-context"] // contexts where this applies
-       }
-     ]
-   },
-   ```
+### Visual Identity
+```javascript
+visualIdentity: {
+  colors: {
+    primary: ["#0063B2", "#9CC3D5"], // Primary brand colors (hex codes)
+    secondary: ["#F9A826", "#D8E9A8"], // Secondary brand colors
+    forbidden: ["#FF0000", "#FF00FF"] // Colors that should never be used
+  },
+  typography: {
+    headingFont: "Montserrat, sans-serif", // Font family for headings
+    bodyFont: "Open Sans, sans-serif", // Font family for body text
+    fontSizes: {
+      // Recommended font sizes
+      heading: {
+        h1: "2.5rem",
+        h2: "2rem",
+        h3: "1.75rem"
+      },
+      body: "1rem"
+    }
+  },
+  imagery: {
+    style: "clean, bright photos with people using technology", // Image style
+    subjects: ["diverse people", "sustainable technology"], // Recommended subjects
+    avoidedSubjects: ["outdated technology", "generic stock imagery"] // Subjects to avoid
+  },
+  layout: {
+    preferences: "clean and spacious with clear hierarchy", // Layout preferences
+    gridSystem: "12-column responsive grid with ample whitespace" // Grid system details
+  }
+},
+```
 
-5. **Define Context-Specific Adjustments**:
-   ```javascript
-   contextualAdjustments: [
-     {
-       contexts: ["social-media", "blog"],
-       applyRules: {
-         tone: "casual and friendly",
-         voice: { 
-           usesContractions: true 
-         }
-       }
-     }
-   ]
-   ```
+### Context-Specific Visual Rules
+```javascript
+contextualVisualRules: [
+  {
+    contexts: ["social-media", "blog-informal"], // Contexts where rules apply
+    applyRules: {
+      imagery: { 
+        style: "more vibrant and engaging, potentially using illustrations",
+        notes: "Prioritize engagement over strict adherence to primary style"
+      },
+      typography: { 
+        notes: "Can use slightly larger, bolder fonts for emphasis"
+      }
+    }
+  },
+  {
+    contexts: ["print", "formal-report"],
+    applyRules: {
+      colors: { 
+        notes: "Ensure primary colors are dominant. Use secondary sparingly."
+      },
+      typography: { 
+        headingFont: "Montserrat, sans-serif",
+        bodyFont: "Open Sans, sans-serif",
+        notes: "Strict adherence to standard font sizes required."
+      },
+      layout: { 
+        preferences: "clean, structured layout with consistent margins",
+        notes: "Whitespace is critical for formal print documents."
+      }
+    }
+  }
+],
+```
 
-After modifying this file, rebuild the project with `npm run build`.
+### Terminology Guidelines
+```javascript
+terminologyGuidelines: {
+  avoidedGlobalTerms: ["synergy", "leverage", "disruptive"], // Terms to always avoid
+  properNouns: {
+    productNames: "Always capitalized, no spaces (e.g., ProductName)",
+    companyName: "YourCompany (with exact capitalization)"
+  },
+  terms: [
+    {
+      preferred: "purchase", // The preferred term to use
+      alternatives: ["buy", "acquire"], // Alternative terms to avoid
+      contexts: ["ecommerce", "sales"], // Contexts where this rule applies
+      notes: "Use 'purchase' in customer-facing transaction contexts."
+    },
+    {
+      preferred: "artificial intelligence",
+      alternatives: ["AI"],
+      contexts: ["formal", "documentation", "first-mention"],
+      notes: "Spell out on first use or in formal documents."
+    },
+    {
+      term: "bleeding edge", // Term to avoid in specific contexts
+      avoidInContexts: ["marketing", "formal"],
+      notes: "Avoid hype/cliché. Use 'innovative' or 'advanced' instead."
+    }
+  ]
+},
+```
+
+### Context-Specific Adjustments
+```javascript
+contextualAdjustments: [
+  {
+    contexts: ["social-media", "blog-informal"], // Contexts where adjustments apply
+    applyRules: {
+      tone: "more casual and conversational", // Override primary tone
+      voice: { 
+        usesContractions: true, 
+        sentenceLength: "shorter"
+      }
+    }
+  },
+  {
+    contexts: ["technical-documentation", "api-reference"],
+    applyRules: {
+      tone: "more detailed and instructive",
+      voice: { 
+        personality: "precise and helpful expert", 
+        usesContractions: false, 
+        sentenceStructure: "clear and direct" 
+      }
+    }
+  },
+  {
+    contexts: ["marketing-landingpage", "marketing-email"],
+    applyRules: {
+      tone: "more aspirational and inspiring"
+    }
+  }
+]
+```
+
+After modifying this file with your brand's specific guidelines, rebuild the project with `npm run build`.
 
 ## Brand Safety Features
 
@@ -329,6 +436,71 @@ const complianceResult = await client.callTool({
 });
 // Returns detailed brand compliance analysis
 ```
+
+## Using with Claude
+
+You can use this Brand MCP with Claude by providing simple instructions and example JSON format. Claude can then use this format to check content against your brand guidelines.
+
+### Instructions for Claude
+
+Here's a template you can use with Claude:
+
+```
+I need you to check if the following content meets our brand guidelines. Use this JSON format for your analysis:
+
+{
+  "content": "The content to evaluate",
+  "context": "marketing", // Optional: can be "social-media", "documentation", "marketing", etc.
+  "brandName": "YourBrandName",
+  "primaryChecks": ["tone", "voice", "terminology"] // Optional: specify which aspects to focus on
+}
+
+Please return the analysis with a compliance score, any issues found, and suggestions for improvement.
+```
+
+### Example Request
+
+```json
+{
+  "content": "We are excited to announce our new AI product that leverages cutting-edge technology to disrupt the market. This synergistic solution will help you leverage your data assets.",
+  "context": "marketing-email",
+  "brandName": "TechFuture",
+  "primaryChecks": ["tone", "terminology"]
+}
+```
+
+### Example Response
+
+Claude would analyze this using the Brand MCP and return:
+
+```json
+{
+  "complianceScore": 65,
+  "isCompliant": false,
+  "issues": [
+    {
+      "type": "terminology",
+      "issue": "Use of avoided terms: 'disrupt', 'synergistic', 'leverage'",
+      "suggestion": "Replace with preferred terminology: Consider 'transform the market' instead of 'disrupt', 'integrated' instead of 'synergistic', and 'utilize' instead of 'leverage'"
+    },
+    {
+      "type": "tone",
+      "issue": "Tone is too formal and uses clichéd business language",
+      "suggestion": "Adjust to a more confident and optimistic tone that avoids business clichés"
+    }
+  ],
+  "summary": "The content does not meet TechFuture's brand guidelines. It uses several avoided terms ('disrupt', 'synergistic', 'leverage') and has a tone that relies on business clichés rather than the confident, optimistic tone preferred by the brand."
+}
+```
+
+### Implementation Notes
+
+To use Claude with your Brand MCP:
+
+1. Start your Brand MCP server using `npm start`
+2. In your Claude prompt, include instructions to analyze content using the JSON format shown above
+3. You can customize the context field to match your specific use cases (e.g., "social-media", "documentation")
+4. For more advanced use cases, you can create a custom client that allows Claude to directly call your Brand MCP server
 
 ## Contributing
 
