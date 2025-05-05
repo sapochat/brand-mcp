@@ -6,8 +6,11 @@ A Model Context Protocol (MCP) server that performs both brand safety evaluation
 
 - [Overview](#overview)
 - [Installation](#installation)
-- [Usage](#usage)
-- [Testing](#testing)
+- [Running and Testing](#running-and-testing)
+  - [Starting the MCP Server](#starting-the-mcp-server)
+  - [Testing with Built-in Clients](#testing-with-built-in-clients)
+  - [Integrating with Client Applications](#integrating-with-client-applications)
+  - [Using with Claude](#using-with-claude)
 - [Customizing for Your Brand](#customizing-for-your-brand)
 - [Brand Safety Features](#brand-safety-features)
 - [Brand Compliance Features](#brand-compliance-features)
@@ -39,9 +42,11 @@ npm install
 npm run build
 ```
 
-## Usage
+## Running and Testing
 
 ### Starting the MCP Server
+
+To start the Brand MCP server:
 
 ```bash
 npm start
@@ -49,7 +54,40 @@ npm start
 
 The server uses stdio as the transport mechanism, making it compatible with various MCP clients including Claude Desktop App, Cursor, and other tools that support MCP.
 
+### Testing with Built-in Clients
+
+The package includes several demo clients to test functionality:
+
+#### Basic Test
+
+```bash
+npm run test
+```
+
+This runs a simple test to verify the MCP server is working correctly.
+
+#### Demo Client
+
+```bash
+npm run demo
+```
+
+This demonstrates the brand safety and compliance features with example content.
+
+#### SDK Example Client
+
+```bash
+npm run sdk-demo
+```
+
+This runs a comprehensive example showing how to integrate with the MCP using the SDK, including:
+- Brand safety evaluation
+- Brand compliance checking
+- Context-specific compliance testing
+
 ### Integrating with Client Applications
+
+For developers who want to integrate the Brand MCP with their own applications:
 
 ```javascript
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -87,36 +125,67 @@ const complianceResult = await client.callTool({
 });
 ```
 
-## Testing
+### Using with Claude
 
-The package includes several demo clients to test functionality:
+You can use the Brand MCP with Claude in a natural conversational way without requiring JSON formatting. Here's how to set it up and use it in a chat environment:
 
-### Basic Test
+#### Setup for Claude Desktop App
 
-```bash
-npm run test
+1. Start your Brand MCP server using `npm start` in a terminal window
+2. Open the Claude Desktop App 
+3. Configure Claude to use your running MCP server (via Settings > Model Context Protocols)
+
+#### Natural Language Instructions for Claude
+
+Instead of requiring users to provide JSON, you can use natural language prompts:
+
+```
+Please check if the following content meets our brand guidelines:
+
+Content: We are excited to announce our new AI product that leverages cutting-edge technology to disrupt the market. This synergistic solution will help you leverage your data assets.
+
+Context: This is for a marketing email
+Brand: TechFuture
+Focus on: tone and terminology
 ```
 
-This runs a simple test to verify the MCP server is working correctly.
+#### Example Response
 
-### Demo Client
+Claude would analyze this and respond in natural language:
 
-```bash
-npm run demo
+```
+I've checked this content against TechFuture's brand guidelines. Here's my analysis:
+
+Compliance Score: 65/100 (Not Compliant)
+
+Issues Found:
+1. Terminology: The content uses several terms that should be avoided according to your guidelines:
+   - "disrupt" (avoided global term)
+   - "synergistic" (avoided global term)
+   - "leverage" (appears twice, avoided global term)
+
+2. Tone: The tone relies on business clichés rather than the confident, optimistic tone preferred by TechFuture.
+
+Suggestions:
+- Replace "disrupt the market" with "transform the market"
+- Replace "synergistic solution" with "integrated solution"
+- Replace "leverage your data assets" with "utilize your data assets"
+- Adjust the overall tone to be more confident and optimistic while avoiding business jargon
+
+Revised Version:
+"We're excited to announce our new AI product that uses innovative technology to transform the market. This integrated solution will help you make the most of your data assets."
 ```
 
-This demonstrates the brand safety and compliance features with example content.
+#### Implementation in Conversation Flow
 
-### SDK Example Client
+For a seamless conversation experience, you can instruct Claude to:
 
-```bash
-npm run sdk-demo
-```
+1. Accept content for review in natural language
+2. Apply the appropriate brand guidelines based on context
+3. Provide analysis and suggestions in a clear, conversational format
+4. Offer revised versions that better align with brand guidelines
 
-This runs a comprehensive example showing how to integrate with the MCP using the SDK, including:
-- Brand safety evaluation
-- Brand compliance checking
-- Context-specific compliance testing
+This approach makes the Brand MCP accessible to non-technical users who interact with Claude through the desktop app or other chat interfaces.
 
 ## Customizing for Your Brand
 
@@ -436,71 +505,6 @@ const complianceResult = await client.callTool({
 });
 // Returns detailed brand compliance analysis
 ```
-
-## Using with Claude
-
-You can use this Brand MCP with Claude by providing simple instructions and example JSON format. Claude can then use this format to check content against your brand guidelines.
-
-### Instructions for Claude
-
-Here's a template you can use with Claude:
-
-```
-I need you to check if the following content meets our brand guidelines. Use this JSON format for your analysis:
-
-{
-  "content": "The content to evaluate",
-  "context": "marketing", // Optional: can be "social-media", "documentation", "marketing", etc.
-  "brandName": "YourBrandName",
-  "primaryChecks": ["tone", "voice", "terminology"] // Optional: specify which aspects to focus on
-}
-
-Please return the analysis with a compliance score, any issues found, and suggestions for improvement.
-```
-
-### Example Request
-
-```json
-{
-  "content": "We are excited to announce our new AI product that leverages cutting-edge technology to disrupt the market. This synergistic solution will help you leverage your data assets.",
-  "context": "marketing-email",
-  "brandName": "TechFuture",
-  "primaryChecks": ["tone", "terminology"]
-}
-```
-
-### Example Response
-
-Claude would analyze this using the Brand MCP and return:
-
-```json
-{
-  "complianceScore": 65,
-  "isCompliant": false,
-  "issues": [
-    {
-      "type": "terminology",
-      "issue": "Use of avoided terms: 'disrupt', 'synergistic', 'leverage'",
-      "suggestion": "Replace with preferred terminology: Consider 'transform the market' instead of 'disrupt', 'integrated' instead of 'synergistic', and 'utilize' instead of 'leverage'"
-    },
-    {
-      "type": "tone",
-      "issue": "Tone is too formal and uses clichéd business language",
-      "suggestion": "Adjust to a more confident and optimistic tone that avoids business clichés"
-    }
-  ],
-  "summary": "The content does not meet TechFuture's brand guidelines. It uses several avoided terms ('disrupt', 'synergistic', 'leverage') and has a tone that relies on business clichés rather than the confident, optimistic tone preferred by the brand."
-}
-```
-
-### Implementation Notes
-
-To use Claude with your Brand MCP:
-
-1. Start your Brand MCP server using `npm start`
-2. In your Claude prompt, include instructions to analyze content using the JSON format shown above
-3. You can customize the context field to match your specific use cases (e.g., "social-media", "documentation")
-4. For more advanced use cases, you can create a custom client that allows Claude to directly call your Brand MCP server
 
 ## Contributing
 
