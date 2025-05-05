@@ -135,6 +135,72 @@ You can use the Brand MCP with Claude in a natural conversational way without re
 2. Open the Claude Desktop App 
 3. Configure Claude to use your running MCP server (via Settings > Model Context Protocols)
 
+#### Claude Desktop Configuration
+
+For a more seamless experience, you can configure Claude Desktop to automatically start the Brand MCP server when the app launches:
+
+1. Open the Claude menu on your computer and select "Settings..."
+2. Click on "Developer" in the left-hand bar, then click "Edit Config"
+3. This will open your configuration file (`claude_desktop_config.json`)
+4. Update the file to include the Brand MCP server:
+
+##### Option 1: Direct Path Configuration
+```json
+{
+  "mcpServers": {
+    "brandSafety": {
+      "command": "node",
+      "args": ["path/to/your/brand-mcp/dist/index.js"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}
+```
+
+Replace `"path/to/your/brand-mcp/dist/index.js"` with the absolute path to the compiled index.js file in your brand-mcp project.
+
+For example:
+- macOS: `"/Users/username/Documents/brand-mcp/dist/index.js"`
+- Windows: `"C:\\Users\\username\\Documents\\brand-mcp\\dist\\index.js"`
+
+##### Option 2: Using NPX (If Published to NPM)
+If you've published your Brand MCP to NPM, you can use npx for a more streamlined installation:
+
+```json
+{
+  "mcpServers": {
+    "brandSafety": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@yourusername/brand-mcp"
+      ],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}
+```
+
+5. Save the file and restart Claude Desktop
+
+When Claude Desktop starts, you should see a hammer icon in the input box, indicating that tools are available. Clicking this icon should show tools including "evaluateContent" and "checkBrandCompliance".
+
+If you don't see the tools, check the logs:
+- macOS: `~/Library/Logs/Claude/mcp*.log`
+- Windows: `%APPDATA%\Claude\logs\mcp*.log`
+
+##### Troubleshooting Claude Desktop Integration
+
+If the server isn't showing up in Claude Desktop:
+1. Make sure you've built the project with `npm run build` before configuring Claude
+2. Check that the path in your configuration points to the correct location
+3. Try running the server manually to see if there are any errors
+4. Check Claude's logs for detailed error information
+
 #### Natural Language Instructions for Claude
 
 Instead of requiring users to provide JSON, you can use natural language prompts:
@@ -472,6 +538,70 @@ const result = await client.callTool({
 
 2. **brand://guidelines**
    - Brand-specific guidelines based on the loaded brand schema
+
+## Sharing Your Brand MCP
+
+Once you've customized your Brand MCP for your organization, you might want to share it with team members or publish it for wider use.
+
+### Publishing to NPM
+
+To make your Brand MCP easily installable in Claude Desktop and other environments:
+
+1. Update your `package.json` with appropriate details:
+```json
+{
+  "name": "@yourorg/brand-mcp",
+  "version": "1.0.0",
+  "description": "Brand safety and compliance MCP for YourOrg",
+  "main": "dist/index.js",
+  "bin": "dist/index.js",
+  "files": [
+    "dist",
+    "brandSchema.js"
+  ],
+  // other properties...
+}
+```
+
+2. Add a shebang to your entry file (`src/index.ts`):
+```typescript
+#!/usr/bin/env node
+// Rest of your code...
+```
+
+3. Build your project:
+```bash
+npm run build
+```
+
+4. Publish to NPM:
+```bash
+npm publish
+```
+
+Now others can use your Brand MCP in Claude Desktop by simply adding this to their `claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "yourOrgBrandSafety": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@yourorg/brand-mcp"
+      ]
+    }
+  }
+}
+```
+
+### Sharing Within Your Organization
+
+For internal use cases, you can also:
+
+1. Host the repository on your organization's GitHub or similar platform
+2. Document organization-specific brand guidelines and customizations
+3. Create a private NPM package if you have an internal registry
+4. Provide pre-built versions that colleagues can download and run directly
 
 ## Real-World Usage
 
