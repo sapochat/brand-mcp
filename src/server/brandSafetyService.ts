@@ -1,37 +1,67 @@
-import { 
-  BrandSafetyCategory, 
-  RiskLevel, 
-  ContentSafetyResult, 
+import {
+  BrandSafetyCategory,
+  RiskLevel,
+  ContentSafetyResult,
   BrandSafetyEvaluation,
   BrandSafetyConfig,
   DEFAULT_BRAND_SAFETY_CONFIG
 } from '../types/brandSafety.js';
+import { loadBrandSchema } from '../server/brandSchemaLoader.js'; // Added import
 
 // Placeholder for actual MCP LLM client.
 // In a real scenario, this would be imported or injected.
 // For now, we'll mock its behavior.
 class McpLanguageModel {
- sampling = {
-   async createMessage(_payload: { prompt: string }): Promise<{ completion: string }> {
-     // Mocked LLM response logic will be in the specific methods
-     return { completion: "" };
-   }
- }
+  sampling = {
+    async createMessage(_payload: { prompt: string }): Promise<{ completion: string }> {
+      // Mocked LLM response logic will be in the specific methods
+      return { completion: "" };
+    }
+  }
 }
 
 export class BrandSafetyService {
   private config: BrandSafetyConfig;
 
-  constructor(config: Partial<BrandSafetyConfig> = {}) {
-    // Merge provided config with defaults
-    this.config = {
+  private constructor(config: BrandSafetyConfig) { // Changed to private, accepts full BrandSafetyConfig
+    this.config = config;
+  }
+
+  public static async createInstance(initialConfig: Partial<BrandSafetyConfig> = {}): Promise<BrandSafetyService> {
+    // Merge provided config with defaults, ensuring deep merge for riskTolerances
+    const baseConfig: BrandSafetyConfig = {
       ...DEFAULT_BRAND_SAFETY_CONFIG,
-      ...config,
+      ...initialConfig,
       riskTolerances: {
         ...DEFAULT_BRAND_SAFETY_CONFIG.riskTolerances,
-        ...(config.riskTolerances || {})
-      }
+        ...(initialConfig.riskTolerances || {})
+      },
+      // Ensure other nested objects from DEFAULT_BRAND_SAFETY_CONFIG are also included if not in initialConfig
+      // For example, if blockedTopics or sensitiveKeywords were complex objects in DEFAULT_BRAND_SAFETY_CONFIG
+      blockedTopics: initialConfig.blockedTopics ? [...initialConfig.blockedTopics] : [...DEFAULT_BRAND_SAFETY_CONFIG.blockedTopics],
+      sensitiveKeywords: initialConfig.sensitiveKeywords ? [...initialConfig.sensitiveKeywords] : [...DEFAULT_BRAND_SAFETY_CONFIG.sensitiveKeywords],
+      categories: initialConfig.categories ? [...initialConfig.categories] : [...DEFAULT_BRAND_SAFETY_CONFIG.categories],
     };
+
+    try {
+      const brandSchemaData = await loadBrandSchema().catch(err => {
+        console.warn('Failed to load brand schema for BrandSafetyService:', err);
+        return null;
+      });
+
+      if (brandSchemaData && brandSchemaData.terminologyGuidelines?.avoidedGlobalTerms && Array.isArray(brandSchemaData.terminologyGuidelines.avoidedGlobalTerms)) {
+        const currentBlockedTopics = baseConfig.blockedTopics || [];
+        const termsFromSchema = brandSchemaData.terminologyGuidelines.avoidedGlobalTerms.filter(term => typeof term === 'string');
+        
+        const mergedBlockedTopics = Array.from(new Set([...currentBlockedTopics, ...termsFromSchema]));
+        baseConfig.blockedTopics = mergedBlockedTopics;
+      }
+    } catch (err) {
+      // This catch is for errors within the try block itself, not from loadBrandSchema (which is handled by .catch above)
+      console.warn('Error processing brand schema in BrandSafetyService.createInstance:', err);
+    }
+
+    return new BrandSafetyService(baseConfig);
   }
 
   /**
