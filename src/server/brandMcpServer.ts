@@ -20,7 +20,7 @@ import { BrandSafetyEvaluation, ContentSafetyResult, RiskLevel } from '../types/
  */
 export async function createServer(): Promise<Server> {
   // Initialize the brand safety service
-  const brandSafetyService = new BrandSafetyService();
+  const brandSafetyService = await BrandSafetyService.createInstance();
   
   // Initialize the brand service
   const brandService = new BrandService();
@@ -54,7 +54,7 @@ export async function createServer(): Promise<Server> {
     // Base tools that work without brand schema
     const tools = [
       {
-        name: 'evaluateContent',
+        name: 'analyzeSafety',
         description: 'Analyze text content for brand safety concerns',
         inputSchema: {
           type: 'object',
@@ -154,7 +154,7 @@ export async function createServer(): Promise<Server> {
 
   // Define the tool call endpoint
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    if (request.params.name === 'evaluateContent') {
+    if (request.params.name === 'analyzeSafety') {
       try {
         const args = request.params.arguments || {};
         const content = args.content as string;
@@ -171,7 +171,7 @@ export async function createServer(): Promise<Server> {
           };
         }
         
-        const evaluation = brandSafetyService.evaluateContent(content);
+        const evaluation = await brandSafetyService.evaluateContent(content);
         const formattedResponse = formatSafetyEvaluation(evaluation);
         
         return {
