@@ -7,6 +7,18 @@ import {
   DEFAULT_BRAND_SAFETY_CONFIG
 } from '../types/brandSafety.js';
 
+// Placeholder for actual MCP LLM client.
+// In a real scenario, this would be imported or injected.
+// For now, we'll mock its behavior.
+class McpLanguageModel {
+ sampling = {
+   async createMessage(_payload: { prompt: string }): Promise<{ completion: string }> {
+     // Mocked LLM response logic will be in the specific methods
+     return { completion: "" };
+   }
+ }
+}
+
 export class BrandSafetyService {
   private config: BrandSafetyConfig;
 
@@ -39,34 +51,52 @@ export class BrandSafetyService {
   /**
    * Evaluate content for brand safety concerns
    */
-  evaluateContent(content: string): BrandSafetyEvaluation {
-    const evaluations: ContentSafetyResult[] = [];
-    
+  async evaluateContent(content: string): Promise<BrandSafetyEvaluation> {
+    const evaluationPromises: Promise<ContentSafetyResult>[] = [];
+
     // Evaluate each category
     for (const category of this.config.categories) {
-      const result = this.evaluateCategory(content, category);
-      evaluations.push(result);
+      // Skip CONTEXTUAL_ANALYSIS here, it will be handled separately for more detailed output
+      if (category !== BrandSafetyCategory.CONTEXTUAL_ANALYSIS) {
+        evaluationPromises.push(this.evaluateCategory(content, category));
+      }
+    }
+
+    let evaluations = await Promise.all(evaluationPromises);
+    
+    let contextualAssessmentData: { assessment: string; explanation: string; riskLevel?: RiskLevel } | undefined = undefined;
+    let contextualAnalysisResult: ContentSafetyResult | undefined = undefined;
+
+    if (this.config.categories.includes(BrandSafetyCategory.CONTEXTUAL_ANALYSIS)) {
+      contextualAnalysisResult = await this.performContextualLlmAnalysis(content);
+      evaluations.push(contextualAnalysisResult); // Add to the list of evaluations
+      contextualAssessmentData = {
+        assessment: (contextualAnalysisResult as any).llmAssessment || "N/A", // Store raw LLM assessment string
+        explanation: contextualAnalysisResult.explanation,
+        riskLevel: contextualAnalysisResult.riskLevel
+      };
     }
     
-    // Determine overall risk level (highest risk from any category)
-    const overallRisk = this.calculateOverallRisk(evaluations);
+    // Determine overall risk level, now considering contextual assessment
+    const overallRisk = this.calculateOverallRisk(evaluations, contextualAssessmentData);
     
-    // Generate summary
-    const summary = this.generateSummary(evaluations, overallRisk);
+    // Generate summary, now considering contextual assessment
+    const summary = this.generateSummary(evaluations, overallRisk, contextualAssessmentData);
     
     return {
       content,
       evaluations,
       overallRisk,
       summary,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      contextualAssessment: contextualAssessmentData
     };
   }
 
   /**
    * Evaluate content against a specific safety category
    */
-  private evaluateCategory(content: string, category: BrandSafetyCategory): ContentSafetyResult {
+  private async evaluateCategory(content: string, category: BrandSafetyCategory): Promise<ContentSafetyResult> {
     // Simple keyword-based evaluation for demonstration purposes
     // In a real implementation, this would use more sophisticated content analysis
     
@@ -74,8 +104,17 @@ export class BrandSafetyService {
     let riskLevel = RiskLevel.NONE;
     let explanation = '';
 
+    if (category === BrandSafetyCategory.SENTIMENT_ANALYSIS) {
+      return this.evaluateSentiment(content);
+    }
+    // CONTEXTUAL_ANALYSIS is handled directly in evaluateContent to populate the specific field
+    // but if evaluateCategory were to be called for it, it would delegate:
+    // if (category === BrandSafetyCategory.CONTEXTUAL_ANALYSIS) {
+    //   return this.performContextualLlmAnalysis(content);
+    // }
+
     // Check for brand-specific blocked topics
-    const blockedTopicMatch = this.config.blockedTopics.find(topic => 
+    const blockedTopicMatch = this.config.blockedTopics.find(topic =>
       lowerContent.includes(topic.toLowerCase())
     );
     
@@ -86,7 +125,7 @@ export class BrandSafetyService {
     }
 
     // Check for sensitive keywords
-    const sensitiveKeywordMatch = this.config.sensitiveKeywords.find(keyword => 
+    const sensitiveKeywordMatch = this.config.sensitiveKeywords.find(keyword =>
       lowerContent.includes(keyword.toLowerCase())
     );
     
@@ -128,6 +167,8 @@ export class BrandSafetyService {
       case BrandSafetyCategory.RELIGION:
         riskLevel = this.checkForReligion(lowerContent);
         break;
+      // SENTIMENT_ANALYSIS is handled above
+      // CONTEXTUAL_ANALYSIS is handled by performContextualLlmAnalysis and integrated in evaluateContent
     }
 
     explanation = this.generateExplanation(category, riskLevel, lowerContent);
@@ -135,9 +176,145 @@ export class BrandSafetyService {
   }
 
   /**
+   * Evaluate content sentiment using an LLM
+   */
+  private async evaluateSentiment(content: string): Promise<ContentSafetyResult> {
+    const category = BrandSafetyCategory.SENTIMENT_ANALYSIS;
+    const mcpLlmClient = new McpLanguageModel();
+
+    const prompt = `Analyze the sentiment of the following text. Classify it as "positive", "negative", or "neutral". If possible, provide a confidence score between 0 and 1. Return the result as a JSON object with "classification" and "score" fields. Text: "${content}"`;
+
+    try {
+      // const llmResponseRaw = await mcpLlmClient.sampling.createMessage({ prompt });
+      // For demonstration, simulating LLM response:
+      let llmResponseMock: { classification: string; score?: number };
+      const lowerContent = content.toLowerCase();
+      if (lowerContent.includes("happy") || lowerContent.includes("wonderful") || lowerContent.includes("excellent")) {
+        llmResponseMock = { classification: "positive", score: 0.9 };
+      } else if (lowerContent.includes("sad") || lowerContent.includes("terrible") || lowerContent.includes("bad")) {
+        llmResponseMock = { classification: "negative", score: 0.85 };
+      } else {
+        llmResponseMock = { classification: "neutral", score: 0.7 };
+      }
+      // const llmResponse = JSON.parse(llmResponseRaw.completion);
+      const llmResponse = llmResponseMock;
+
+      let riskLevel = RiskLevel.NONE;
+      let explanation = `Sentiment: ${llmResponse.classification}`;
+      if (llmResponse.score !== undefined) {
+        explanation += ` (Score: ${llmResponse.score.toFixed(2)})`;
+      }
+
+      switch (llmResponse.classification.toLowerCase()) {
+        case "positive":
+          riskLevel = RiskLevel.NONE;
+          break;
+        case "neutral":
+          riskLevel = RiskLevel.LOW;
+          break;
+        case "negative":
+          riskLevel = RiskLevel.MEDIUM;
+          break;
+        default:
+          riskLevel = RiskLevel.LOW;
+          explanation = `Unknown sentiment classification: ${llmResponse.classification}`;
+      }
+      return { category, riskLevel, explanation };
+
+    } catch (error) {
+      console.error("Error during sentiment analysis LLM call:", error);
+      return {
+        category,
+        riskLevel: RiskLevel.NONE,
+        explanation: "Sentiment analysis failed or returned an unexpected response."
+      };
+    }
+  }
+
+  /**
+   * Perform contextual analysis using an LLM.
+   * This is a new method to be added.
+   */
+  private async performContextualLlmAnalysis(content: string): Promise<ContentSafetyResult & { llmAssessment?: string }> {
+    const category = BrandSafetyCategory.CONTEXTUAL_ANALYSIS;
+    const mcpLlmClient = new McpLanguageModel(); // Placeholder
+
+    const prompt = `You are a brand safety expert. Analyze the following text for contextual brand safety risks.
+Consider the overall context, intent (e.g., informative, educational, satirical vs. malicious, promoting harm), sarcasm, and whether the content is reporting on a sensitive issue versus endorsing or promoting it.
+Based on your analysis, provide a risk assessment and a brief explanation.
+The risk assessment should be one of: 'safe_in_context', 'borderline_contextual_risk', 'unsafe_due_to_context'.
+Return your response as a JSON object with the following fields:
+- "assessment": Your risk assessment string.
+- "explanation": A brief explanation for your assessment (1-2 sentences).
+- "risk_level_suggestion": (Optional) If you can confidently map your assessment to a risk level from ["NONE", "LOW", "MEDIUM", "HIGH", "VERY_HIGH"], provide it here. Otherwise, omit this field.
+
+Text to analyze:
+"${content}"`;
+
+    try {
+      // const llmResponseRaw = await mcpLlmClient.sampling.createMessage({ prompt });
+      // For demonstration, simulating LLM response:
+      let llmResponseMock: { assessment: string; explanation: string; risk_level_suggestion?: RiskLevel };
+      const lowerContent = content.toLowerCase();
+
+      if (lowerContent.includes("discussing violence for educational purposes")) {
+        llmResponseMock = { assessment: "safe_in_context", explanation: "Content discusses violence in an educational context, not promoting it.", risk_level_suggestion: RiskLevel.LOW };
+      } else if (lowerContent.includes("clearly satire about a sensitive topic")) {
+        llmResponseMock = { assessment: "safe_in_context", explanation: "Content is satirical and not a genuine endorsement of harmful views.", risk_level_suggestion: RiskLevel.LOW };
+      } else if (lowerContent.includes("subtle promotion of harmful ideology")) {
+        llmResponseMock = { assessment: "unsafe_due_to_context", explanation: "Content subtly promotes harmful ideology under the guise of discussion.", risk_level_suggestion: RiskLevel.HIGH };
+      } else if (lowerContent.includes("borderline case with ambiguous intent")) {
+        llmResponseMock = { assessment: "borderline_contextual_risk", explanation: "Intent is ambiguous, could be misinterpreted as problematic.", risk_level_suggestion: RiskLevel.MEDIUM };
+      } else {
+         // Default mock for unhandled cases
+        llmResponseMock = { assessment: "safe_in_context", explanation: "Context appears generally safe.", risk_level_suggestion: RiskLevel.NONE };
+      }
+      // const llmResponse = JSON.parse(llmResponseRaw.completion);
+      const llmResponse = llmResponseMock;
+
+      let riskLevel = RiskLevel.NONE;
+      const llmAssessment = llmResponse.assessment;
+      let explanation = llmResponse.explanation;
+
+      if (llmResponse.risk_level_suggestion) {
+        riskLevel = llmResponse.risk_level_suggestion;
+      } else {
+        // Map assessment string to RiskLevel if no direct suggestion
+        switch (llmAssessment) {
+          case "safe_in_context":
+            riskLevel = RiskLevel.NONE; // Could be LOW if we want to be more cautious
+            break;
+          case "borderline_contextual_risk":
+            riskLevel = RiskLevel.MEDIUM;
+            break;
+          case "unsafe_due_to_context":
+            riskLevel = RiskLevel.HIGH; // Could be VERY_HIGH
+            break;
+          default:
+            riskLevel = RiskLevel.LOW; // Default for unknown assessment
+            explanation = `Unknown contextual assessment: ${llmAssessment}. ${explanation}`;
+        }
+      }
+      return { category, riskLevel, explanation, llmAssessment };
+
+    } catch (error) {
+      console.error("Error during contextual analysis LLM call:", error);
+      return {
+        category,
+        riskLevel: RiskLevel.NONE, // Or a specific risk level for error cases
+        explanation: "Contextual analysis failed or returned an unexpected response.",
+        llmAssessment: "error"
+      };
+    }
+  }
+
+  /**
    * Calculate the overall risk level from individual evaluations
    */
-  private calculateOverallRisk(evaluations: ContentSafetyResult[]): RiskLevel {
+  private calculateOverallRisk(
+    evaluations: ContentSafetyResult[],
+    contextualAssessment?: { assessment: string; explanation: string; riskLevel?: RiskLevel }
+  ): RiskLevel {
     const riskLevels = evaluations.map(evaluation => evaluation.riskLevel);
     const riskValues = {
       [RiskLevel.NONE]: 0,
@@ -147,48 +324,142 @@ export class BrandSafetyService {
       [RiskLevel.VERY_HIGH]: 4
     };
 
-    // Find the highest risk level
-    let highestRiskValue = riskValues[RiskLevel.NONE];
+    // Find the highest risk level from standard evaluations
+    let highestStandardRiskValue = riskValues[RiskLevel.NONE];
     for (const risk of riskLevels) {
-      if (riskValues[risk] > highestRiskValue) {
-        highestRiskValue = riskValues[risk];
+      // Exclude contextual analysis from this initial pass if its risk is derived differently
+      const evalResult = evaluations.find(e => e.riskLevel === risk);
+      if (evalResult && evalResult.category !== BrandSafetyCategory.CONTEXTUAL_ANALYSIS) {
+         if (riskValues[risk] > highestStandardRiskValue) {
+           highestStandardRiskValue = riskValues[risk];
+         }
+      } else if (evalResult && evalResult.category === BrandSafetyCategory.CONTEXTUAL_ANALYSIS && !contextualAssessment?.riskLevel) {
+        // If contextual assessment doesn't have its own risk level, use its derived one
+        if (riskValues[risk] > highestStandardRiskValue) {
+           highestStandardRiskValue = riskValues[risk];
+         }
       }
+    }
+
+    let overallRiskValue = highestStandardRiskValue;
+
+    // Factor in contextual assessment
+    if (contextualAssessment && contextualAssessment.riskLevel) {
+      const contextualRiskValue = riskValues[contextualAssessment.riskLevel];
+      // Specific logic for how contextual assessment overrides or influences overall risk
+      if (contextualAssessment.assessment === "unsafe_due_to_context") {
+        overallRiskValue = Math.max(overallRiskValue, riskValues[RiskLevel.HIGH]); // Ensure at least HIGH
+        if (contextualRiskValue > overallRiskValue) overallRiskValue = contextualRiskValue;
+      } else if (contextualAssessment.assessment === "safe_in_context") {
+        // If context says safe, it can downgrade, but not below LOW if other flags exist.
+        // Or, if LLM suggests a specific low risk, use that.
+        const maxNonContextualRisk = evaluations
+          .filter(e => e.category !== BrandSafetyCategory.CONTEXTUAL_ANALYSIS)
+          .reduce((max, e) => Math.max(max, riskValues[e.riskLevel]), riskValues[RiskLevel.NONE]);
+
+        if (contextualRiskValue < overallRiskValue) {
+           // If LLM suggests a lower risk and context is safe, consider it.
+           // Example: keywords flagged HIGH, but context is safe and LLM suggests LOW.
+           // We might cap the downgrade or use a more complex rule.
+           // For now, let's say if context is safe, the overall risk can be lowered,
+           // but not necessarily to the LLM's suggestion if other strong signals exist.
+           // A simple approach: if "safe_in_context", cap overall risk at MEDIUM, unless LLM suggests lower.
+           if (maxNonContextualRisk >= riskValues[RiskLevel.HIGH] && contextualRiskValue <= riskValues[RiskLevel.MEDIUM]) {
+               overallRiskValue = Math.min(overallRiskValue, riskValues[RiskLevel.MEDIUM]); // Cap at medium if previously high
+               overallRiskValue = Math.min(overallRiskValue, contextualRiskValue); // Allow LLM to pull lower if it suggests
+           } else {
+                overallRiskValue = Math.min(overallRiskValue, contextualRiskValue);
+           }
+           // Ensure it doesn't go below the LLM's suggested risk level for "safe_in_context"
+           overallRiskValue = Math.min(overallRiskValue, contextualRiskValue);
+
+        }
+         // If everything else is NONE, and context is safe and suggests NONE, it remains NONE.
+         if (maxNonContextualRisk === riskValues[RiskLevel.NONE] && contextualRiskValue === riskValues[RiskLevel.NONE]) {
+           overallRiskValue = riskValues[RiskLevel.NONE];
+         }
+
+
+      } else if (contextualAssessment.assessment === "borderline_contextual_risk") {
+        overallRiskValue = Math.max(overallRiskValue, contextualRiskValue); // Take the higher of the two
+        overallRiskValue = Math.max(overallRiskValue, riskValues[RiskLevel.MEDIUM]); // Ensure at least MEDIUM for borderline
+      } else {
+        // If contextual assessment has a risk level but no specific assessment string match
+        overallRiskValue = Math.max(overallRiskValue, contextualRiskValue);
+      }
+    } else if (contextualAssessment && !contextualAssessment.riskLevel) {
+       // If contextual assessment exists but didn't provide a direct risk level,
+       // its derived risk level from performContextualLlmAnalysis would have been in 'evaluations'
+       const contextualEval = evaluations.find(e => e.category === BrandSafetyCategory.CONTEXTUAL_ANALYSIS);
+       if (contextualEval) {
+           const contextualRiskValue = riskValues[contextualEval.riskLevel];
+            if (contextualAssessment.assessment === "unsafe_due_to_context") {
+               overallRiskValue = Math.max(overallRiskValue, riskValues[RiskLevel.HIGH]);
+            } else if (contextualAssessment.assessment === "borderline_contextual_risk") {
+               overallRiskValue = Math.max(overallRiskValue, riskValues[RiskLevel.MEDIUM]);
+            }
+           // Potentially other rules here based on assessment string
+           overallRiskValue = Math.max(overallRiskValue, contextualRiskValue);
+       }
     }
 
     // Convert back to RiskLevel
     const riskLevelEntries = Object.entries(riskValues);
     for (const [level, value] of riskLevelEntries) {
-      if (value === highestRiskValue) {
+      if (value === overallRiskValue) {
         return level as RiskLevel;
       }
     }
 
-    return RiskLevel.NONE;
+    return RiskLevel.NONE; // Default
   }
 
   /**
    * Generate a summary of the brand safety evaluation
    */
-  private generateSummary(evaluations: ContentSafetyResult[], overallRisk: RiskLevel): string {
+  private generateSummary(
+    evaluations: ContentSafetyResult[],
+    overallRisk: RiskLevel,
+    contextualAssessment?: { assessment: string; explanation: string; riskLevel?: RiskLevel }
+  ): string {
     const highRiskCategories = evaluations
-      .filter(evaluation => evaluation.riskLevel === RiskLevel.HIGH || evaluation.riskLevel === RiskLevel.VERY_HIGH)
+      .filter(evaluation => (evaluation.riskLevel === RiskLevel.HIGH || evaluation.riskLevel === RiskLevel.VERY_HIGH) && evaluation.category !== BrandSafetyCategory.CONTEXTUAL_ANALYSIS)
       .map(evaluation => evaluation.category);
     
     const mediumRiskCategories = evaluations
-      .filter(evaluation => evaluation.riskLevel === RiskLevel.MEDIUM)
+      .filter(evaluation => evaluation.riskLevel === RiskLevel.MEDIUM && evaluation.category !== BrandSafetyCategory.CONTEXTUAL_ANALYSIS)
       .map(evaluation => evaluation.category);
+    
+    const sentimentEvaluation = evaluations.find(ev => ev.category === BrandSafetyCategory.SENTIMENT_ANALYSIS);
+    let sentimentSummary = "";
+    if (sentimentEvaluation) {
+      sentimentSummary = ` Sentiment: ${sentimentEvaluation.explanation.replace('Sentiment: ', '')}.`;
+    }
+
+    let contextualSummary = "";
+    if (contextualAssessment) {
+      contextualSummary = ` Contextual Analysis: ${contextualAssessment.assessment} - ${contextualAssessment.explanation}.`;
+    }
+
+    let baseSummary = "";
 
     if (overallRisk === RiskLevel.VERY_HIGH) {
-      return `UNSAFE: Content poses very high risk in categories: ${highRiskCategories.join(', ')}. Not suitable for brand association.`;
+      baseSummary = `UNSAFE: Content poses very high risk.`;
+      if (highRiskCategories.length > 0) baseSummary += ` High risk in: ${highRiskCategories.join(', ')}.`;
     } else if (overallRisk === RiskLevel.HIGH) {
-      return `HIGH RISK: Content has high risk factors in categories: ${highRiskCategories.join(', ')}. Recommend against brand association.`;
+      baseSummary = `HIGH RISK: Content has high risk factors.`;
+      if (highRiskCategories.length > 0) baseSummary += ` High risk in: ${highRiskCategories.join(', ')}.`;
     } else if (overallRisk === RiskLevel.MEDIUM) {
-      return `CAUTION: Content has moderate risk in categories: ${mediumRiskCategories.join(', ')}. Review carefully before brand association.`;
+      baseSummary = `CAUTION: Content has moderate risk.`;
+      if (mediumRiskCategories.length > 0) baseSummary += ` Moderate risk in: ${mediumRiskCategories.join(', ')}.`;
+      else if (highRiskCategories.length > 0) baseSummary += ` Factors contributed from: ${highRiskCategories.join(', ')}.`; // If context downgraded
     } else if (overallRisk === RiskLevel.LOW) {
-      return 'LOW RISK: Content has minimal brand safety concerns but review recommended.';
+      baseSummary = `LOW RISK: Content has minimal brand safety concerns.`;
     } else {
-      return 'SAFE: Content appears safe for brand association.';
+      baseSummary = `SAFE: Content appears safe for brand association.`;
     }
+    
+    return `${baseSummary}${contextualSummary}${sentimentSummary}`.trim();
   }
 
   /**

@@ -9,7 +9,9 @@ export enum BrandSafetyCategory {
   PROFANITY = "PROFANITY",
   ALCOHOL_TOBACCO = "ALCOHOL_TOBACCO",
   POLITICAL = "POLITICAL",
-  RELIGION = "RELIGION"
+  RELIGION = "RELIGION",
+  SENTIMENT_ANALYSIS = "SENTIMENT_ANALYSIS",
+  CONTEXTUAL_ANALYSIS = "CONTEXTUAL_ANALYSIS"
 }
 
 // Risk levels for safety evaluations
@@ -35,6 +37,11 @@ export interface BrandSafetyEvaluation {
   overallRisk: RiskLevel;
   summary: string;
   timestamp: string;
+  contextualAssessment?: {
+    assessment: string; // e.g., "safe_in_context", "borderline_contextual_risk", "unsafe_due_to_context"
+    explanation: string;
+    riskLevel?: RiskLevel; // Optional: if the LLM provides a direct risk level
+  };
 }
 
 // Brand safety configuration
@@ -68,7 +75,9 @@ export const DEFAULT_BRAND_SAFETY_CONFIG: BrandSafetyConfig = {
     [BrandSafetyCategory.PROFANITY]: RiskLevel.LOW,
     [BrandSafetyCategory.ALCOHOL_TOBACCO]: RiskLevel.MEDIUM,
     [BrandSafetyCategory.POLITICAL]: RiskLevel.MEDIUM,
-    [BrandSafetyCategory.RELIGION]: RiskLevel.MEDIUM
+    [BrandSafetyCategory.RELIGION]: RiskLevel.MEDIUM,
+    [BrandSafetyCategory.SENTIMENT_ANALYSIS]: RiskLevel.NONE, // Default, can be adjusted
+    [BrandSafetyCategory.CONTEXTUAL_ANALYSIS]: RiskLevel.NONE // Default, actual risk determined by LLM
   },
   sensitiveKeywords: [],
   allowedTopics: [],
