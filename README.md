@@ -110,7 +110,7 @@ await client.connect(transport);
 
 // Evaluate content for brand safety
 const safetyResult = await client.callTool({
-  name: 'evaluateContent',
+  name: 'analyzeSafety',
   arguments: {
     content: "Your content to evaluate"
   }
@@ -188,7 +188,7 @@ If you've published your Brand MCP to NPM, you can use npx for a more streamline
 
 5. Save the file and restart Claude Desktop
 
-When Claude Desktop starts, you should see a hammer icon in the input box, indicating that tools are available. Clicking this icon should show tools including "evaluateContent" and "checkBrandCompliance".
+When Claude Desktop starts, you should see a hammer icon in the input box, indicating that tools are available. Clicking this icon should show tools including "analyzeSafety" and "checkBrandCompliance".
 
 If you don't see the tools, check the logs:
 - macOS: `~/Library/Logs/Claude/mcp*.log`
@@ -256,10 +256,13 @@ This approach makes the Brand MCP accessible to non-technical users who interact
 
 ## Customizing for Your Brand
 
-To customize the MCP for your specific brand, you need to modify the `brandSchema.js` file in the root directory. The schema includes comprehensive dimensions for brand guidelines:
+To customize the MCP for your specific brand, you need to modify the `activeBrandProfile` object within the `brandSchema.js` file located in the root directory. The `brandSchema` object (also in `brandSchema.js`) serves as a template and documentation for the structure of `activeBrandProfile`.
+
+The `activeBrandProfile` object includes comprehensive dimensions for brand guidelines:
 
 ### Brand Identity
 ```javascript
+// Example of fields within the activeBrandProfile object in brandSchema.js:
 name: "YourBrandName",
 description: "Your brand description",
 ```
@@ -440,14 +443,14 @@ After modifying this file with your brand's specific guidelines, rebuild the pro
 
 ## Moving from Demo to Production
 
-The Brand Safety MCP comes with a demo brand schema (`brandSchema.js`) containing sample guidelines. To implement your own brand safety and compliance rules:
+The Brand Safety MCP uses the `activeBrandProfile` object within `brandSchema.js` to define your brand's specific guidelines. The `brandSchema.js` file also contains a `brandSchema` object that documents the structure. To implement your own brand safety and compliance rules:
 
 1. First, review the demo implementation by running:
    ```bash
    npm run demo
    ```
 
-2. Next, open the `brandSchema.js` file in the root directory and replace the demo values with your own brand guidelines following the structure outlined above.
+2. Next, open the `brandSchema.js` file in the root directory and edit the values within the `activeBrandProfile` object to match your own brand guidelines, using the `brandSchema` object as a structural reference.
 
 3. After customizing your schema, rebuild the project:
    ```bash
@@ -475,6 +478,8 @@ The MCP evaluates content across the following safety categories:
 - **Alcohol/Tobacco**: References to alcohol, tobacco, or related products
 - **Political Content**: References to political figures, parties, or controversial topics
 - **Religious Content**: References to religious beliefs, practices, or institutions
+- **Sentiment Analysis**: Determines the emotional tone of the content (e.g., positive, negative, neutral) using LLM capabilities.
+- **Contextual Analysis**: Provides a deeper understanding of content nuances, intent, and potential risks that might be missed by keyword-only checks, using LLM capabilities.
 
 Each category is evaluated on a five-level risk scale: NONE, LOW, MEDIUM, HIGH, VERY_HIGH.
 
