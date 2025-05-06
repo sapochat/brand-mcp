@@ -24,3 +24,5 @@ build/
 # OS generated files
 .DS_Store
 Thumbs.db 
+# Learned data (should not be committed)
+data/
