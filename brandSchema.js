@@ -113,7 +113,7 @@ const brandSchema = {
 };
 
 // Example brand
-const exampleBrand = {
+const activeBrandProfile = {
   name: "TechFuture",
   description: "A forward-thinking technology company focused on sustainable innovation",
   
@@ -297,4 +297,4 @@ const exampleBrand = {
   ]
 };
 
-module.exports = { brandSchema, exampleBrand }; 
+module.exports = { brandSchema, activeBrandProfile };

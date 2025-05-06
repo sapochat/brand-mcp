@@ -22,18 +22,18 @@ export async function loadBrandSchema(filePath?: string): Promise<BrandSchema> {
     // Read file content
     const fileContent = fs.readFileSync(filePath, 'utf8');
     
-    // Extract exampleBrand data using a regex pattern
+    // Extract activeBrandProfile data using a regex pattern
     // Note: In a real implementation, you would import the module properly
     // This is a simplified approach for demonstration purposes
-    const exampleBrandMatch = fileContent.match(/const exampleBrand = ({[\s\S]*?});/);
+    const activeBrandProfileMatch = fileContent.match(/const activeBrandProfile = ({[\s\S]*?});/);
     
-    if (!exampleBrandMatch || !exampleBrandMatch[1]) {
-      throw new Error('Could not extract exampleBrand from the file');
+    if (!activeBrandProfileMatch || !activeBrandProfileMatch[1]) {
+      throw new Error('Could not extract activeBrandProfile from the file');
     }
     
     // Parse the extracted JSON
     // Note: This is not a safe approach for production, but works for demonstration
-    const brandObject = eval(`(${exampleBrandMatch[1]})`);
+    const brandObject = eval(`(${activeBrandProfileMatch[1]})`);
     
     return brandObject as BrandSchema;
   } catch (error) {
