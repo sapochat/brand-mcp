@@ -12,6 +12,7 @@ A Model Context Protocol (MCP) server that performs both brand safety evaluation
   - [Integrating with Client Applications](#integrating-with-client-applications)
   - [Using with Claude](#using-with-claude)
 - [Customizing for Your Brand](#customizing-for-your-brand)
+- [Moving from Demo to Production](#moving-from-demo-to-production)
 - [Brand Safety Features](#brand-safety-features)
 - [Brand Compliance Features](#brand-compliance-features)
 - [Context-Aware Evaluation](#context-aware-evaluation)
@@ -436,6 +437,29 @@ contextualAdjustments: [
 ```
 
 After modifying this file with your brand's specific guidelines, rebuild the project with `npm run build`.
+
+## Moving from Demo to Production
+
+The Brand Safety MCP comes with a demo brand schema (`brandSchema.js`) containing sample guidelines. To implement your own brand safety and compliance rules:
+
+1. First, review the demo implementation by running:
+   ```bash
+   npm run demo
+   ```
+
+2. Next, open the `brandSchema.js` file in the root directory and replace the demo values with your own brand guidelines following the structure outlined above.
+
+3. After customizing your schema, rebuild the project:
+   ```bash
+   npm run build
+   ```
+
+4. Test your custom implementation:
+   ```bash
+   npm run test
+   ```
+
+> **Note:** All commands (`npm run demo`, `npm run test`, etc.) will use your custom brand schema after you've modified and rebuilt the project.
 
 ## Brand Safety Features
 
