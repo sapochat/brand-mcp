@@ -3,6 +3,86 @@ import { BrandSchema, BrandComplianceIssue, BrandComplianceResult } from '../typ
 export class BrandService {
   private brandSchema: BrandSchema | null = null;
   private defaultContext: string = 'general';
+  
+  // Technical terms that are exempt from tone analysis
+  private technicalTermsAllowlist: string[] = [
+    'api', 'sdk', 'ui', 'ux', 'http', 'rest', 'json', 'xml', 'database', 'server',
+    'client', 'interface', 'framework', 'library', 'component', 'function', 'class',
+    'algorithm', 'parameter', 'configuration', 'deployment', 'integration', 'authentication',
+    'content recognition system', 'machine learning', 'artificial intelligence', 'neural network',
+    'data processing', 'software', 'hardware', 'platform', 'architecture', 'infrastructure',
+    'repository', 'codebase', 'pipeline', 'workflow', 'backend', 'frontend', 'fullstack'
+  ];
+  
+  // Technical contexts that should have relaxed tone requirements
+  private technicalContexts: string[] = [
+    'technical-documentation', 'api-reference', 'developer-guide', 
+    'product-specs', 'technical-specs', 'feature-description',
+    'technical-support', 'code-example', 'implementation-guide'
+  ];
+
+  // Phrase-level patterns for more accurate tone detection
+  private phrasePatterns: Record<string, RegExp[]> = {
+    'condescending': [
+      /as (everyone|anybody) knows/i,
+      /it('s| is) (very |really |quite )?(simple|easy|obvious)/i,
+      /even a (child|beginner) could/i,
+      /if you (just|simply) (read|understood|knew)/i,
+      /of course|needless to say/i
+    ],
+    'pessimistic': [
+      /unlikely to (succeed|work)/i,
+      /bound to (fail|disappoint)/i,
+      /don't expect (much|good results)/i,
+      /(won't|will not) (work|succeed|help)/i,
+      /too (difficult|hard|complex) to/i,
+      /never (works|succeeds)/i
+    ],
+    'overly technical': [
+      /leveraging the (architecture|framework|system)/i,
+      /utilizing (advanced|complex) (algorithms|systems)/i,
+      /implementing (sophisticated|complex) (mechanisms|protocols)/i,
+      /technical (specifications|parameters|considerations)/i
+    ],
+    'confident': [
+      /we (guarantee|ensure|promise)/i,
+      /you can (count on|rely on|trust)/i,
+      /(guaranteed|certain|definite) (results|outcome)/i,
+      /we're (confident|certain|sure) that/i
+    ],
+    'approachable': [
+      /let('s| us) (explore|discover|learn)/i,
+      /we'd love (to hear|to help)/i,
+      /feel free to/i,
+      /we're here (to help|for you)/i
+    ]
+  };
+
+  // Domain-specific exemptions beyond technical terms
+  private domainExemptions: Record<string, string[]> = {
+    'marketing': [
+      'campaign', 'promotion', 'limited time', 'exclusive', 'offering',
+      'launch', 'announce', 'introducing', 'new', 'improved', 'featuring',
+      'special', 'offer', 'discount', 'premium', 'value', 'benefits'
+    ],
+    'legal': [
+      'terms', 'conditions', 'agreement', 'liability', 'warranty',
+      'disclaimer', 'rights', 'confidential', 'privacy', 'compliance',
+      'legal', 'law', 'regulation', 'policy', 'guideline', 'procedure'
+    ],
+    'educational': [
+      'learn', 'study', 'understand', 'concept', 'lesson', 'tutorial',
+      'guide', 'explanation', 'introduction', 'basics', 'fundamentals'
+    ]
+  };
+
+  // Define content types beyond technical
+  private contentTypes: string[] = [
+    'technical', 'marketing', 'legal', 'educational', 'conversational'
+  ];
+
+  // Store examples of false positives for learning
+  private falsePositives: Array<{issue: BrandComplianceIssue, content: string}> = [];
 
   constructor(brandSchema?: BrandSchema) {
     if (brandSchema) {
@@ -25,6 +105,81 @@ export class BrandService {
   }
 
   /**
+   * Add technical terms to the allowlist
+   */
+  addTechnicalTerms(terms: string[]): void {
+    this.technicalTermsAllowlist.push(...terms);
+  }
+
+  /**
+   * Add technical contexts
+   */
+  addTechnicalContexts(contexts: string[]): void {
+    this.technicalContexts.push(...contexts);
+  }
+
+  /**
+   * Record a false positive to improve future detection
+   */
+  public addFalsePositive(issue: BrandComplianceIssue, content: string): void {
+    this.falsePositives.push({ issue, content });
+    
+    // If we have accumulated enough examples, adjust detection parameters
+    if (this.falsePositives.length >= 5) {
+      this.updateDetectionParameters();
+    }
+  }
+
+  /**
+   * Update detection parameters based on false positive feedback
+   */
+  private updateDetectionParameters(): void {
+    // This is a simplified implementation
+    // In a real system, you would use machine learning to adjust thresholds
+    
+    // Count issues by type
+    const issueTypes = new Map<string, number>();
+    const issueTerms = new Map<string, number>();
+    
+    for (const { issue } of this.falsePositives) {
+      // Count issue types
+      issueTypes.set(issue.type, (issueTypes.get(issue.type) || 0) + 1);
+      
+      // Extract terms from descriptions
+      const terms = issue.description.match(/["']([^"']+)["']/g) || [];
+      for (const term of terms) {
+        const cleanTerm = term.replace(/["']/g, '');
+        issueTerms.set(cleanTerm, (issueTerms.get(cleanTerm) || 0) + 1);
+      }
+    }
+    
+    // Add frequently flagged terms to appropriate allowlists
+    // This is a simplified approach - a real implementation would be more sophisticated
+    for (const [term, count] of issueTerms.entries()) {
+      if (count >= 3) {
+        // If this term appears in most false positives, consider allowlisting it
+        if (term.match(/technical|algorithm|implementation|api|framework/i)) {
+          this.technicalTermsAllowlist.push(term);
+        }
+      }
+    }
+    
+    // Clear the false positives after processing
+    this.falsePositives = [];
+  }
+
+  /**
+   * Add domain-specific exemptions
+   */
+  public addDomainExemptions(domain: string, terms: string[]): void {
+    if (this.domainExemptions[domain]) {
+      this.domainExemptions[domain].push(...terms);
+    } else {
+      this.domainExemptions[domain] = terms;
+    }
+  }
+
+  /**
    * Check if content complies with brand guidelines
    */
   checkBrandCompliance(content: string, context: string = this.defaultContext): BrandComplianceResult {
@@ -34,8 +189,11 @@ export class BrandService {
 
     const issues: BrandComplianceIssue[] = [];
     
-    // Check for tone compliance
-    const toneIssues = this.checkToneCompliance(content, context);
+    // Detect content type for more accurate analysis
+    const contentType = this.detectContentType(content);
+    
+    // Check for tone compliance with section analysis
+    const toneIssues = this.checkToneComplianceWithSections(content, context, contentType);
     issues.push(...toneIssues);
     
     // Check for voice compliance
@@ -46,63 +204,452 @@ export class BrandService {
     const terminologyIssues = this.checkTerminologyCompliance(content, context);
     issues.push(...terminologyIssues);
 
+    // Filter issues based on Bayesian probability to reduce false positives
+    const filteredIssues = this.filterIssuesByProbability(issues, content, contentType);
+
     // Calculate compliance score (inversely proportional to number and severity of issues)
-    const complianceScore = this.calculateComplianceScore(issues);
+    const complianceScore = this.calculateComplianceScore(filteredIssues);
     
     // Determine overall compliance
     const isCompliant = complianceScore >= 80;
     
     // Generate summary
-    const summary = this.generateComplianceSummary(issues, complianceScore, isCompliant);
+    const summary = this.generateComplianceSummary(filteredIssues, complianceScore, isCompliant);
     
     return {
       content,
       isCompliant,
       complianceScore,
-      issues,
+      issues: filteredIssues,
       summary,
       timestamp: new Date().toISOString(),
       brandName: this.brandSchema.name,
-      context
+      context,
+      contentType
     };
   }
 
   /**
-   * Check content for tone compliance
+   * Detect the type of content (technical, marketing, legal, etc.)
    */
-  private checkToneCompliance(content: string, context: string): BrandComplianceIssue[] {
+  private detectContentType(content: string): string {
+    const lowerContent = content.toLowerCase();
+    const contentWords = lowerContent.split(/\s+/);
+    const totalWords = contentWords.length;
+    
+    // Calculate term density for each content type
+    const densities: Record<string, number> = {};
+    
+    // Technical content detection
+    const technicalTerms = this.countTechnicalTerms(content);
+    densities['technical'] = totalWords > 0 ? technicalTerms / totalWords : 0;
+    
+    // Marketing content detection
+    const marketingTerms = this.countDomainTerms(content, 'marketing');
+    densities['marketing'] = totalWords > 0 ? marketingTerms / totalWords : 0;
+    
+    // Legal content detection
+    const legalTerms = this.countDomainTerms(content, 'legal');
+    densities['legal'] = totalWords > 0 ? legalTerms / totalWords : 0;
+    
+    // Educational content detection
+    const educationalTerms = this.countDomainTerms(content, 'educational');
+    densities['educational'] = totalWords > 0 ? educationalTerms / totalWords : 0;
+    
+    // Sentiment-based detection for conversational content
+    const sentiment = this.analyzeSentiment(content);
+    densities['conversational'] = Math.max(sentiment.positivity, sentiment.negativity) * 0.5;
+    
+    // Find the content type with the highest density
+    let maxDensity = 0;
+    let contentType = 'general';
+    
+    for (const [type, density] of Object.entries(densities)) {
+      if (density > maxDensity && density > 0.1) { // Threshold to avoid random matches
+        maxDensity = density;
+        contentType = type;
+      }
+    }
+    
+    return contentType;
+  }
+
+  /**
+   * Count domain-specific terms in the content
+   */
+  private countDomainTerms(content: string, domain: string): number {
+    const domainTerms = this.domainExemptions[domain] || [];
+    const lowerContent = content.toLowerCase();
+    
+    return domainTerms.filter(term => 
+      new RegExp(`\\b${term.toLowerCase()}\\b`).test(lowerContent)
+    ).length;
+  }
+
+  /**
+   * Analyze sentiment of content
+   */
+  private analyzeSentiment(content: string): {
+    positivity: number;
+    negativity: number;
+    objectivity: number;
+  } {
+    const lowerContent = content.toLowerCase();
+    
+    // Simple sentiment analysis using keyword lists
+    // A real implementation would use a more sophisticated NLP model
+    const positiveWords = [
+      'good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 
+      'helpful', 'best', 'positive', 'recommend', 'love', 'like', 'enjoy',
+      'happy', 'pleased', 'satisfied', 'impressive', 'easy', 'effective'
+    ];
+    
+    const negativeWords = [
+      'bad', 'poor', 'terrible', 'horrible', 'awful', 'disappointing',
+      'difficult', 'hard', 'negative', 'issue', 'problem', 'hate', 'dislike',
+      'unhappy', 'displeased', 'dissatisfied', 'complicated', 'ineffective'
+    ];
+    
+    const objectiveWords = [
+      'is', 'are', 'was', 'were', 'has', 'have', 'had', 'will', 'would',
+      'can', 'could', 'may', 'might', 'should', 'must', 'shall', 'includes',
+      'contains', 'features', 'provides', 'supports', 'enables'
+    ];
+    
+    // Count occurrences
+    let positiveCount = 0;
+    let negativeCount = 0;
+    let objectiveCount = 0;
+    
+    const words = lowerContent.split(/\s+/);
+    
+    for (const word of words) {
+      if (positiveWords.includes(word)) positiveCount++;
+      if (negativeWords.includes(word)) negativeCount++;
+      if (objectiveWords.includes(word)) objectiveCount++;
+    }
+    
+    // Calculate normalized scores
+    const total = words.length || 1; // Avoid division by zero
+    
+    return {
+      positivity: positiveCount / total,
+      negativity: negativeCount / total,
+      objectivity: objectiveCount / total
+    };
+  }
+
+  /**
+   * Apply n-gram analysis to content for tone detection
+   */
+  private analyzeNgrams(content: string, tone: string): number {
+    const words = content.toLowerCase().split(/\s+/);
+    const ngrams: string[] = [];
+    
+    // Create bigrams and trigrams
+    for (let i = 0; i < words.length - 1; i++) {
+      ngrams.push(words[i] + ' ' + words[i+1]);
+      if (i < words.length - 2) {
+        ngrams.push(words[i] + ' ' + words[i+1] + ' ' + words[i+2]);
+      }
+    }
+    
+    // Define ngram indicators for each tone
+    const ngramIndicators: Record<string, Array<{pattern: string, weight: number}>> = {
+      'confident': [
+        { pattern: 'we guarantee', weight: 1.0 },
+        { pattern: 'we ensure', weight: 0.9 },
+        { pattern: 'we promise', weight: 0.9 },
+        { pattern: 'proven to', weight: 0.7 },
+        { pattern: 'certainly will', weight: 0.8 }
+      ],
+      'approachable': [
+        { pattern: 'easy to', weight: 0.8 },
+        { pattern: 'simple to', weight: 0.8 },
+        { pattern: 'here to help', weight: 1.0 },
+        { pattern: 'feel free', weight: 0.9 },
+        { pattern: 'happy to', weight: 0.7 }
+      ],
+      'pessimistic': [
+        { pattern: 'might not', weight: 0.7 },
+        { pattern: 'could fail', weight: 0.9 },
+        { pattern: 'unlikely to', weight: 0.8 },
+        { pattern: 'difficult to', weight: 0.6 },
+        { pattern: 'not easy', weight: 0.7 }
+      ],
+      'condescending': [
+        { pattern: 'obviously you', weight: 0.9 },
+        { pattern: 'of course you', weight: 0.8 },
+        { pattern: 'simply put', weight: 0.6 },
+        { pattern: 'just remember', weight: 0.6 },
+        { pattern: 'basic understanding', weight: 0.7 }
+      ]
+    };
+    
+    // Get indicators for the specific tone
+    const indicators = ngramIndicators[tone.toLowerCase()] || [];
+    
+    if (indicators.length === 0) {
+      return 0; // No indicators, no score
+    }
+    
+    // Calculate total possible weight
+    const totalWeight = indicators.reduce((sum, indicator) => sum + indicator.weight, 0);
+    
+    // Calculate matched weight
+    let matchedWeight = 0;
+    
+    for (const indicator of indicators) {
+      for (const ngram of ngrams) {
+        if (ngram.includes(indicator.pattern)) {
+          matchedWeight += indicator.weight;
+          break; // Only count each indicator once
+        }
+      }
+    }
+    
+    // Return normalized score (0-1)
+    return totalWeight > 0 ? matchedWeight / totalWeight : 0;
+  }
+
+  /**
+   * Check content for tone compliance with section-based analysis
+   */
+  private checkToneComplianceWithSections(content: string, context: string, contentType: string): BrandComplianceIssue[] {
+    const issues: BrandComplianceIssue[] = [];
+    
+    if (!this.brandSchema) return issues;
+    
+    // Split content into sections (paragraphs)
+    const sections = content.split(/\n{2,}|\r\n{2,}/);
+    
+    // If content is short or only has one section, analyze as a whole
+    if (sections.length <= 1 || content.length < 100) {
+      return this.checkToneCompliance(content, context, contentType);
+    }
+    
+    // Analyze each section separately
+    const sectionIssues: BrandComplianceIssue[][] = [];
+    
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i];
+      if (section.trim().length === 0) continue;
+      
+      const issues = this.checkToneCompliance(section, context, contentType);
+      
+      // Add section information to issues
+      const sectionNumber = i + 1;
+      const augmentedIssues = issues.map(issue => ({
+        ...issue,
+        description: `Section ${sectionNumber}: ${issue.description}`
+      }));
+      
+      sectionIssues.push(augmentedIssues);
+    }
+    
+    // Aggregate issues, prioritizing high severity ones
+    // Only include the most severe issues to avoid overwhelming feedback
+    const highSeverityIssues = sectionIssues.flat().filter(issue => issue.severity === 'high');
+    const mediumSeverityIssues = sectionIssues.flat().filter(issue => issue.severity === 'medium');
+    const lowSeverityIssues = sectionIssues.flat().filter(issue => issue.severity === 'low');
+    
+    // Add all high severity issues
+    issues.push(...highSeverityIssues);
+    
+    // Add at most 3 medium severity issues
+    issues.push(...mediumSeverityIssues.slice(0, 3));
+    
+    // Add at most 2 low severity issues
+    issues.push(...lowSeverityIssues.slice(0, 2));
+    
+    return issues;
+  }
+
+  /**
+   * Check content for tone compliance with enhanced detection
+   */
+  private checkToneCompliance(content: string, context: string, contentType: string = 'general'): BrandComplianceIssue[] {
     const issues: BrandComplianceIssue[] = [];
     const lowerContent = content.toLowerCase();
     
     if (!this.brandSchema) return issues;
     
+    // Skip tone analysis for technical contexts or if technical terms density is high
+    const isTechnicalContext = this.technicalContexts.includes(context);
+    const technicalTermsCount = this.countTechnicalTerms(content);
+    const contentWords = content.split(/\s+/).length;
+    const technicalDensity = contentWords > 0 ? technicalTermsCount / contentWords : 0;
+    
+    // If this is a technical context or has high technical term density (>20%),
+    // apply more lenient tone checking or skip certain checks
+    const isHighlyTechnical = isTechnicalContext || technicalDensity > 0.2;
+    
+    // Also check if this is another exempt content type (like legal)
+    const isExemptContentType = contentType === 'legal' || 
+                              (contentType === 'technical' && isHighlyTechnical);
+    
     // Get context-specific tone if available
     const contextualTone = this.getContextualTone(context);
     const primaryTone = contextualTone || this.brandSchema.toneGuidelines.primaryTone;
     
-    // Check for avoided tones
-    for (const avoidedTone of this.brandSchema.toneGuidelines.avoidedTones) {
-      if (this.detectTone(lowerContent, avoidedTone)) {
+    // Check for avoided tones using multiple detection methods
+    if (!isExemptContentType) {
+      for (const avoidedTone of this.brandSchema.toneGuidelines.avoidedTones) {
+        // 1. Keyword-based detection with confidence
+        const { detected: keywordDetected, confidence: keywordConfidence } = 
+          this.detectToneWithConfidence(lowerContent, avoidedTone);
+        
+        // 2. Phrase-pattern detection
+        const phraseDetected = this.detectToneWithPhrases(lowerContent, avoidedTone);
+        
+        // 3. N-gram analysis
+        const ngramScore = this.analyzeNgrams(lowerContent, avoidedTone);
+        
+        // Combine all signals for final confidence score
+        // Weight the different methods
+        const combinedConfidence = 
+          (keywordConfidence * 0.5) + 
+          (phraseDetected ? 0.3 : 0) + 
+          (ngramScore * 0.2);
+        
+        // Only flag if combined confidence is above threshold
+        if (combinedConfidence > 0.6) {
+          issues.push({
+            type: 'tone',
+            severity: combinedConfidence > 0.8 ? 'high' : (combinedConfidence > 0.7 ? 'medium' : 'low'),
+            description: `Content uses avoided tone: "${avoidedTone}" (confidence: ${Math.round(combinedConfidence * 100)}%)`,
+            suggestion: `Rewrite to align with the brand's preferred tone: "${primaryTone}"`
+          });
+        }
+      }
+    }
+    
+    // Check for primary tone with combined detection methods
+    // Skip this check for exempt content types with technical density over 30%
+    if (!isExemptContentType || technicalDensity <= 0.3) {
+      // 1. Keyword-based detection
+      const { detected: keywordDetected, confidence: keywordConfidence } = 
+        this.detectToneWithConfidence(lowerContent, primaryTone);
+      
+      // 2. Phrase-pattern detection
+      const phraseDetected = this.detectToneWithPhrases(lowerContent, primaryTone);
+      
+      // 3. N-gram analysis
+      const ngramScore = this.analyzeNgrams(lowerContent, primaryTone);
+      
+      // Combine all signals for final confidence score
+      const combinedConfidence = 
+        (keywordConfidence * 0.5) + 
+        (phraseDetected ? 0.3 : 0) + 
+        (ngramScore * 0.2);
+      
+      // For technical content, we're more lenient with primary tone requirements
+      const confidenceThreshold = isHighlyTechnical ? 0.3 : 0.5;
+      
+      if (combinedConfidence < confidenceThreshold) {
+        // Adjust severity based on context and confidence
+        let severity: 'low' | 'medium' | 'high' = 'medium';
+        
+        if (isHighlyTechnical || contentType === 'technical') {
+          severity = 'low'; // Lower severity for technical content
+        } else if (combinedConfidence < 0.2) {
+          severity = 'high'; // High severity for very low confidence
+        } else if (combinedConfidence < 0.4) {
+          severity = 'medium';
+        } else {
+          severity = 'low';
+        }
+        
         issues.push({
           type: 'tone',
-          severity: 'high',
-          description: `Content uses avoided tone: "${avoidedTone}"`,
-          suggestion: `Rewrite to align with the brand's preferred tone: "${primaryTone}"`
+          severity,
+          description: `Content may not align with the brand's primary tone: "${primaryTone}" (confidence: ${Math.round((1 - combinedConfidence) * 100)}%)`,
+          suggestion: `Consider adjusting tone to be more ${primaryTone}`
         });
       }
     }
     
-    // Simple tone detection - in a real implementation, this would use more sophisticated NLP
-    if (!this.detectTone(lowerContent, primaryTone)) {
-      issues.push({
-        type: 'tone',
-        severity: 'medium',
-        description: `Content may not align with the brand's primary tone: "${primaryTone}"`,
-        suggestion: `Consider adjusting tone to be more ${primaryTone}`
-      });
+    return issues;
+  }
+
+  /**
+   * Detect tone using phrase patterns
+   */
+  private detectToneWithPhrases(content: string, tone: string): boolean {
+    // Get phrase patterns for this tone
+    const patterns = this.phrasePatterns[tone.toLowerCase()] || [];
+    
+    // Test each pattern against the content
+    for (const pattern of patterns) {
+      if (pattern.test(content)) {
+        return true;
+      }
     }
     
-    return issues;
+    return false;
+  }
+
+  /**
+   * Filter issues based on Bayesian probability to reduce false positives
+   */
+  private filterIssuesByProbability(
+    issues: BrandComplianceIssue[], 
+    content: string, 
+    contentType: string
+  ): BrandComplianceIssue[] {
+    return issues.filter(issue => {
+      const probability = this.calculateIssueProbability(issue, content, contentType);
+      return probability >= 0.6; // Only keep issues with 60%+ probability of being valid
+    });
+  }
+
+  /**
+   * Calculate the probability that an issue is a true positive
+   */
+  private calculateIssueProbability(
+    issue: BrandComplianceIssue, 
+    content: string,
+    contentType: string
+  ): number {
+    // Base probability from severity
+    let baseProbability = 0;
+    switch (issue.severity) {
+      case 'high': baseProbability = 0.8; break;
+      case 'medium': baseProbability = 0.6; break;
+      case 'low': baseProbability = 0.4; break;
+    }
+    
+    // Adjustments based on content type
+    let contentTypeAdjustment = 0;
+    if (issue.type === 'tone' && contentType === 'technical') {
+      contentTypeAdjustment = -0.2; // Lower probability for tone issues in technical content
+    }
+    if (issue.type === 'terminology' && contentType === 'legal') {
+      contentTypeAdjustment = -0.15; // Lower probability for terminology issues in legal content
+    }
+    if (issue.type === 'voice' && contentType === 'marketing') {
+      contentTypeAdjustment = -0.1; // Lower probability for voice issues in marketing content
+    }
+    
+    // Adjustment based on content length (longer content gets more leeway)
+    const words = content.split(/\s+/).length;
+    const lengthAdjustment = words > 200 ? -0.1 : (words > 100 ? -0.05 : 0);
+    
+    // Adjustment based on confidence (parse from description if available)
+    let confidenceAdjustment = 0;
+    const confidenceMatch = issue.description.match(/confidence: (\d+)%/);
+    if (confidenceMatch) {
+      const confidence = parseInt(confidenceMatch[1], 10) / 100;
+      confidenceAdjustment = confidence - 0.5; // Adjust up or down based on confidence
+    }
+    
+    // Calculate final probability
+    let probability = baseProbability + contentTypeAdjustment + lengthAdjustment + confidenceAdjustment;
+    
+    // Clamp to valid range
+    probability = Math.max(0, Math.min(1, probability));
+    
+    return probability;
   }
 
   /**
@@ -164,7 +711,7 @@ export class BrandService {
   }
 
   /**
-   * Check content for terminology compliance
+   * Check content for terminology compliance with improved handling of technical terms
    */
   private checkTerminologyCompliance(content: string, context: string): BrandComplianceIssue[] {
     const issues: BrandComplianceIssue[] = [];
@@ -173,8 +720,18 @@ export class BrandService {
     
     const lowerContent = content.toLowerCase();
     
-    // Check for globally avoided terms
+    // Skip certain checks for highly technical contexts
+    const isTechnicalContext = this.technicalContexts.includes(context);
+    
+    // Check for globally avoided terms, but exempt technical terms in technical contexts
     for (const term of this.brandSchema.terminologyGuidelines.avoidedGlobalTerms) {
+      // Skip this check if the term is in the technical allowlist and we're in a technical context
+      if (isTechnicalContext && this.technicalTermsAllowlist.some(
+        techTerm => techTerm.toLowerCase() === term.toLowerCase()
+      )) {
+        continue;
+      }
+
       if (new RegExp(`\\b${term}\\b`, 'i').test(content)) {
         issues.push({
           type: 'terminology',
@@ -198,7 +755,7 @@ export class BrandService {
       }
     }
     
-    // Check for preferred/avoided terms based on context
+    // Check for preferred/avoided terms based on context, with technical term exemptions
     for (const termRule of this.brandSchema.terminologyGuidelines.terms) {
       // Skip if this term should only be applied in specific contexts that don't include the current context
       if (termRule.contexts && !termRule.contexts.includes(context)) {
@@ -210,11 +767,18 @@ export class BrandService {
         continue;
       }
       
-      // Check for preferred terms
+      // Check for preferred terms, but exempt technical terms in technical contexts
       if (termRule.preferred) {
         const alternatives = termRule.alternatives || [];
         
         for (const alt of alternatives) {
+          // Skip this check if the alternative is in the technical allowlist and we're in a technical context
+          if (isTechnicalContext && this.technicalTermsAllowlist.some(
+            techTerm => techTerm.toLowerCase() === alt.toLowerCase()
+          )) {
+            continue;
+          }
+          
           if (new RegExp(`\\b${alt}\\b`, 'i').test(content)) {
             issues.push({
               type: 'terminology',
@@ -228,6 +792,13 @@ export class BrandService {
       
       // Check for terms to avoid in specific contexts
       if (termRule.term && termRule.avoidInContexts && termRule.avoidInContexts.includes(context)) {
+        // Skip this check if the term is in the technical allowlist and we're in a technical context
+        if (isTechnicalContext && this.technicalTermsAllowlist.some(
+          techTerm => techTerm.toLowerCase() === termRule.term!.toLowerCase()
+        )) {
+          continue;
+        }
+        
         if (new RegExp(`\\b${termRule.term}\\b`, 'i').test(content)) {
           issues.push({
             type: 'terminology',
@@ -304,35 +875,6 @@ export class BrandService {
     } else {
       return `MOSTLY COMPLIANT: Content generally aligns with ${this.brandSchema?.name} brand guidelines (${score}% compliance). Found ${highIssues} high, ${mediumIssues} medium, and ${lowIssues} low severity issues that should be addressed.`;
     }
-  }
-
-  /**
-   * Detect if content matches a specific tone
-   * This is a simplified implementation - a real version would use NLP
-   */
-  private detectTone(content: string, tone: string): boolean {
-    // Map tones to simple keyword indicators
-    const toneIndicators: Record<string, string[]> = {
-      'confident': ['definitely', 'certainly', 'absolutely', 'will', 'can'],
-      'optimistic': ['opportunity', 'exciting', 'potential', 'positive', 'future'],
-      'innovative': ['new', 'breakthrough', 'revolutionary', 'cutting-edge', 'advanced'],
-      'approachable': ['help', 'simple', 'easy', 'welcome', 'friendly'],
-      'professional': ['expertise', 'professional', 'standards', 'quality', 'results'],
-      'authoritative': ['expert', 'leading', 'authority', 'proven', 'established'],
-      'friendly': ['welcome', 'thanks', 'please', 'happy to', 'glad'],
-      'casual': ['hey', 'cool', 'awesome', 'check out', 'great']
-    };
-    
-    // Get indicators for the specified tone
-    const indicators = toneIndicators[tone.toLowerCase()] || [];
-    
-    // If no indicators are defined for this tone, we can't detect it
-    if (indicators.length === 0) {
-      return true; // Assume compliance if we can't detect
-    }
-    
-    // Check if content contains any of the tone indicators
-    return indicators.some(indicator => content.includes(indicator));
   }
 
   /**

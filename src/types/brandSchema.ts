@@ -117,4 +117,5 @@ export interface BrandComplianceResult {
   timestamp: string;
   brandName: string;
   context?: string;
+  contentType?: string;
 } 

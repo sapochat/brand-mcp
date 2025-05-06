@@ -112,7 +112,7 @@ const brandSchema = {
   }]
 };
 
-// Example brand document
+// Example brand
 const exampleBrand = {
   name: "TechFuture",
   description: "A forward-thinking technology company focused on sustainable innovation",
