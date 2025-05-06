@@ -220,10 +220,10 @@ export class BrandSafetyService {
     ];
     const mediumRiskTerms = [
       'nude', 'sexually suggestive', 'erotic', 'sexual', 'sensual', 'intimate', 
-      'provocative', 'seductive', 'bedroom'
+      'provocative', 'seductive' // Removed 'bedroom'
     ];
     const lowRiskTerms = [
-      'kissing', 'romance', 'dating', 'relationship', 'love', 'attraction', 
+      'kissing', 'romance', 'dating', // Removed 'relationship', 'love', 'attraction'
       'flirting', 'affection'
     ];
 
@@ -238,38 +238,41 @@ export class BrandSafetyService {
       'intimate moments', 'romantic encounter'
     ];
     
-    // Check for high risk phrases
-    for (const phrase of highRiskPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.HIGH;
-      }
+    // Helper function to create the regex safely
+    const createBoundaryRegex = (term: string): RegExp => {
+      const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      return new RegExp(`\\b${escapedTerm}\\b`, 'i');
+    };
+
+    // Check for high risk phrases using word boundaries
+    if (highRiskPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
+      return RiskLevel.HIGH;
     }
     
-    // Check for medium risk phrases
-    for (const phrase of mediumRiskPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.MEDIUM;
-      }
+    // Check for medium risk phrases using word boundaries
+    if (mediumRiskPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
+      return RiskLevel.MEDIUM;
     }
 
-    if (highRiskTerms.some(term => content.includes(term))) {
+    // Check terms using word boundaries
+    if (highRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
       return RiskLevel.HIGH;
-    } else if (mediumRiskTerms.some(term => content.includes(term))) {
+    } else if (mediumRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
       return RiskLevel.MEDIUM;
-    } else if (lowRiskTerms.some(term => content.includes(term))) {
+    } else if (lowRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
       return RiskLevel.LOW;
     }
     return RiskLevel.NONE;
   }
 
   private checkForViolence(content: string): RiskLevel {
-    const highRiskTerms = ['murder', 'killing', 'terrorist attack', 'death', 'kill', 'harm', 'destroy', 'hurt'];
+    const highRiskTerms = ['murder', 'killing', 'terrorist attack', 'death', 'harm', 'hurt']; // Removed 'kill', 'destroy'
     const mediumRiskTerms = [
-      'fight', 'assault', 'violent', 'attack', 'beat', 'hit', 'punch', 'kick', 'suffer', 
-      'pain', 'blood', 'wound', 'injury', 'damage'
+      'fight', 'assault', 'violent', 'attack', 'punch', 'kick', 'suffer', // Removed 'beat', 'hit'
+      'pain', 'blood', 'wound', 'injury' // Removed 'damage'
     ];
     const lowRiskTerms = [
-      'conflict', 'argument', 'tension', 'battle', 'combat', 'force', 'aggressive',
+      'tension', 'combat', 'aggressive', // Removed 'conflict', 'argument', 'battle', 'force'
       'make them afraid', 'what happens when', 'consequences', 'pay for'
     ];
 
@@ -284,25 +287,28 @@ export class BrandSafetyService {
       'put an end to', 'they won\'t know what hit them'
     ];
     
-    // Check for high risk phrases
-    for (const phrase of highRiskPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.HIGH;
-      }
+    // Helper function to create the regex safely
+    const createBoundaryRegex = (term: string): RegExp => {
+      const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      return new RegExp(`\\b${escapedTerm}\\b`, 'i');
+    };
+
+    // Check for high risk phrases using word boundaries
+    if (highRiskPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
+      return RiskLevel.HIGH;
     }
     
-    // Check for medium risk phrases
-    for (const phrase of mediumRiskPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.MEDIUM;
-      }
+    // Check for medium risk phrases using word boundaries
+    if (mediumRiskPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
+      return RiskLevel.MEDIUM;
     }
 
-    if (highRiskTerms.some(term => content.includes(term))) {
+    // Check terms using word boundaries
+    if (highRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
       return RiskLevel.HIGH;
-    } else if (mediumRiskTerms.some(term => content.includes(term))) {
+    } else if (mediumRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
       return RiskLevel.MEDIUM;
-    } else if (lowRiskTerms.some(term => content.includes(term))) {
+    } else if (lowRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
       return RiskLevel.LOW;
     }
     return RiskLevel.NONE;
@@ -314,11 +320,11 @@ export class BrandSafetyService {
       'xenophobia', 'antisemitism', 'islamophobia', 'transphobia', 'supremacist'
     ];
     const mediumRiskTerms = [
-      'discriminatory', 'prejudice', 'stereotyping', 'offensive', 'derogatory',
-      'intolerant', 'biased', 'hate', 'hateful'
+      'discriminatory', 'prejudice', 'stereotyping', 'derogatory', // Removed 'offensive'
+      'intolerant', 'biased', 'hateful' // Removed 'hate'
     ];
     const lowRiskTerms = [
-      'controversial', 'insensitive', 'generalization', 'stereotype'
+      'insensitive', 'generalization', 'stereotype' // Removed 'controversial'
     ];
     
     // Check for phrases indicating hate speech
@@ -333,35 +339,38 @@ export class BrandSafetyService {
       'aren\'t like us', 'don\'t share our values', 'don\'t fit in'
     ];
     
-    // Check for high risk phrases
-    for (const phrase of highRiskPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.VERY_HIGH;
-      }
-    }
-    
-    // Check for medium risk phrases
-    for (const phrase of mediumRiskPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.HIGH;
-      }
-    }
-    
-    if (highRiskTerms.some(term => content.includes(term))) {
+    // Helper function to create the regex safely
+    const createBoundaryRegex = (term: string): RegExp => {
+      const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      return new RegExp(`\\b${escapedTerm}\\b`, 'i');
+    };
+
+    // Check for high risk phrases using word boundaries
+    if (highRiskPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
       return RiskLevel.VERY_HIGH;
-    } else if (mediumRiskTerms.some(term => content.includes(term))) {
+    }
+    
+    // Check for medium risk phrases using word boundaries
+    if (mediumRiskPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
       return RiskLevel.HIGH;
-    } else if (lowRiskTerms.some(term => content.includes(term))) {
+    }
+    
+    // Check terms using word boundaries
+    if (highRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
+      return RiskLevel.VERY_HIGH;
+    } else if (mediumRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
+      return RiskLevel.HIGH;
+    } else if (lowRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
       return RiskLevel.MEDIUM;
     }
     return RiskLevel.NONE;
   }
 
   private checkForHarassment(content: string): RiskLevel {
-    const highRiskTerms = ['harassment', 'bullying', 'stalking', 'threaten', 'threat'];
+    const highRiskTerms = ['harassment', 'bullying', 'stalking', 'threaten']; // Removed 'threat'
     const mediumRiskTerms = [
-      'intimidation', 'threatening', 'mocking', 'bully', 'mock', 'humiliate', 
-      'ridicule', 'shame', 'embarrass', 'target'
+      'intimidation', 'threatening', 'mocking', 'bully', 'humiliate', // Removed 'mock'
+      'ridicule', 'shame', 'embarrass' // Removed 'target'
     ];
     
     // Check for phrases that imply harassment or intimidation
@@ -375,23 +384,26 @@ export class BrandSafetyService {
       'they deserve what\'s coming', 'consequences of ignoring'
     ];
     
-    // Check for high risk phrases
-    for (const phrase of highRiskPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.HIGH;
-      }
-    }
-    
-    // Check for medium risk phrases
-    for (const phrase of mediumRiskPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.MEDIUM;
-      }
-    }
-    
-    if (highRiskTerms.some(term => content.includes(term))) {
+    // Helper function to create the regex safely
+    const createBoundaryRegex = (term: string): RegExp => {
+      const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      return new RegExp(`\\b${escapedTerm}\\b`, 'i');
+    };
+
+    // Check for high risk phrases using word boundaries
+    if (highRiskPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
       return RiskLevel.HIGH;
-    } else if (mediumRiskTerms.some(term => content.includes(term))) {
+    }
+    
+    // Check for medium risk phrases using word boundaries
+    if (mediumRiskPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
+      return RiskLevel.MEDIUM;
+    }
+    
+    // Check terms using word boundaries
+    if (highRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
+      return RiskLevel.HIGH;
+    } else if (mediumRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
       return RiskLevel.MEDIUM;
     }
     return RiskLevel.NONE;
@@ -424,25 +436,28 @@ export class BrandSafetyService {
       'world would be better without me'
     ];
     
-    // Check for high risk phrases
-    for (const phrase of highRiskPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.VERY_HIGH;
-      }
-    }
-    
-    // Check for medium risk phrases
-    for (const phrase of mediumRiskPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.HIGH;
-      }
-    }
-    
-    if (highRiskTerms.some(term => content.includes(term))) {
+    // Helper function to create the regex safely
+    const createBoundaryRegex = (term: string): RegExp => {
+      const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      return new RegExp(`\\b${escapedTerm}\\b`, 'i');
+    };
+
+    // Check for high risk phrases using word boundaries
+    if (highRiskPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
       return RiskLevel.VERY_HIGH;
-    } else if (mediumRiskTerms.some(term => content.includes(term))) {
+    }
+    
+    // Check for medium risk phrases using word boundaries
+    if (mediumRiskPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
       return RiskLevel.HIGH;
-    } else if (lowRiskTerms.some(term => content.includes(term))) {
+    }
+    
+    // Check terms using word boundaries
+    if (highRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
+      return RiskLevel.VERY_HIGH;
+    } else if (mediumRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
+      return RiskLevel.HIGH;
+    } else if (lowRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
       return RiskLevel.MEDIUM;
     }
     return RiskLevel.NONE;
@@ -454,11 +469,11 @@ export class BrandSafetyService {
       'human trafficking', 'smuggling', 'money laundering', 'illegal drugs'
     ];
     const mediumRiskTerms = [
-      'hacking', 'fraud', 'counterfeit', 'illegal', 'theft', 'stolen', 
-      'black market', 'dark web', 'criminal', 'scam'
+      'fraud', 'counterfeit', 'illegal', 'theft', 'stolen', // Removed 'hacking'
+      'black market', 'dark web', 'scam' // Removed 'criminal'
     ];
     const lowRiskTerms = [
-      'piracy', 'copyright infringement', 'downloading', 'circumvent', 
+      'copyright infringement', 'circumvent', // Removed 'piracy', 'downloading'
       'loophole', 'evade', 'avoid detection'
     ];
     
@@ -474,25 +489,28 @@ export class BrandSafetyService {
       'bypass security', 'fake documentation', 'illicit content'
     ];
     
-    // Check for high risk phrases
-    for (const phrase of highRiskPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.VERY_HIGH;
-      }
-    }
-    
-    // Check for medium risk phrases
-    for (const phrase of mediumRiskPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.HIGH;
-      }
-    }
-    
-    if (highRiskTerms.some(term => content.includes(term))) {
+    // Helper function to create the regex safely
+    const createBoundaryRegex = (term: string): RegExp => {
+      const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      return new RegExp(`\\b${escapedTerm}\\b`, 'i');
+    };
+
+    // Check for high risk phrases using word boundaries
+    if (highRiskPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
       return RiskLevel.VERY_HIGH;
-    } else if (mediumRiskTerms.some(term => content.includes(term))) {
+    }
+    
+    // Check for medium risk phrases using word boundaries
+    if (mediumRiskPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
       return RiskLevel.HIGH;
-    } else if (lowRiskTerms.some(term => content.includes(term))) {
+    }
+    
+    // Check terms using word boundaries
+    if (highRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
+      return RiskLevel.VERY_HIGH;
+    } else if (mediumRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
+      return RiskLevel.HIGH;
+    } else if (lowRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
       return RiskLevel.MEDIUM;
     }
     return RiskLevel.NONE;
@@ -504,11 +522,11 @@ export class BrandSafetyService {
       'b*tch', 'a*s', 'b*stard', 'bullsh*t'
     ];
     const mediumRiskTerms = [
-      'damn', 'hell', 'crap', 'piss', 'suck', 'screw', 'jerk', 'idiot', 'stupid',
+      'crap', 'piss', 'idiot', 'stupid', // Removed 'damn', 'hell', 'suck', 'screw', 'jerk'
       'dumb', 'moron', 'freak', 'wtf', 'stfu', 'lmfao'
     ];
     const lowRiskTerms = [
-      'heck', 'darn', 'gosh', 'fudge', 'shoot', 'dang', 'freaking', 'hella'
+      'heck', 'darn', 'gosh', 'fudge', 'dang', 'freaking', 'hella' // Removed 'shoot'
     ];
     
     // Look for deliberate obfuscation
@@ -524,23 +542,33 @@ export class BrandSafetyService {
       }
     }
     
-    // Check for phrases with negative modifiers
+    // Helper function to create the regex safely
+    const createBoundaryRegex = (term: string): RegExp => {
+      const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      // Special handling for terms with asterisks (already partially regex-like)
+      // We'll assume they are meant to match variations, so don't add word boundaries
+      if (term.includes('*')) {
+        return new RegExp(escapedTerm.replace(/\*/g, '[^\\s]*'), 'i'); // Allow variations
+      }
+      return new RegExp(`\\b${escapedTerm}\\b`, 'i');
+    };
+
+    // Check for phrases with negative modifiers using word boundaries
     const contextualPhrases = [
-      'what the f', 'f ing', 'freaking idiot', 'effing', 
+      'what the f', 'f ing', 'freaking idiot', 'effing',
       'shut the f up', 'shut up', 'go to hell'
     ];
     
-    for (const phrase of contextualPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.MEDIUM;
-      }
+    if (contextualPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
+      return RiskLevel.MEDIUM;
     }
     
-    if (highRiskTerms.some(term => content.includes(term))) {
+    // Check terms using word boundaries (or modified regex for asterisk terms)
+    if (highRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
       return RiskLevel.HIGH;
-    } else if (mediumRiskTerms.some(term => content.includes(term))) {
+    } else if (mediumRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
       return RiskLevel.MEDIUM;
-    } else if (lowRiskTerms.some(term => content.includes(term))) {
+    } else if (lowRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
       return RiskLevel.LOW;
     }
     return RiskLevel.NONE;
@@ -557,8 +585,9 @@ export class BrandSafetyService {
       'vodka', 'rum', 'gin', 'smoking', 'cigar', 'alcoholic beverage'
     ];
     const lowRiskTerms = [
-      'bar', 'drink', 'party', 'pub', 'nightclub', 'cocktail', 'happy hour',
-      'drinking', 'brewery', 'winery', 'smoke'
+      // Removed 'bar', 'drink', 'party', 'smoke' due to ambiguity
+      'pub', 'nightclub', 'cocktail', 'happy hour',
+      'drinking', 'brewery', 'winery'
     ];
     
     // Check for phrases promoting or glamorizing
@@ -587,11 +616,12 @@ export class BrandSafetyService {
       }
     }
     
-    if (highRiskTerms.some(term => content.includes(term))) {
+    // Use word boundaries for more precise term matching (case-insensitive)
+    if (highRiskTerms.some(term => new RegExp(`\\b${term}\\b`, 'i').test(content))) {
       return RiskLevel.HIGH;
-    } else if (mediumRiskTerms.some(term => content.includes(term))) {
+    } else if (mediumRiskTerms.some(term => new RegExp(`\\b${term}\\b`, 'i').test(content))) {
       return RiskLevel.MEDIUM;
-    } else if (lowRiskTerms.some(term => content.includes(term))) {
+    } else if (lowRiskTerms.some(term => new RegExp(`\\b${term}\\b`, 'i').test(content))) {
       return RiskLevel.LOW;
     }
     return RiskLevel.NONE;
@@ -604,12 +634,12 @@ export class BrandSafetyService {
       'political violence', 'political divide'
     ];
     const mediumRiskTerms = [
-      'election', 'political party', 'politician', 'democrat', 'republican',
+      'political party', 'politician', 'democrat', 'republican', // Removed 'election'
       'liberal', 'conservative', 'left-wing', 'right-wing', 'campaign',
-      'vote', 'voter', 'political', 'politically', 'politics'
+      'voter', 'politically' // Removed 'vote', 'political', 'politics'
     ];
     const lowRiskTerms = [
-      'policy', 'government', 'democracy', 'democratic', 'administration',
+      'democratic', 'administration', // Removed 'policy', 'government', 'democracy'
       'congress', 'senate', 'legislation', 'representative'
     ];
     
@@ -627,25 +657,28 @@ export class BrandSafetyService {
       'republican voters', 'democratic voters', 'swing voters'
     ];
     
-    // Check for high risk phrases
-    for (const phrase of highRiskPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.HIGH;
-      }
-    }
-    
-    // Check for medium risk phrases
-    for (const phrase of mediumRiskPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.MEDIUM;
-      }
-    }
-    
-    if (highRiskTerms.some(term => content.includes(term))) {
+    // Helper function to create the regex safely
+    const createBoundaryRegex = (term: string): RegExp => {
+      const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      return new RegExp(`\\b${escapedTerm}\\b`, 'i');
+    };
+
+    // Check for high risk phrases using word boundaries
+    if (highRiskPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
       return RiskLevel.HIGH;
-    } else if (mediumRiskTerms.some(term => content.includes(term))) {
+    }
+    
+    // Check for medium risk phrases using word boundaries
+    if (mediumRiskPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
       return RiskLevel.MEDIUM;
-    } else if (lowRiskTerms.some(term => content.includes(term))) {
+    }
+    
+    // Check terms using word boundaries
+    if (highRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
+      return RiskLevel.HIGH;
+    } else if (mediumRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
+      return RiskLevel.MEDIUM;
+    } else if (lowRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
       return RiskLevel.LOW;
     }
     return RiskLevel.NONE;
@@ -658,13 +691,13 @@ export class BrandSafetyService {
       'sacrilege', 'religious extremism', 'religious fanaticism'
     ];
     const mediumRiskTerms = [
-      'religion', 'religious', 'faith', 'worship', 'church', 'mosque', 'temple',
-      'synagogue', 'pray', 'prayer', 'bible', 'quran', 'torah', 'god', 'allah',
+      'religious', 'worship', 'mosque', 'temple', // Removed 'religion', 'faith', 'church'
+      'synagogue', 'prayer', 'bible', 'quran', 'torah', 'allah', // Removed 'pray', 'god'
       'jesus', 'muhammad', 'buddha', 'christian', 'muslim', 'jew', 'hindu', 'sikh'
     ];
     const lowRiskTerms = [
-      'spiritual', 'belief', 'tradition', 'blessing', 'congregation',
-      'divine', 'holy', 'sacred', 'ceremony', 'ritual', 'faith-based'
+      'spiritual', 'tradition', 'blessing', 'congregation', // Removed 'belief'
+      'divine', 'ceremony', 'ritual', 'faith-based' // Removed 'holy', 'sacred'
     ];
     
     // Check for religiously controversial phrases
@@ -680,25 +713,28 @@ export class BrandSafetyService {
       'religious holiday', 'religious festival'
     ];
     
-    // Check for high risk phrases
-    for (const phrase of highRiskPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.HIGH;
-      }
-    }
-    
-    // Check for medium risk phrases
-    for (const phrase of mediumRiskPhrases) {
-      if (content.includes(phrase)) {
-        return RiskLevel.MEDIUM;
-      }
-    }
-    
-    if (highRiskTerms.some(term => content.includes(term))) {
+    // Helper function to create the regex safely
+    const createBoundaryRegex = (term: string): RegExp => {
+      const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      return new RegExp(`\\b${escapedTerm}\\b`, 'i');
+    };
+
+    // Check for high risk phrases using word boundaries
+    if (highRiskPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
       return RiskLevel.HIGH;
-    } else if (mediumRiskTerms.some(term => content.includes(term))) {
+    }
+    
+    // Check for medium risk phrases using word boundaries
+    if (mediumRiskPhrases.some(phrase => createBoundaryRegex(phrase).test(content))) {
       return RiskLevel.MEDIUM;
-    } else if (lowRiskTerms.some(term => content.includes(term))) {
+    }
+    
+    // Check terms using word boundaries
+    if (highRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
+      return RiskLevel.HIGH;
+    } else if (mediumRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
+      return RiskLevel.MEDIUM;
+    } else if (lowRiskTerms.some(term => createBoundaryRegex(term).test(content))) {
       return RiskLevel.LOW;
     }
     return RiskLevel.NONE;

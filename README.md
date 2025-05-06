@@ -504,7 +504,7 @@ The MCP checks content for compliance with brand guidelines defined in `brandSch
 - **Context-Specific Terms**: Applies different terminology rules based on content context
 - **Domain Exemptions**: Automatically exempts certain terms in appropriate contexts
 
-## Advanced Features
+## Other Features
 
 ### Content Type Detection
 The MCP automatically detects the type of content being analyzed and applies appropriate rules:
@@ -723,6 +723,13 @@ const complianceResult = await client.callTool({
 });
 // Returns detailed brand compliance analysis
 ```
+
+## Recent Updates
+
+*   **TypeScript Fixes (`src/server/brandService.ts`):** Implemented missing `countTechnicalTerms` and `detectToneWithConfidence` methods to resolve type errors.
+*   **Persistent Learning System (`src/server/brandService.ts`):** Introduced a major enhancement allowing the system to learn from false positive feedback (`addFalsePositive`). Learned data (allowlists, thresholds, sensitivity) is stored in `data/learning.json`, and the system adapts compliance checks over time. The `data/` directory has been added to `.gitignore`.
+*   **Brand Safety Refinements (`src/server/brandSafetyService.ts`):** Improved evaluation logic for all safety categories by adding word boundary checks (`\b`) to keyword matching and removing ambiguous keywords to minimize false positives.
+*   **Codebase Review:** Identified `src/server/simpleServer.ts` as potentially unused code.
 
 ## Contributing
 
