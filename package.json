@@ -10,7 +10,8 @@
     "dev": "tsc-watch --onSuccess \"node dist/index.js\"",
     "test": "tsc && node dist/client/testClient.js",
     "demo": "tsc && node dist/client/brandComplianceClient.js",
-    "sdk-demo": "tsc && node dist/client/sdkExampleClient.js"
+    "sdk-demo": "tsc && node dist/client/sdkExampleClient.js",
+    "enhanced-test": "node dist/client/enhancedTestClient.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.11.0",

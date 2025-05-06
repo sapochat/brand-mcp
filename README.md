@@ -462,6 +462,11 @@ The MCP checks content for compliance with brand guidelines defined in `brandSch
 - **Primary Tone**: Checks if content matches the brand's primary tone
 - **Avoided Tones**: Ensures content doesn't use tones that should be avoided
 - **Contextual Tone**: Applies different tone expectations based on context
+- **Enhanced Detection**: Uses multiple detection methods for more accurate results:
+  - Keyword analysis with confidence scoring
+  - Phrase pattern detection
+  - N-gram analysis
+  - Section-based analysis for longer content
 
 ### Voice Guidelines
 - **Contractions**: Checks whether content uses contractions based on brand preferences
@@ -473,6 +478,65 @@ The MCP checks content for compliance with brand guidelines defined in `brandSch
 - **Preferred Terms**: Identifies when alternatives are used instead of preferred terminology
 - **Proper Nouns**: Verifies correct capitalization and formatting of brand names and products
 - **Context-Specific Terms**: Applies different terminology rules based on content context
+- **Domain Exemptions**: Automatically exempts certain terms in appropriate contexts
+
+## Advanced Features
+
+### Content Type Detection
+The MCP automatically detects the type of content being analyzed and applies appropriate rules:
+
+- **Technical**: Relaxed tone requirements, technical terminology exemptions
+- **Marketing**: Appropriate tone for promotional content
+- **Legal**: Special handling for legal terminology
+- **Educational**: Context-specific rules for educational materials
+- **Conversational**: Sentiment-aware analysis
+
+### False Positive Reduction
+Multiple mechanisms work together to minimize false positives:
+
+- **Bayesian Probability**: Calculates the likelihood that a detected issue is accurate
+- **Context-Aware Analysis**: Adjusts sensitivity based on content context
+- **Technical Exemptions**: Automatically exempts technical terms in technical contexts
+- **Confidence Scoring**: Only flags issues when confidence exceeds thresholds
+- **Feedback Learning**: Improves over time based on false positive reports
+
+### Section-Based Analysis
+For longer content, the MCP analyzes sections independently:
+
+- **Paragraph Analysis**: Evaluates each paragraph on its own
+- **Section Tracking**: Identifies which section contains issues
+- **Priority Filtering**: Focuses on the most important issues
+- **Length-Aware Scoring**: Adjusts expectations based on content length
+
+### Sentiment Analysis
+Basic sentiment detection provides additional context:
+
+- **Positivity**: Measures positive sentiment
+- **Negativity**: Measures negative sentiment
+- **Objectivity**: Measures factual/neutral language
+
+### Customization Options
+Extensive customization options available:
+
+```javascript
+// Add custom technical terms to exempt from checks
+brandService.addTechnicalTerms([
+  'authentication', 'authorization', 'encryption'
+]);
+
+// Add custom technical contexts
+brandService.addTechnicalContexts([
+  'system-requirements', 'architecture-overview'
+]);
+
+// Add domain-specific exemptions
+brandService.addDomainExemptions('marketing', [
+  'promotional', 'limited-time', 'exclusive-offer'
+]);
+
+// Report false positives to improve system
+brandService.addFalsePositive(issue, originalContent);
+```
 
 ## Context-Aware Evaluation
 
