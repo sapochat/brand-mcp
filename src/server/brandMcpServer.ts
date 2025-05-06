@@ -12,6 +12,8 @@ import { BrandSafetyService } from './brandSafetyService.js';
 import { BrandService } from './brandService.js';
 import { loadBrandSchema } from './brandSchemaLoader.js';
 import { BrandSafetyConfig } from '../types/brandSafety.js';
+import { BrandComplianceResult } from '../types/brandSchema.js';
+import { BrandSafetyEvaluation, ContentSafetyResult, RiskLevel } from '../types/brandSafety.js';
 
 /**
  * Creates and configures the brand safety MCP server
@@ -53,7 +55,7 @@ export async function createServer(): Promise<Server> {
     const tools = [
       {
         name: 'evaluateContent',
-        description: 'Analyze text content against brand safety guidelines',
+        description: 'Analyze text content for brand safety concerns',
         inputSchema: {
           type: 'object',
           properties: {
@@ -62,43 +64,42 @@ export async function createServer(): Promise<Server> {
           required: ['content']
         },
         annotations: {
-          title: 'Evaluate Content for Brand Safety',
+          title: 'Evaluate Content Safety',
           readOnlyHint: true,
           openWorldHint: false
         }
       },
       {
         name: 'updateBrandConfig',
-        description: 'Modify brand-specific safety settings and risk tolerances',
+        description: 'Update brand safety configuration settings',
         inputSchema: {
           type: 'object',
           properties: {
             sensitiveKeywords: { 
               type: 'array', 
               items: { type: 'string' },
-              description: 'Brand-specific sensitive keywords'
+              description: 'Brand-specific sensitive keywords to monitor'
             },
             allowedTopics: { 
               type: 'array', 
               items: { type: 'string' },
-              description: 'Topics explicitly allowed for the brand'
+              description: 'Brand-specific allowed topics'
             },
             blockedTopics: { 
               type: 'array', 
               items: { type: 'string' },
-              description: 'Topics explicitly blocked for the brand'
+              description: 'Brand-specific blocked topics'
             },
             riskTolerances: { 
               type: 'object',
-              description: 'Risk tolerance levels for each category'
+              description: 'Risk tolerance levels for each safety category'
             }
           }
         },
         annotations: {
           title: 'Update Brand Safety Configuration',
           readOnlyHint: false,
-          idempotentHint: true,
-          openWorldHint: false
+          openWorldHint: true
         }
       }
     ];
@@ -121,9 +122,27 @@ export async function createServer(): Promise<Server> {
             content: { type: 'string', description: 'The content to check for brand compliance' }
           },
           required: ['content']
-        },
+        } as any,
         annotations: {
           title: 'Check Brand Compliance',
+          readOnlyHint: true,
+          openWorldHint: false
+        }
+      });
+      
+      // Add new combined evaluation tool
+      tools.push({
+        name: 'evaluateContentWithBrand',
+        description: 'Perform a combined evaluation for both brand safety and brand compliance',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            content: { type: 'string', description: 'The content to evaluate' }
+          },
+          required: ['content']
+        } as any,
+        annotations: {
+          title: 'Combined Evaluation',
           readOnlyHint: true,
           openWorldHint: false
         }
@@ -153,12 +172,13 @@ export async function createServer(): Promise<Server> {
         }
         
         const evaluation = brandSafetyService.evaluateContent(content);
+        const formattedResponse = formatSafetyEvaluation(evaluation);
         
         return {
           content: [
             {
               type: 'text',
-              text: JSON.stringify(evaluation, null, 2)
+              text: formattedResponse
             }
           ]
         };
@@ -236,12 +256,13 @@ export async function createServer(): Promise<Server> {
         
         // Perform brand compliance check
         const complianceResult = brandService.checkBrandCompliance(content, context);
+        const formattedResponse = formatBrandCompliance(complianceResult);
         
         return {
           content: [
             {
               type: 'text',
-              text: JSON.stringify(complianceResult, null, 2)
+              text: formattedResponse
             }
           ]
         };
@@ -252,6 +273,129 @@ export async function createServer(): Promise<Server> {
             {
               type: 'text',
               text: `Error checking brand compliance: ${error instanceof Error ? error.message : String(error)}`
+            }
+          ]
+        };
+      }
+    }
+    
+    // Handle the evaluateContentWithBrand tool
+    if (request.params.name === 'evaluateContentWithBrand') {
+      try {
+        const brandSchema = brandService.getBrandSchema();
+        
+        if (!brandSchema) {
+          return {
+            isError: true,
+            content: [
+              {
+                type: 'text',
+                text: 'Error: Brand schema is not loaded'
+              }
+            ]
+          };
+        }
+        
+        const args = request.params.arguments || {};
+        const content = args.content as string;
+        const context = (args.context as string) || 'general';
+        const brandWeight = parseFloat((args.brandWeight as string) || '2.0'); 
+        const safetyWeight = parseFloat((args.safetyWeight as string) || '1.0');
+        const includeSafety = args.includeSafety !== 'false';
+        const includeBrand = args.includeBrand !== 'false';
+        
+        if (!content) {
+          return {
+            isError: true,
+            content: [
+              {
+                type: 'text',
+                text: 'Error: Content is required for evaluation'
+              }
+            ]
+          };
+        }
+        
+        // Normalize weights to valid range
+        const normalizedBrandWeight = Math.max(1.0, Math.min(5.0, brandWeight));
+        const normalizedSafetyWeight = Math.max(1.0, Math.min(5.0, safetyWeight));
+        
+        // Initialize the combined result
+        const combinedResult: any = {
+          content,
+          timestamp: new Date().toISOString()
+        };
+        
+        // Perform evaluations based on flags
+        if (includeSafety) {
+          combinedResult.safety = brandSafetyService.evaluateContent(content);
+        }
+        
+        if (includeBrand) {
+          combinedResult.brand = brandService.checkBrandCompliance(content, context);
+        }
+        
+        // Only calculate combined score if both evaluations were performed
+        if (includeSafety && includeBrand) {
+          // Convert safety risk level to a numeric score (inverse - higher is better)
+          const safetyLevels: Record<string, number> = {
+            'NONE': 100,
+            'LOW': 80,
+            'MEDIUM': 60,
+            'HIGH': 30,
+            'VERY_HIGH': 0
+          };
+          
+          const safetyScore = safetyLevels[combinedResult.safety.overallRisk] || 50;
+          const brandScore = combinedResult.brand.complianceScore;
+          
+          // Apply weights to the scores
+          const weightedSafetyScore = safetyScore * normalizedSafetyWeight;
+          const weightedBrandScore = brandScore * normalizedBrandWeight;
+          const totalWeight = normalizedSafetyWeight + normalizedBrandWeight;
+          
+          // Calculate combined score (weighted average)
+          const combinedScore = Math.round((weightedSafetyScore + weightedBrandScore) / totalWeight);
+          
+          // Determine overall compliance
+          const isCompliant = combinedScore >= 70;
+          
+          combinedResult.combinedScore = combinedScore;
+          combinedResult.isCompliant = isCompliant;
+          combinedResult.weights = {
+            brand: normalizedBrandWeight,
+            safety: normalizedSafetyWeight
+          };
+          
+          // Generate overall summary
+          if (isCompliant) {
+            combinedResult.summary = `COMPLIANT: Content achieves a combined score of ${combinedScore}. It aligns sufficiently with both safety guidelines and brand requirements.`;
+          } else {
+            const brandIssues = combinedResult.brand.isCompliant ? [] : [`brand compliance issues (${combinedResult.brand.complianceScore})`];
+            const safetyIssues = (combinedResult.safety.overallRisk === 'NONE' || combinedResult.safety.overallRisk === 'LOW') ? [] : [`safety concerns (${combinedResult.safety.overallRisk})`];
+            const issues = [...brandIssues, ...safetyIssues].join(' and ');
+            
+            combinedResult.summary = `NON-COMPLIANT: Content has a combined score of ${combinedScore} due to ${issues}. Review recommended before use.`;
+          }
+        }
+        
+        const formattedResponse = formatCombinedEvaluation(combinedResult);
+        
+        return {
+          content: [
+            {
+              type: 'text',
+              text: formattedResponse
+            }
+          ]
+        };
+      } catch (error) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: 'text',
+              text: `Error evaluating content: ${error instanceof Error ? error.message : String(error)}`
             }
           ]
         };
@@ -588,6 +732,203 @@ Brands can customize safety evaluations by:
 2. Defining sensitive keywords specific to their brand
 3. Creating lists of explicitly allowed or blocked topics
 `;
+}
+
+// Helper functions for formatting human-readable responses
+
+/**
+ * Format brand safety evaluation result as human-readable text
+ */
+function formatSafetyEvaluation(evaluation: BrandSafetyEvaluation): string {
+  // Get risk color indicator
+  const riskColors = {
+    'NONE': '✅ SAFE',
+    'LOW': '🟢 LOW RISK',
+    'MEDIUM': '🟡 CAUTION',
+    'HIGH': '🔴 HIGH RISK',
+    'VERY_HIGH': '⛔ UNSAFE'
+  };
+  
+  const riskIndicator = riskColors[evaluation.overallRisk] || evaluation.overallRisk;
+  
+  // Format the header
+  let result = `# Brand Safety Evaluation\n\n`;
+  result += `## Overall Assessment: ${riskIndicator}\n\n`;
+  result += `${evaluation.summary}\n\n`;
+  
+  // Format the categories with issues
+  const categoriesWithIssues = evaluation.evaluations.filter(
+    item => item.riskLevel !== 'NONE' && item.riskLevel !== 'LOW'
+  );
+  
+  if (categoriesWithIssues.length > 0) {
+    result += `## Areas of Concern\n\n`;
+    
+    for (const category of categoriesWithIssues) {
+      const riskIndicator = riskColors[category.riskLevel] || category.riskLevel;
+      result += `### ${category.category}: ${riskIndicator}\n`;
+      result += `${category.explanation}\n\n`;
+    }
+  }
+  
+  // Format safe categories
+  const safeCategories = evaluation.evaluations.filter(
+    item => item.riskLevel === 'NONE' || item.riskLevel === 'LOW'
+  );
+  
+  if (safeCategories.length > 0) {
+    result += `## Safe Categories\n\n`;
+    result += safeCategories.map(cat => `- ${cat.category}`).join('\n');
+    result += '\n\n';
+  }
+  
+  return result;
+}
+
+/**
+ * Format brand compliance result as human-readable text
+ */
+function formatBrandCompliance(result: BrandComplianceResult): string {
+  // Determine compliance status indicator
+  const statusIndicator = result.isCompliant 
+    ? '✅ COMPLIANT' 
+    : (result.complianceScore >= 60 ? '🟡 NEEDS IMPROVEMENT' : '❌ NON-COMPLIANT');
+  
+  // Format the header
+  let output = `# Brand Compliance Evaluation\n\n`;
+  output += `## Overall Assessment: ${statusIndicator} (Score: ${result.complianceScore}/100)\n\n`;
+  output += `${result.summary}\n\n`;
+  
+  // Group issues by type
+  const issuesByType: Record<string, typeof result.issues> = {};
+  
+  for (const issue of result.issues) {
+    if (!issuesByType[issue.type]) {
+      issuesByType[issue.type] = [];
+    }
+    issuesByType[issue.type].push(issue);
+  }
+  
+  // Display issues if any exist
+  if (result.issues.length > 0) {
+    output += `## Issues Found\n\n`;
+    
+    // Display each issue type with its issues
+    for (const [type, issues] of Object.entries(issuesByType)) {
+      output += `### ${type.charAt(0).toUpperCase() + type.slice(1)} Issues\n\n`;
+      
+      for (const issue of issues) {
+        const severityIndicator = 
+          issue.severity === 'high' ? '🔴' : 
+          (issue.severity === 'medium' ? '🟡' : '🟢');
+        
+        output += `${severityIndicator} **${issue.description}**\n`;
+        output += `   - Suggestion: ${issue.suggestion}\n\n`;
+      }
+    }
+  } else {
+    output += `✅ No issues found. Content is fully compliant with ${result.brandName} brand guidelines.\n\n`;
+  }
+  
+  // Add context information
+  if (result.context) {
+    output += `*Evaluation context: ${result.context}*\n\n`;
+  }
+  
+  return output;
+}
+
+/**
+ * Format combined evaluation result as human-readable text
+ */
+function formatCombinedEvaluation(result: any): string {
+  // Create the header with overall result
+  let output = `# Combined Brand and Safety Evaluation\n\n`;
+  
+  // If we have a combined score
+  if (result.combinedScore !== undefined) {
+    const statusIndicator = result.isCompliant 
+      ? '✅ COMPLIANT' 
+      : '❌ NON-COMPLIANT';
+    
+    output += `## Overall Assessment: ${statusIndicator} (Score: ${result.combinedScore}/100)\n\n`;
+    output += `${result.summary}\n\n`;
+    
+    // Show weights used
+    output += `*Using weights: Brand ${result.weights.brand}x, Safety ${result.weights.safety}x*\n\n`;
+  }
+  
+  // Include brand compliance section if available
+  if (result.brand) {
+    output += `## Brand Compliance\n\n`;
+    output += `Score: ${result.brand.complianceScore}/100 - ${result.brand.isCompliant ? '✅ COMPLIANT' : '❌ NON-COMPLIANT'}\n\n`;
+    
+    // Only show issues if there are any
+    if (result.brand.issues && result.brand.issues.length > 0) {
+      output += `### Issues Found\n\n`;
+      
+      // Group issues by type
+      const issuesByType: Record<string, any[]> = {};
+      
+      for (const issue of result.brand.issues) {
+        if (!issuesByType[issue.type]) {
+          issuesByType[issue.type] = [];
+        }
+        issuesByType[issue.type].push(issue);
+      }
+      
+      // Display each issue type with its issues
+      for (const [type, issues] of Object.entries(issuesByType)) {
+        output += `#### ${type.charAt(0).toUpperCase() + type.slice(1)} Issues\n\n`;
+        
+        for (const issue of issues) {
+          const severityIndicator = 
+            issue.severity === 'high' ? '🔴' : 
+            (issue.severity === 'medium' ? '🟡' : '🟢');
+          
+          output += `${severityIndicator} **${issue.description}**\n`;
+          output += `   - Suggestion: ${issue.suggestion}\n\n`;
+        }
+      }
+    } else {
+      output += `✅ No brand issues found.\n\n`;
+    }
+  }
+  
+  // Include safety evaluation section if available
+  if (result.safety) {
+    output += `## Safety Evaluation\n\n`;
+    
+    const riskColors: Record<string, string> = {
+      'NONE': '✅ SAFE',
+      'LOW': '🟢 LOW RISK',
+      'MEDIUM': '🟡 CAUTION',
+      'HIGH': '🔴 HIGH RISK',
+      'VERY_HIGH': '⛔ UNSAFE'
+    };
+    
+    const riskIndicator = riskColors[result.safety.overallRisk] || result.safety.overallRisk;
+    output += `Overall Risk: ${riskIndicator}\n\n`;
+    
+    // Format the categories with issues
+    const categoriesWithIssues = result.safety.evaluations.filter(
+      (item: any) => item.riskLevel !== 'NONE' && item.riskLevel !== 'LOW'
+    );
+    
+    if (categoriesWithIssues.length > 0) {
+      output += `### Areas of Concern\n\n`;
+      
+      for (const category of categoriesWithIssues) {
+        const riskIndicator = riskColors[category.riskLevel] || category.riskLevel;
+        output += `#### ${category.category}: ${riskIndicator}\n`;
+        output += `${category.explanation}\n\n`;
+      }
+    } else {
+      output += `✅ No safety concerns detected.\n\n`;
+    }
+  }
+  
+  return output;
 }
 
 /**
