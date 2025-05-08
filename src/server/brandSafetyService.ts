@@ -23,7 +23,7 @@ class McpLanguageModel {
 export class BrandSafetyService {
   private config: BrandSafetyConfig;
 
-  private constructor(config: BrandSafetyConfig) { // Changed to private, accepts full BrandSafetyConfig
+  private constructor(config: BrandSafetyConfig) { // Private constructor, initializes with a complete BrandSafetyConfig.
     this.config = config;
   }
 
@@ -263,7 +263,6 @@ export class BrandSafetyService {
 
   /**
    * Perform contextual analysis using an LLM.
-   * This is a new method to be added.
    */
   private async performContextualLlmAnalysis(content: string): Promise<ContentSafetyResult & { llmAssessment?: string }> {
     const category = BrandSafetyCategory.CONTEXTUAL_ANALYSIS;

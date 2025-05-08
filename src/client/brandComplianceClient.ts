@@ -15,7 +15,7 @@ async function main() {
       stdio: 'inherit'
     });
     
-    // Give the server time to start
+    // Allow server startup time
     console.log('Waiting for the server to start...');
     await new Promise(resolve => setTimeout(resolve, 2000));
     
