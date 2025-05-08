@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url'; // Added import
 import { BrandSchema, BrandComplianceIssue, BrandComplianceResult } from '../types/brandSchema.js';
 
 export class BrandService {
@@ -87,7 +88,7 @@ export class BrandService {
   private falsePositives: Array<{issue: BrandComplianceIssue, content: string, context: string}> = []; // Added context
 
   // --- Persistent Learning ---
-  private learningDataPath = path.resolve(__dirname, '../../data/learning.json');
+  private learningDataPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../data/learning.json');
   private dataDir = path.dirname(this.learningDataPath);
 
   private learningData: {
