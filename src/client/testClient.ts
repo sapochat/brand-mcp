@@ -13,7 +13,7 @@ async function main() {
       stdio: 'inherit'
     });
     
-    // Give the server some time to start
+    // Allow server startup time
     console.log('Server started, waiting for it to initialize...');
     await sleep(2000);
     

@@ -14,7 +14,7 @@ async function main() {
     stdio: 'pipe' // Capture I/O for communication
   });
   
-  // Give the server time to start
+  // Allow server startup time
   console.log('Waiting for server to start...');
   await sleep(2000);
   

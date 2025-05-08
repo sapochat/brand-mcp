@@ -83,7 +83,7 @@ export class BrandService {
     'technical', 'marketing', 'legal', 'educational', 'conversational'
   ];
 
-  // Store examples of false positives for learning - Will be updated later
+  // Stores examples of false positives for learning and future adjustments.
   private falsePositives: Array<{issue: BrandComplianceIssue, content: string, context: string}> = []; // Added context
 
   // --- Persistent Learning ---
@@ -142,7 +142,7 @@ export class BrandService {
         console.log(`Learning data loaded from ${this.learningDataPath}`);
       } else {
         console.log(`Learning data file not found at ${this.learningDataPath}. Using defaults.`);
-        // Optionally save defaults on first run: this.saveLearningData();
+        // Default learning data can be saved on first run by uncommenting this.saveLearningData().
       }
     } catch (error) {
       console.error(`Error loading learning data from ${this.learningDataPath}:`, error);
