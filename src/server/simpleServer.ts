@@ -19,7 +19,7 @@ import { BrandComplianceResult, BrandSchema } from '../types/brandSchema.js';
  */
 export async function createBrandSafetyServer(): Promise<Server> {
   // Initialize the brand safety service
-  const brandSafetyService = new BrandSafetyService();
+  const brandSafetyService = await BrandSafetyService.createInstance();
   
   // Initialize the brand service with the loaded schema
   const brandService = new BrandService();
@@ -133,7 +133,7 @@ export async function createBrandSafetyServer(): Promise<Server> {
           };
         }
         
-        const evaluation = brandSafetyService.evaluateContent(content);
+        const evaluation = await brandSafetyService.evaluateContent(content);
         
         return {
           content: [

@@ -21,11 +21,13 @@ export async function loadBrandSchema(filePath?: string): Promise<BrandSchema> {
     
     // Read file content
     const fileContent = fs.readFileSync(filePath, 'utf8');
+    console.log(`[DEBUG] brandSchemaLoader: Reading from filePath: ${filePath}`); // Added log
     
     // Extract activeBrandProfile data using a regex pattern
     // The module is extracted using regex for demonstration purposes.
     // A direct import would be used in a production environment.
     const activeBrandProfileMatch = fileContent.match(/const activeBrandProfile = ({[\s\S]*?});/);
+    console.log('[DEBUG] brandSchemaLoader: activeBrandProfileMatch:', activeBrandProfileMatch ? activeBrandProfileMatch[0].substring(0, 100) + '...' : null); // Added log
     
     if (!activeBrandProfileMatch || !activeBrandProfileMatch[1]) {
       throw new Error('Could not extract activeBrandProfile from the file');
