@@ -28,9 +28,7 @@ export async function createBrandSafetyServer(): Promise<Server> {
     // Load brand schema
     const brandSchema = await loadBrandSchema();
     brandService.setBrandSchema(brandSchema);
-    console.error(`Loaded brand schema for "${brandSchema.name}"`);
   } catch (error) {
-    console.error('Failed to load brand schema:', error);
     // Continue without brand schema - still usable for safety only
   }
   
@@ -108,7 +106,6 @@ export async function createBrandSafetyServer(): Promise<Server> {
     if (brandService.getBrandSchema()) {
       // Just log info about the brand schema rather than providing a tool
       const schema = brandService.getBrandSchema();
-      console.error(`Brand schema loaded: ${schema?.name}`);
     }
     
     return { tools };
@@ -610,9 +607,7 @@ export async function startServer(): Promise<void> {
     const server = await createBrandSafetyServer();
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error('Brand Safety MCP server started');
   } catch (error) {
-    console.error('Failed to start MCP server:', error);
     process.exit(1);
   }
 } 

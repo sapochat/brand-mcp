@@ -29,16 +29,14 @@ export async function createServer(): Promise<Server> {
   try {
     const brandSchema = await loadBrandSchema();
     brandService.setBrandSchema(brandSchema);
-    console.error(`Loaded brand schema for "${brandSchema.name}"`);
   } catch (error) {
-    console.error('Failed to load brand schema:', error);
   }
   
   // Create and configure the MCP server
   const server = new Server(
     {
-      name: 'brand-safety-mcp',
-      version: '1.0.0'
+      name: 'BrandCheck',
+      version: '1.0.1'
     },
     {
       capabilities: {
@@ -54,7 +52,7 @@ export async function createServer(): Promise<Server> {
     // Base tools that work without brand schema
     const tools = [
       {
-        name: 'analyzeSafety',
+        name: 'Safety Check',
         description: 'Analyze text content for brand safety concerns',
         inputSchema: {
           type: 'object',
@@ -70,7 +68,7 @@ export async function createServer(): Promise<Server> {
         }
       },
       {
-        name: 'updateBrandConfig',
+        name: 'Update Config',
         description: 'Update brand safety configuration settings',
         inputSchema: {
           type: 'object',
@@ -108,13 +106,10 @@ export async function createServer(): Promise<Server> {
     if (brandService.getBrandSchema()) {
       // Console log brand info instead of providing a tool
       const schema = brandService.getBrandSchema();
-      console.error(`Brand schema loaded: ${schema?.name}`);
-      console.error(`Brand tone: ${schema?.toneGuidelines.primaryTone}`);
-      console.error(`Brand voice: ${schema?.voiceGuidelines.personality}`);
       
       // Add brand compliance evaluation tool
       tools.push({
-        name: 'checkBrandCompliance',
+        name: 'Check Compliance',
         description: 'Evaluate content for compliance with brand guidelines',
         inputSchema: {
           type: 'object',
@@ -132,7 +127,7 @@ export async function createServer(): Promise<Server> {
       
       // Add new combined evaluation tool
       tools.push({
-        name: 'evaluateContentWithBrand',
+        name: 'Content Evaluation',
         description: 'Perform a combined evaluation for both brand safety and brand compliance',
         inputSchema: {
           type: 'object',
@@ -939,9 +934,7 @@ export async function startServer(): Promise<void> {
     const server = await createServer();
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error('Brand Safety MCP server started');
   } catch (error) {
-    console.error('Failed to start MCP server:', error);
     process.exit(1);
   }
 } 
