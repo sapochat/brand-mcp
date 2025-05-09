@@ -140,13 +140,10 @@ export class BrandService {
           patternWeights: parsedData.patternWeights || {},
           contextSensitivity: parsedData.contextSensitivity || this.learningData.contextSensitivity,
         };
-        console.log(`Learning data loaded from ${this.learningDataPath}`);
       } else {
-        console.log(`Learning data file not found at ${this.learningDataPath}. Using defaults.`);
         // Default learning data can be saved on first run by uncommenting this.saveLearningData().
       }
     } catch (error) {
-      console.error(`Error loading learning data from ${this.learningDataPath}:`, error);
       // Use default data in case of error
     }
   }
@@ -159,14 +156,11 @@ export class BrandService {
       // Ensure the data directory exists
       if (!fs.existsSync(this.dataDir)) {
         fs.mkdirSync(this.dataDir, { recursive: true });
-        console.log(`Created data directory: ${this.dataDir}`);
       }
 
       const data = JSON.stringify(this.learningData, null, 2); // Pretty print JSON
       fs.writeFileSync(this.learningDataPath, data, 'utf-8');
-      console.log(`Learning data saved to ${this.learningDataPath}`);
     } catch (error) {
-      console.error(`Error saving learning data to ${this.learningDataPath}:`, error);
     }
   }
 
@@ -174,7 +168,6 @@ export class BrandService {
    * Reset learning data to defaults and save.
    */
   public resetLearning(): void {
-    console.log('Resetting learning data to defaults...');
     // Re-initialize with the default structure defined in the class
     this.learningData = {
       allowlistedTerms: {},
@@ -242,7 +235,6 @@ export class BrandService {
     // If we have accumulated enough examples, adjust detection parameters
     const LEARNING_THRESHOLD = 5; // Define threshold
     if (this.falsePositives.length >= LEARNING_THRESHOLD) {
-      console.log(`Reached ${LEARNING_THRESHOLD} false positives. Updating detection parameters...`);
       this.updateDetectionParameters();
     }
   }
@@ -251,7 +243,6 @@ export class BrandService {
    * Update detection parameters based on accumulated false positive feedback.
    */
   private updateDetectionParameters(): void {
-    console.log('Analyzing false positives to update learning data...');
     const issueTypeCounts: Record<string, number> = {};
     const termCounts: Record<string, { count: number; contexts: Set<string>; contentTypes: Set<string> }> = {};
     const contextCounts: Record<string, number> = {};
@@ -280,7 +271,6 @@ export class BrandService {
       }
     }
 
-    console.log('Analysis complete:', { issueTypeCounts, termCounts, contextCounts });
 
     // 2. Update learningData based on analysis
     let updated = false;
@@ -294,7 +284,6 @@ export class BrandService {
           this.learningData.contextAllowlists[context] = this.learningData.contextAllowlists[context] || [];
           if (!this.learningData.contextAllowlists[context].includes(term)) {
             this.learningData.contextAllowlists[context].push(term);
-            console.log(`Added term "${term}" to context allowlist for "${context}"`);
             updated = true;
           }
         }
@@ -304,13 +293,11 @@ export class BrandService {
              this.learningData.allowlistedTerms[contentType] = this.learningData.allowlistedTerms[contentType] || [];
              if (!this.learningData.allowlistedTerms[contentType].includes(term)) {
                 this.learningData.allowlistedTerms[contentType].push(term);
-                console.log(`Added term "${term}" to allowlisted terms for content type "${contentType}"`);
                 updated = true;
              }
         }
         // Avoid adding overly generic terms if they appear in many contexts/types without clear pattern
         else {
-             console.log(`Term "${term}" appeared frequently but in diverse contexts/types. Skipping allowlisting for now.`);
         }
       }
     }
@@ -323,7 +310,6 @@ export class BrandService {
         // Increase threshold, capping at 0.95 to avoid ignoring everything
         this.learningData.confidenceThresholds[type] = Math.min(0.95, oldThreshold + 0.05);
         if (oldThreshold !== this.learningData.confidenceThresholds[type]) {
-            console.log(`Increased confidence threshold for issue type "${type}" to ${this.learningData.confidenceThresholds[type]}`);
             updated = true;
         }
       }
@@ -337,7 +323,6 @@ export class BrandService {
            // Decrease sensitivity, capping at 0.5 to avoid making it completely insensitive
            this.learningData.contextSensitivity[context] = Math.max(0.5, oldSensitivity - 0.1);
            if (oldSensitivity !== this.learningData.contextSensitivity[context]) {
-               console.log(`Decreased context sensitivity for "${context}" to ${this.learningData.contextSensitivity[context]}`);
                updated = true;
            }
        }
@@ -348,12 +333,10 @@ export class BrandService {
     if (updated) {
       this.saveLearningData();
     } else {
-      console.log('No significant patterns found to update learning data this cycle.');
     }
 
     // 4. Clear the processed false positives
     this.falsePositives = [];
-    console.log('Cleared processed false positives.');
   }
 
   /**

@@ -167,12 +167,12 @@ For example:
 - Windows: `"C:\\Users\\username\\Documents\\brand-mcp\\dist\\index.js"`
 
 ##### Option 2: Using NPX (If Published to NPM)
-If you've published your Brand MCP to NPM, you can use npx for a more streamlined installation:
+If you've published your Brand MCP to NPM, you can use npx for a more streamlined installation - you can rename your server by replacing "Brand Check" in the below:
 
 ```json
 {
   "mcpServers": {
-    "brandSafety": {
+    "Brand Check": {
       "command": "npx",
       "args": [
         "-y",

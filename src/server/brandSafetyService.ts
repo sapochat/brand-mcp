@@ -45,7 +45,6 @@ export class BrandSafetyService {
 
     try {
       const brandSchemaData = await loadBrandSchema().catch(err => {
-        console.warn('Failed to load brand schema for BrandSafetyService:', err);
         return null;
       });
 
@@ -58,7 +57,6 @@ export class BrandSafetyService {
       }
     } catch (err) {
       // This catch is for errors within the try block itself, not from loadBrandSchema (which is handled by .catch above)
-      console.warn('Error processing brand schema in BrandSafetyService.createInstance:', err);
     }
 
     return new BrandSafetyService(baseConfig);
@@ -252,7 +250,6 @@ export class BrandSafetyService {
       return { category, riskLevel, explanation };
 
     } catch (error) {
-      console.error("Error during sentiment analysis LLM call:", error);
       return {
         category,
         riskLevel: RiskLevel.NONE,
@@ -327,7 +324,6 @@ Text to analyze:
       return { category, riskLevel, explanation, llmAssessment };
 
     } catch (error) {
-      console.error("Error during contextual analysis LLM call:", error);
       return {
         category,
         riskLevel: RiskLevel.NONE, // Or a specific risk level for error cases
