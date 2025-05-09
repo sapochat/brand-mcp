@@ -52,7 +52,7 @@ export async function createServer(): Promise<Server> {
     // Base tools that work without brand schema
     const tools = [
       {
-        name: 'Safety Check',
+        name: 'Safety_Check',
         description: 'Analyze text content for brand safety concerns',
         inputSchema: {
           type: 'object',
@@ -68,7 +68,7 @@ export async function createServer(): Promise<Server> {
         }
       },
       {
-        name: 'Update Config',
+        name: 'Update_Config',
         description: 'Update brand safety configuration settings',
         inputSchema: {
           type: 'object',
@@ -109,7 +109,7 @@ export async function createServer(): Promise<Server> {
       
       // Add brand compliance evaluation tool
       tools.push({
-        name: 'Check Compliance',
+        name: 'Check_Compliance',
         description: 'Evaluate content for compliance with brand guidelines',
         inputSchema: {
           type: 'object',
@@ -127,7 +127,7 @@ export async function createServer(): Promise<Server> {
       
       // Add new combined evaluation tool
       tools.push({
-        name: 'Content Evaluation',
+        name: 'Content_Evaluation',
         description: 'Perform a combined evaluation for both brand safety and brand compliance',
         inputSchema: {
           type: 'object',
@@ -149,7 +149,7 @@ export async function createServer(): Promise<Server> {
 
   // Define the tool call endpoint
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    if (request.params.name === 'analyzeSafety') {
+    if (request.params.name === 'Safety_Check') {
       try {
         const args = request.params.arguments || {};
         const content = args.content as string;
@@ -190,7 +190,7 @@ export async function createServer(): Promise<Server> {
       }
     }
     
-    if (request.params.name === 'updateBrandConfig') {
+    if (request.params.name === 'Update_Config') {
       try {
         // Update the brand safety configuration
         const args = request.params.arguments || {};
@@ -217,7 +217,7 @@ export async function createServer(): Promise<Server> {
       }
     }
     
-    if (request.params.name === 'checkBrandCompliance') {
+    if (request.params.name === 'Check_Compliance') {
       try {
         const brandSchema = brandService.getBrandSchema();
         
@@ -275,7 +275,7 @@ export async function createServer(): Promise<Server> {
     }
     
     // Handle the evaluateContentWithBrand tool
-    if (request.params.name === 'evaluateContentWithBrand') {
+    if (request.params.name === 'Content_Evaluation') {
       try {
         const brandSchema = brandService.getBrandSchema();
         
