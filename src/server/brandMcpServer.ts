@@ -29,9 +29,7 @@ export async function createServer(): Promise<Server> {
   try {
     const brandSchema = await loadBrandSchema();
     brandService.setBrandSchema(brandSchema);
-    console.error(`Loaded brand schema for "${brandSchema.name}"`);
   } catch (error) {
-    console.error('Failed to load brand schema:', error);
   }
   
   // Create and configure the MCP server
@@ -108,9 +106,6 @@ export async function createServer(): Promise<Server> {
     if (brandService.getBrandSchema()) {
       // Console log brand info instead of providing a tool
       const schema = brandService.getBrandSchema();
-      console.error(`Brand schema loaded: ${schema?.name}`);
-      console.error(`Brand tone: ${schema?.toneGuidelines.primaryTone}`);
-      console.error(`Brand voice: ${schema?.voiceGuidelines.personality}`);
       
       // Add brand compliance evaluation tool
       tools.push({
@@ -154,10 +149,35 @@ export async function createServer(): Promise<Server> {
 
   // Define the tool call endpoint
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    let parsedArgs: any;
+    const rawArgs = request.params.arguments;
+
+    if (rawArgs === undefined || rawArgs === null) {
+      parsedArgs = {}; // Default to an empty object if arguments are missing
+    } else if (typeof rawArgs === 'object') {
+      // If it's already an object (e.g., SDK parsed it), use it directly
+      parsedArgs = rawArgs;
+    } else if (typeof rawArgs === 'string') {
+      // If it's a string, try to parse it directly as JSON
+      try {
+        parsedArgs = JSON.parse(rawArgs);
+      } catch (e: any) {
+        return {
+          isError: true,
+          content: [{ type: 'text', text: `MCP Server: Malformed tool arguments. Expected valid JSON. Details: ${e.message}` }]
+        };
+      }
+    } else {
+      // Unexpected type for arguments
+      return {
+        isError: true,
+        content: [{ type: 'text', text: `MCP Server: Invalid arguments type received: ${typeof rawArgs}` }]
+      };
+    }
+
     if (request.params.name === 'analyzeSafety') {
       try {
-        const args = request.params.arguments || {};
-        const content = args.content as string;
+        const content = (parsedArgs as any)?.content as string;
         
         if (!content) {
           return {
@@ -198,8 +218,7 @@ export async function createServer(): Promise<Server> {
     if (request.params.name === 'updateBrandConfig') {
       try {
         // Update the brand safety configuration
-        const args = request.params.arguments || {};
-        brandSafetyService.updateConfig(args as Partial<BrandSafetyConfig>);
+        brandSafetyService.updateConfig(parsedArgs as Partial<BrandSafetyConfig>);
         
         return {
           content: [
@@ -238,9 +257,8 @@ export async function createServer(): Promise<Server> {
           };
         }
         
-        const args = request.params.arguments || {};
-        const content = args.content as string;
-        const context = (args.context as string) || 'general';
+        const content = (parsedArgs as any)?.content as string;
+        const context = ((parsedArgs as any)?.context as string) || 'general';
         
         if (!content) {
           return {
@@ -296,13 +314,17 @@ export async function createServer(): Promise<Server> {
           };
         }
         
-        const args = request.params.arguments || {};
-        const content = args.content as string;
-        const context = (args.context as string) || 'general';
-        const brandWeight = parseFloat((args.brandWeight as string) || '2.0'); 
-        const safetyWeight = parseFloat((args.safetyWeight as string) || '1.0');
-        const includeSafety = args.includeSafety !== 'false';
-        const includeBrand = args.includeBrand !== 'false';
+        const content = (parsedArgs as any)?.content as string;
+        const context = ((parsedArgs as any)?.context as string) || 'general';
+        const brandWeightString = (parsedArgs as any)?.brandWeight as string;
+        const safetyWeightString = (parsedArgs as any)?.safetyWeight as string;
+        const includeSafetyString = (parsedArgs as any)?.includeSafety as string;
+        const includeBrandString = (parsedArgs as any)?.includeBrand as string;
+
+        const brandWeight = parseFloat(brandWeightString || '2.0'); 
+        const safetyWeight = parseFloat(safetyWeightString || '1.0');
+        const includeSafety = includeSafetyString !== 'false'; 
+        const includeBrand = includeBrandString !== 'false';
         
         if (!content) {
           return {
@@ -328,7 +350,7 @@ export async function createServer(): Promise<Server> {
         
         // Perform evaluations based on flags
         if (includeSafety) {
-          combinedResult.safety = brandSafetyService.evaluateContent(content);
+          combinedResult.safety = await brandSafetyService.evaluateContent(content);
         }
         
         if (includeBrand) {
@@ -939,9 +961,7 @@ export async function startServer(): Promise<void> {
     const server = await createServer();
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error('Brand Safety MCP server started');
   } catch (error) {
-    console.error('Failed to start MCP server:', error);
     process.exit(1);
   }
 } 

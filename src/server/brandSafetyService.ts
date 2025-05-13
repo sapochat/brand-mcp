@@ -45,7 +45,7 @@ export class BrandSafetyService {
 
     try {
       const brandSchemaData = await loadBrandSchema().catch(err => {
-        console.warn('Failed to load brand schema for BrandSafetyService:', err);
+        // console.warn('Failed to load brand schema for BrandSafetyService:', err); // Removed: Potential stdio interference
         return null;
       });
 
@@ -58,7 +58,7 @@ export class BrandSafetyService {
       }
     } catch (err) {
       // This catch is for errors within the try block itself, not from loadBrandSchema (which is handled by .catch above)
-      console.warn('Error processing brand schema in BrandSafetyService.createInstance:', err);
+      // console.warn('Error processing brand schema in BrandSafetyService.createInstance:', err); // Removed: Potential stdio interference
     }
 
     return new BrandSafetyService(baseConfig);
