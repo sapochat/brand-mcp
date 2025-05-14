@@ -15,6 +15,10 @@ build/
 .env.test.local
 .env.production.local
 
+#Other files
+LI_BrandSchema_130525.json
+brandSchema.js
+
 # IDE and editor files
 .idea/
 .vscode/
