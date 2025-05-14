@@ -465,7 +465,7 @@ export async function createServer(): Promise<Server> {
       }
     }
 
-    // Add the Blue persona prompt
+    // Add the assistant persona prompt
     prompts.push({
       name: 'brand-assistant-persona',
       description: "Engage with the brand compliance and safety assistant.",

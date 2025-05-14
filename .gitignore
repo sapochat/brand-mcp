@@ -16,7 +16,6 @@ build/
 .env.production.local
 
 #Other files
-LI_BrandSchema_130525.json
 brandSchema.js
 src/server/assistant_persona_instructions.md
 
