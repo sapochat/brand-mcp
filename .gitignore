@@ -18,6 +18,7 @@ build/
 #Other files
 LI_BrandSchema_130525.json
 brandSchema.js
+src/server/assistant_persona_instructions.md
 
 # IDE and editor files
 .idea/
