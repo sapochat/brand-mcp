@@ -1,9 +1,33 @@
 {
   "name": "brand-safety-mcp",
   "version": "1.0.0",
-  "description": "Brand Safety MCP for evaluating content against brand guidelines",
+  "description": "Enterprise-grade Model Context Protocol server for AI content brand safety and compliance",
   "main": "dist/index.js",
   "type": "module",
+  "author": "",
+  "license": "MIT",
+  "homepage": "https://github.com/sapochat/brand-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sapochat/brand-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sapochat/brand-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "brand-safety",
+    "brand-compliance",
+    "ai-safety",
+    "content-moderation",
+    "llm",
+    "typescript",
+    "enterprise"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",

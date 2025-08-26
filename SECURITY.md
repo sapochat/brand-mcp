@@ -2,16 +2,27 @@
 
 ## Supported Versions
 
-We release patches for security vulnerabilities. Which versions are eligible for receiving such patches depends on the CVSS v3.0 Rating:
+We release patches for security vulnerabilities based on the CVSS v3.0 Rating:
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.0.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+| Version | Supported          | Security Updates |
+| ------- | ------------------ | ---------------- |
+| 1.x.x   | :white_check_mark: | Active           |
+| < 1.0   | :x:                | End of Life      |
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability within Brand MCP, please send an email to security@your-domain.com. All security vulnerabilities will be promptly addressed.
+We take the security of Brand Safety MCP seriously. If you believe you have found a security vulnerability, please report it responsibly.
+
+### Please do NOT:
+- Open a public GitHub issue for security vulnerabilities
+- Post about the vulnerability on social media before it's fixed
+- Attempt to exploit the vulnerability on production systems
+
+### Please DO:
+- Email us with details (see contact information below)
+- Include the word "SECURITY" in the subject line
+- Provide detailed steps to reproduce the vulnerability
+- Allow us reasonable time to respond before public disclosure
 
 Please include the following information in your report:
 - Type of issue (e.g., buffer overflow, SQL injection, cross-site scripting, etc.)
@@ -95,8 +106,8 @@ This project aims to comply with:
 ## Contact
 
 For security concerns, please contact:
-- Email: security@your-domain.com
-- GPG Key: [Link to public key]
+- Create a security advisory: [GitHub Security Advisories](https://github.com/sapochat/brand-mcp/security/advisories/new)
+- For urgent matters: Open an issue with [SECURITY] prefix (do not include exploit details)
 
 ## Acknowledgments
 
