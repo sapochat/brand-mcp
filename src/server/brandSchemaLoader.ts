@@ -1,10 +1,10 @@
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { BrandSchema } from '../types/brandSchema.js';
 
 /**
  * Load brand schema from brandSchema.js file
+ * Uses dynamic import for secure loading without eval()
  */
 export async function loadBrandSchema(filePath?: string): Promise<BrandSchema> {
   try {
@@ -14,30 +14,39 @@ export async function loadBrandSchema(filePath?: string): Promise<BrandSchema> {
       filePath = path.resolve(__dirname, '../../brandSchema.js');
     }
     
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      throw new Error(`Brand schema file not found at ${filePath}`);
+    // Validate path to prevent traversal attacks
+    const normalizedPath = path.normalize(filePath);
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const projectRoot = path.resolve(__dirname, '../..');
+    
+    if (!normalizedPath.startsWith(projectRoot)) {
+      throw new Error('Invalid file path: Access denied outside project directory');
     }
     
-    // Read file content
-    const fileContent = fs.readFileSync(filePath, 'utf8');
-    
-    // Extract activeBrandProfile data using a regex pattern
-    // The module is extracted using regex for demonstration purposes.
-    // A direct import would be used in a production environment.
-    const activeBrandProfileMatch = fileContent.match(/const activeBrandProfile = ({[\s\S]*?});/);
-    
-    if (!activeBrandProfileMatch || !activeBrandProfileMatch[1]) {
-      throw new Error('Could not extract activeBrandProfile from the file');
+    // Use dynamic import to safely load the module
+    try {
+      // Convert to file URL for dynamic import
+      const fileUrl = new URL(`file://${normalizedPath}`).href;
+      const module = await import(fileUrl);
+      
+      if (!module.activeBrandProfile) {
+        throw new Error('activeBrandProfile not found in the loaded module');
+      }
+      
+      return module.activeBrandProfile as BrandSchema;
+    } catch (importError) {
+      // Fallback: Try importing from relative path
+      const relativePath = `../../brandSchema.js`;
+      const module = await import(relativePath);
+      
+      if (!module.activeBrandProfile) {
+        throw new Error('activeBrandProfile not found in the loaded module');
+      }
+      
+      return module.activeBrandProfile as BrandSchema;
     }
-    
-    // Parse the extracted JSON
-    // The extracted string is evaluated for demonstration purposes.
-    // A safer parsing method would be used in a production environment.
-    const brandObject = eval(`(${activeBrandProfileMatch[1]})`);
-    
-    return brandObject as BrandSchema;
   } catch (error) {
-    throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error loading brand schema';
+    throw new Error(`Failed to load brand schema: ${errorMessage}`);
   }
 } 

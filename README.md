@@ -33,8 +33,8 @@ This MCP serves as a barometer for both brand safety and brand compliance when l
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/brand-safety-mcp.git
-cd brand-safety-mcp
+git clone https://github.com/sapochat/brand-mcp.git
+cd brand-mcp
 
 # Install dependencies
 npm install
@@ -176,7 +176,7 @@ If you've published your Brand MCP to NPM, you can use npx for a more streamline
       "command": "npx",
       "args": [
         "-y",
-        "@yourusername/brand-mcp"
+        "@yourorg/brand-safety-mcp"
       ],
       "env": {
         "NODE_ENV": "production"

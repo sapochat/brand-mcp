@@ -26,3 +26,18 @@ build/
 Thumbs.db 
 # Learned data (should not be committed)
 data/
+
+# Logs
+logs/
+*.log
+
+# Configuration
+config.json
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Test artifacts
+*.test.js
+*.spec.js
