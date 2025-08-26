@@ -14,6 +14,7 @@ import { loadBrandSchema } from './brandSchemaLoader.js';
 import { BrandSafetyConfig } from '../types/brandSafety.js';
 import { BrandComplianceResult } from '../types/brandSchema.js';
 import { BrandSafetyEvaluation, ContentSafetyResult, RiskLevel } from '../types/brandSafety.js';
+import { ValidationSchemas, RateLimiter, SafeError, wrapError } from '../utils/security.js';
 
 /**
  * Creates and configures the brand safety MCP server
@@ -147,26 +148,33 @@ export async function createServer(): Promise<Server> {
     return { tools };
   });
 
+  // Initialize rate limiter
+  const rateLimiter = new RateLimiter();
+  
   // Define the tool call endpoint
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    // Rate limiting check
+    const clientId = 'default'; // In production, extract from request headers or connection
+    if (!rateLimiter.isAllowed(clientId)) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: 'text',
+            text: 'Error: Rate limit exceeded. Please try again later.'
+          }
+        ]
+      };
+    }
+    
     if (request.params.name === 'Safety_Check') {
       try {
-        const args = request.params.arguments || {};
-        const content = args.content as string;
+        // Validate input using Zod schema
+        const validatedInput = ValidationSchemas.contentEvaluation.parse({
+          content: request.params.arguments?.content
+        });
         
-        if (!content) {
-          return {
-            isError: true,
-            content: [
-              {
-                type: 'text',
-                text: 'Error: Content is required for evaluation'
-              }
-            ]
-          };
-        }
-        
-        const evaluation = await brandSafetyService.evaluateContent(content);
+        const evaluation = await brandSafetyService.evaluateContent(validatedInput.content);
         const formattedResponse = formatSafetyEvaluation(evaluation);
         
         return {

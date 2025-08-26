@@ -297,4 +297,4 @@ const activeBrandProfile = {
   ]
 };
 
-module.exports = { brandSchema, activeBrandProfile };
+export { brandSchema, activeBrandProfile };
