@@ -1,6 +1,10 @@
 # Brand Safety MCP
 
-A Model Context Protocol (MCP) server that performs both brand safety evaluation and brand compliance checking for LLM-generated content. This dual-function approach ensures that content not only avoids harmful categories but also aligns with specific brand voice, tone, terminology, and context-specific guidelines.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3%2B-blue.svg)](https://www.typescriptlang.org/)
+[![MCP](https://img.shields.io/badge/Model%20Context%20Protocol-1.11%2B-green.svg)](https://modelcontextprotocol.io/)
+
+A production-ready Model Context Protocol (MCP) server that provides comprehensive brand safety evaluation and compliance checking for AI-generated content. This enterprise-grade solution ensures content not only avoids harmful categories but also maintains strict adherence to your organization's brand voice, tone, terminology, and contextual guidelines.
 
 ## Table of Contents
 
@@ -22,12 +26,14 @@ A Model Context Protocol (MCP) server that performs both brand safety evaluation
 
 ## Overview
 
-This MCP serves as a barometer for both brand safety and brand compliance when leveraging LLMs to generate content including text, imagery, or other media. It provides:
+Brand Safety MCP acts as an intelligent gatekeeper for AI-generated content across your organization. Built with enterprise security and performance in mind, it provides:
 
-- **Brand Safety Evaluation**: Check content against safety categories like profanity, violence, etc.
-- **Brand Compliance Checking**: Verify alignment with specific brand guidelines
-- **Context-Specific Guidelines**: Apply different rules based on content context (social, documentation, marketing)
-- **Detailed Feedback**: Get specific issues and recommendations for improvement
+- **🛡️ Advanced Safety Evaluation**: Comprehensive content screening across 12+ safety categories with configurable risk tolerances
+- **✅ Brand Compliance Checking**: Real-time verification against your organization's specific brand guidelines
+- **🎯 Context-Aware Analysis**: Intelligent rule application based on content type and usage context
+- **📊 Detailed Compliance Reporting**: Actionable insights with severity levels, suggestions, and compliance scores
+- **🔒 Enterprise Security**: Built-in security features including input validation, rate limiting, and path traversal protection
+- **⚡ Performance Optimized**: Caching system, efficient algorithms, and scalable architecture
 
 ## Installation
 
@@ -57,38 +63,28 @@ The server uses stdio as the transport mechanism, making it compatible with vari
 
 ### Testing with Built-in Clients
 
-The package includes several demo clients to test functionality:
+The package includes comprehensive testing utilities and demo clients:
 
-#### Basic Test
-
-```bash
-npm run test
-```
-
-This runs a simple test to verify the MCP server is working correctly.
-
-#### Demo Client
+#### Quick Verification
 
 ```bash
-npm run demo
+npm run test        # Basic functionality test
+npm run test:unit   # Run unit test suite
+npm run test:coverage # Generate coverage report
 ```
 
-This demonstrates the brand safety and compliance features with example content.
-
-#### SDK Example Client
+#### Interactive Demo
 
 ```bash
-npm run sdk-demo
+npm run demo        # Brand compliance demonstration
+npm run sdk-demo    # Full SDK integration example
 ```
 
-This runs a comprehensive example showing how to integrate with the MCP using the SDK, including:
-- Brand safety evaluation
-- Brand compliance checking
-- Context-specific compliance testing
+These demos showcase real-world usage patterns with your configured brand guidelines.
 
-### Integrating with Client Applications
+### Production Integration
 
-For developers who want to integrate the Brand MCP with their own applications:
+For production deployments, integrate Brand Safety MCP into your applications:
 
 ```javascript
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -176,7 +172,7 @@ If you've published your Brand MCP to NPM, you can use npx for a more streamline
       "command": "npx",
       "args": [
         "-y",
-        "@yourorg/brand-safety-mcp"
+        "brand-safety-mcp"
       ],
       "env": {
         "NODE_ENV": "production"
@@ -202,46 +198,26 @@ If the server isn't showing up in Claude Desktop:
 3. Try running the server manually to see if there are any errors
 4. Check Claude's logs for detailed error information
 
-#### Natural Language Instructions for Claude
+#### Natural Language Usage
 
-Instead of requiring users to provide JSON, you can use natural language prompts:
+Interact with Brand Safety MCP using conversational prompts:
 
-```
-Please check if the following content meets our brand guidelines:
+**Example Request:**
+> "Please review this marketing email for brand compliance:
+> 
+> 'We're excited to announce our AI product that leverages cutting-edge technology to disrupt the market.'
+> 
+> Check for tone and terminology issues."
 
-Content: We are excited to announce our new AI product that leverages cutting-edge technology to disrupt the market. This synergistic solution will help you leverage your data assets.
-
-Context: This is for a marketing email
-Brand: TechFuture
-Focus on: tone and terminology
-```
-
-#### Example Response
-
-Claude would analyze this and respond in natural language:
-
-```
-I've checked this content against TechFuture's brand guidelines. Here's my analysis:
-
-Compliance Score: 65/100 (Not Compliant)
-
-Issues Found:
-1. Terminology: The content uses several terms that should be avoided according to your guidelines:
-   - "disrupt" (avoided global term)
-   - "synergistic" (avoided global term)
-   - "leverage" (appears twice, avoided global term)
-
-2. Tone: The tone relies on business clichés rather than the confident, optimistic tone preferred by TechFuture.
-
-Suggestions:
-- Replace "disrupt the market" with "transform the market"
-- Replace "synergistic solution" with "integrated solution"
-- Replace "leverage your data assets" with "utilize your data assets"
-- Adjust the overall tone to be more confident and optimistic while avoiding business jargon
-
-Revised Version:
-"We're excited to announce our new AI product that uses innovative technology to transform the market. This integrated solution will help you make the most of your data assets."
-```
+**Example Response:**
+> **Compliance Score:** 65/100 ⚠️
+> 
+> **Issues Identified:**
+> - 🚫 Prohibited terms: "leverage" (2x), "disrupt" 
+> - 📝 Tone: Overuse of business clichés
+> 
+> **Suggested Revision:**
+> "We're excited to announce our AI product that uses innovative technology to transform the market."
 
 #### Implementation in Conversation Flow
 
@@ -441,32 +417,37 @@ contextualAdjustments: [
 
 After modifying this file with your brand's specific guidelines, rebuild the project with `npm run build`.
 
-## Moving from Demo to Production
+## Deployment Guide
 
-The Brand Safety MCP uses the `activeBrandProfile` object within `brandSchema.js` to define your brand's specific guidelines. The `brandSchema.js` file also contains a `brandSchema` object that documents the structure. To implement your own brand safety and compliance rules:
+### Development to Production
 
-1. First, review the demo implementation by running:
+1. **Review Demo Implementation**
    ```bash
-   npm run demo
+   npm run demo  # Explore default configuration
    ```
 
-2. Next, open the `brandSchema.js` file in the root directory and edit the values within the `activeBrandProfile` object to match your own brand guidelines, using the `brandSchema` object as a structural reference.
+2. **Customize Brand Guidelines**
+   - Edit `activeBrandProfile` in `brandSchema.js`
+   - Configure safety tolerances in `src/config/`
+   - Add domain-specific exemptions
 
-3. After customizing your schema, rebuild the project:
+3. **Build & Validate**
    ```bash
    npm run build
+   npm run test:unit
+   npm run test:coverage
    ```
 
-4. Test your custom implementation:
+4. **Security Audit**
    ```bash
-   npm run test
+   npm run audit
+   npm run lint
+   npm run typecheck
    ```
 
-> **Note:** All commands (`npm run demo`, `npm run test`, etc.) will use your custom brand schema after you've modified and rebuilt the project.
+## Features
 
-## Brand Safety Features
-
-The MCP evaluates content across the following safety categories:
+### Brand Safety Categories
 
 - **Sexual Content**: References to sexual themes or explicit material
 - **Violence**: Descriptions of physical harm or violent actions
@@ -481,13 +462,11 @@ The MCP evaluates content across the following safety categories:
 - **Sentiment Analysis**: Determines the emotional tone of the content (e.g., positive, negative, neutral) using LLM capabilities.
 - **Contextual Analysis**: Provides a deeper understanding of content nuances, intent, and potential risks that might be missed by keyword-only checks, using LLM capabilities.
 
-Each category is evaluated on a five-level risk scale: NONE, LOW, MEDIUM, HIGH, VERY_HIGH.
+**Risk Levels:** `NONE` | `LOW` | `MEDIUM` | `HIGH` | `VERY_HIGH`
 
-## Brand Compliance Features
+### Brand Compliance Engine
 
-The MCP checks content for compliance with brand guidelines defined in `brandSchema.js`:
-
-### Tone Guidelines
+#### Tone Analysis
 - **Primary Tone**: Checks if content matches the brand's primary tone
 - **Avoided Tones**: Ensures content doesn't use tones that should be avoided
 - **Contextual Tone**: Applies different tone expectations based on context
@@ -509,7 +488,7 @@ The MCP checks content for compliance with brand guidelines defined in `brandSch
 - **Context-Specific Terms**: Applies different terminology rules based on content context
 - **Domain Exemptions**: Automatically exempts certain terms in appropriate contexts
 
-## Other Features
+### Advanced Capabilities
 
 ### Content Type Detection
 The MCP automatically detects the type of content being analyzed and applies appropriate rules:
@@ -597,7 +576,7 @@ const result = await client.callTool({
 
 ### Tools
 
-1. **evaluateContent**
+1. **analyzeSafety**
    - Analyzes text content against brand safety guidelines
    - Parameters:
      - `content`: The content to evaluate for brand safety
@@ -643,9 +622,9 @@ To make your Brand MCP easily installable in Claude Desktop and other environmen
 1. Update your `package.json` with appropriate details:
 ```json
 {
-  "name": "@yourorg/brand-mcp",
+  "name": "@your-org/brand-safety-mcp",
   "version": "1.0.0",
-  "description": "Brand safety and compliance MCP for YourOrg",
+  "description": "Brand safety and compliance MCP for your organization",
   "main": "dist/index.js",
   "bin": "dist/index.js",
   "files": [
@@ -676,11 +655,11 @@ Now others can use your Brand MCP in Claude Desktop by simply adding this to the
 ```json
 {
   "mcpServers": {
-    "yourOrgBrandSafety": {
+    "brand-safety": {
       "command": "npx",
       "args": [
         "-y",
-        "@yourorg/brand-mcp"
+        "@your-org/brand-safety-mcp"
       ]
     }
   }
@@ -696,22 +675,21 @@ For internal use cases, you can also:
 3. Create a private NPM package if you have an internal registry
 4. Provide pre-built versions that colleagues can download and run directly
 
-## Real-World Usage
+## Use Cases
 
-Integration with this MCP gives your LLM workflows the following capabilities:
+- **Content Generation Pipeline**: Automated brand compliance for AI-generated content
+- **Marketing Automation**: Ensure all campaigns align with brand voice
+- **Documentation Systems**: Maintain consistent technical documentation
+- **Customer Communications**: Standardize support responses
+- **Social Media Management**: Real-time brand safety checks
+- **Legal Compliance**: Ensure content meets regulatory requirements
 
-1. **Pre-Check Generated Content**: Verify content meets brand guidelines before publishing
-2. **Context-Aware Guidelines**: Apply different rules based on where content will appear
-3. **Content Correction**: Identify and fix brand compliance issues
-4. **Brand Guidelines Access**: Let LLMs retrieve the latest guidelines on demand
-5. **Cross-Team Consistency**: Ensure all teams follow the same brand standards
-
-## Example Tool Usage
+## Code Examples
 
 ```javascript
-// Safety evaluation
+// Brand safety evaluation
 const safetyResult = await client.callTool({
-  name: 'evaluateContent',
+  name: 'analyzeSafety',
   arguments: {
     content: "We've designed this feature with your workflow in mind."
   }
@@ -729,17 +707,41 @@ const complianceResult = await client.callTool({
 // Returns detailed brand compliance analysis
 ```
 
-## Recent Updates
+## Security & Performance
 
-*   **TypeScript Fixes (`src/server/brandService.ts`):** Implemented missing `countTechnicalTerms` and `detectToneWithConfidence` methods to resolve type errors.
-*   **Persistent Learning System (`src/server/brandService.ts`):** Introduced a major enhancement allowing the system to learn from false positive feedback (`addFalsePositive`). Learned data (allowlists, thresholds, sensitivity) is stored in `data/learning.json`, and the system adapts compliance checks over time. The `data/` directory has been added to `.gitignore`.
-*   **Brand Safety Refinements (`src/server/brandSafetyService.ts`):** Improved evaluation logic for all safety categories by adding word boundary checks (`\b`) to keyword matching and removing ambiguous keywords to minimize false positives.
-*   **Codebase Review:** Identified `src/server/simpleServer.ts` as potentially unused code.
+### Security Features
+- ✅ Input validation with Zod schemas
+- ✅ Path traversal protection
+- ✅ Rate limiting (DoS protection)
+- ✅ Safe error handling
+- ✅ No eval() or dynamic code execution
+- ✅ Secure file operations
+
+### Performance Optimizations
+- ⚡ Intelligent caching system
+- ⚡ O(n) algorithmic complexity
+- ⚡ Lazy loading of resources
+- ⚡ Efficient memory management
+- ⚡ Batch processing capabilities
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+We welcome contributions! Please see our:
+- [Contributing Guide](CONTRIBUTING.md) - Guidelines for contributing
+- [Security Policy](SECURITY.md) - Security vulnerability reporting
+- [Code of Conduct](CODE_OF_CONDUCT.md) - Community standards
+
+### Getting Help
+- 📖 [Documentation](https://github.com/sapochat/brand-mcp/wiki)
+- 🐛 [Issue Tracker](https://github.com/sapochat/brand-mcp/issues)
+- 💬 [Discussions](https://github.com/sapochat/brand-mcp/discussions)
 
 ## License
 
-This project is licensed under the MIT License.
+[MIT License](LICENSE) - See LICENSE file for details.
+
+---
+
+<p align="center">
+  Built with ❤️ for brand consistency in the age of AI
+</p>
