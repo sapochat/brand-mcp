@@ -1,0 +1,37 @@
+{
+  "id": "profanity-filter",
+  "name": "Profanity Filter Plugin",
+  "version": "1.0.0",
+  "description": "Detects and filters profanity in content",
+  "author": "Brand MCP",
+  "license": "MIT",
+  "main": "index.js",
+  "type": "evaluation",
+  "dependencies": {},
+  "config": {
+    "defaults": {
+      "strictMode": false,
+      "customWords": [],
+      "whitelistedWords": []
+    },
+    "schema": {
+      "type": "object",
+      "properties": {
+        "strictMode": {
+          "type": "boolean",
+          "description": "Enable strict profanity checking"
+        },
+        "customWords": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Additional words to flag as profanity"
+        },
+        "whitelistedWords": {
+          "type": "array", 
+          "items": { "type": "string" },
+          "description": "Words to exclude from profanity checking"
+        }
+      }
+    }
+  }
+}

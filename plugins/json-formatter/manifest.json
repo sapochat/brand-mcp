@@ -1,0 +1,17 @@
+{
+  "id": "json-formatter",
+  "name": "JSON Formatter Plugin",
+  "version": "1.0.0",
+  "description": "Formats evaluation results as JSON with various styles",
+  "author": "Brand MCP",
+  "license": "MIT",
+  "main": "index.js",
+  "type": "formatter",
+  "dependencies": {},
+  "config": {
+    "defaults": {
+      "prettyPrint": true,
+      "includeMetadata": true
+    }
+  }
+}

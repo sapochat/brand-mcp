@@ -1,0 +1,17 @@
+{
+  "id": "sentiment-enricher",
+  "name": "Sentiment Analysis Enricher",
+  "version": "1.0.0",
+  "description": "Enriches content with sentiment analysis metadata",
+  "author": "Brand MCP",
+  "license": "MIT",
+  "main": "index.js",
+  "type": "enricher",
+  "dependencies": {},
+  "config": {
+    "defaults": {
+      "languages": ["en"],
+      "addToneMarkers": true
+    }
+  }
+}

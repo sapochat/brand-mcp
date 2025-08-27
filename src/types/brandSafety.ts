@@ -82,4 +82,79 @@ export const DEFAULT_BRAND_SAFETY_CONFIG: BrandSafetyConfig = {
   sensitiveKeywords: [],
   allowedTopics: [],
   blockedTopics: []
-}; 
+};
+
+// Recommendation types
+export type RecommendationPriority = 'critical' | 'high' | 'medium' | 'low';
+
+export interface ActionableInsight {
+  title: string;
+  description: string;
+  actionItems: string[];
+  expectedImpact: string;
+  priority: RecommendationPriority;
+  category: string;
+  metrics?: {
+    currentValue: number;
+    targetValue: number;
+    improvement: string;
+  };
+  context?: {
+    industry?: string;
+    audience?: string;
+    platform?: string;
+    constraints?: string[];
+  };
+}
+
+export interface ImprovementStrategy {
+  id: string;
+  name: string;
+  description: string;
+  filter: (insights: ActionableInsight[]) => ActionableInsight[];
+  prioritize: (insights: ActionableInsight[]) => ActionableInsight[];
+}
+
+export interface ContentRecommendation {
+  summary: string;
+  insights: ActionableInsight[];
+  priorityMatrix: any;
+  roadmap: any;
+  estimatedImpact: any;
+  nextSteps: string[];
+  resources: any[];
+}
+
+export interface RecommendationContext {
+  industry?: string;
+  audience?: string;
+  platform?: string;
+  urgency?: 'low' | 'medium' | 'high';
+  constraints?: string[];
+}
+
+export interface RecommendationConfig {
+  strategy?: string;
+  maxRecommendations?: number;
+  includeMetrics?: boolean;
+  detailLevel?: 'summary' | 'detailed' | 'comprehensive';
+}
+
+export interface EvaluationResult {
+  safety: {
+    overallScore: number;
+    toxicityScore: number;
+    biasScore: number;
+    [key: string]: any;
+  };
+  compliance: {
+    overallScore: number;
+    brandAlignmentScore: number;
+    regulatoryCompliance: number;
+    [key: string]: any;
+  };
+  metadata?: {
+    wordCount?: number;
+    [key: string]: any;
+  };
+} 

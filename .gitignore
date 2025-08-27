@@ -31,7 +31,7 @@ data/
 logs/
 *.log
 
-# Configuration
+# Config
 config.json
 
 # Coverage reports
@@ -41,3 +41,8 @@ coverage/
 # Test artifacts
 *.test.js
 *.spec.js
+
+# Dev stuff (private)
+ROADMAP.md
+IMPROVEMENTS.md
+CLAUDE.md
