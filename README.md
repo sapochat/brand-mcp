@@ -565,7 +565,7 @@ We welcome contributions! See:
 
 ```bash
 # Fork and clone
-git clone https://github.com/yourusername/brand-mcp.git
+git clone https://github.com/sapochat/brand-mcp.git
 
 # Create feature branch
 git checkout -b feature/your-feature
@@ -579,10 +579,7 @@ npm run lint
 
 ## Support
 
-- 📖 [Documentation](https://github.com/sapochat/brand-mcp/wiki)
-- 🐛 [Issue Tracker](https://github.com/sapochat/brand-mcp/issues)
-- 💬 [Discussions](https://github.com/sapochat/brand-mcp/discussions)
-- 📧 [Email Support](mailto:support@example.com)
+- [Issue Tracker](https://github.com/sapochat/brand-mcp/issues)
 
 ## License
 
