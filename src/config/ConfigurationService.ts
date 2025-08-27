@@ -43,6 +43,7 @@ const DEFAULT_CONFIG: AppConfig = {
     autoReload: false
   },
   safety: {
+    categories: [],
     sensitiveKeywords: [],
     allowedTopics: [],
     blockedTopics: [],
@@ -264,8 +265,8 @@ export class ConfigurationService {
     }
     
     try {
-      const { loadBrandSchema } = await import('../server/brandSchemaLoader.js');
-      this.brandSchema = await loadBrandSchema(this.config.brand.schemaPath);
+      const { loadBrandSchema } = await import('../utils/brandSchemaLoader.js');
+      this.brandSchema = await loadBrandSchema();
       return this.brandSchema;
     } catch (error) {
       throw new SafeError(

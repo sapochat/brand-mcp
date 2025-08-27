@@ -89,12 +89,12 @@ export abstract class IndustryValidator {
    */
   protected checkRequiredDisclosures(
     content: string, 
-    context?: ValidationContext
+    _context?: ValidationContext
   ): MissingRequirement[] {
     const missing: MissingRequirement[] = [];
 
     for (const [disclosure, requirement] of this.requiredDisclosures) {
-      if (this.isDisclosureRequired(disclosure, content, context)) {
+      if (this.isDisclosureRequired(disclosure, content, _context)) {
         const hasDisclosure = this.hasDisclosure(content, disclosure);
         
         if (!hasDisclosure) {
@@ -116,28 +116,28 @@ export abstract class IndustryValidator {
    */
   protected async checkSpecialRequirements(
     content: string,
-    context?: ValidationContext
+    _context?: ValidationContext
   ): Promise<{ violations: ComplianceViolation[], warnings: ComplianceWarning[] }> {
     const violations: ComplianceViolation[] = [];
     const warnings: ComplianceWarning[] = [];
 
     for (const requirement of this.specialRequirements) {
-      const result = await requirement.check(content, context);
+      const result = await requirement.check(content, _context);
       
       if (!result.passed) {
         if (result.severity === 'violation') {
           violations.push({
             type: 'special_requirement',
             severity: 'high',
-            description: result.message,
+            description: result.message || '',
             reason: requirement.reason,
             regulation: requirement.regulation
           });
         } else {
           warnings.push({
             type: 'special_requirement',
-            message: result.message,
-            recommendation: result.recommendation
+            message: result.message || '',
+            recommendation: result.recommendation || ''
           });
         }
       }
@@ -201,7 +201,7 @@ export abstract class IndustryValidator {
    */
   protected abstract performIndustrySpecificChecks(
     content: string,
-    context?: ValidationContext
+    _context?: ValidationContext
   ): Promise<{
     violations: ComplianceViolation[],
     warnings: ComplianceWarning[],
@@ -211,7 +211,7 @@ export abstract class IndustryValidator {
   protected abstract isDisclosureRequired(
     disclosure: string,
     content: string,
-    context?: ValidationContext
+    _context?: ValidationContext
   ): boolean;
 
   protected abstract hasDisclosure(content: string, disclosure: string): boolean;
@@ -275,7 +275,7 @@ export class FinancialServicesValidator extends IndustryValidator {
 
   protected async performIndustrySpecificChecks(
     content: string,
-    context?: ValidationContext
+    _context?: ValidationContext
   ) {
     const violations: ComplianceViolation[] = [];
     const warnings: ComplianceWarning[] = [];
@@ -311,7 +311,7 @@ export class FinancialServicesValidator extends IndustryValidator {
   protected isDisclosureRequired(
     disclosure: string,
     content: string,
-    context?: ValidationContext
+    _context?: ValidationContext
   ): boolean {
     switch (disclosure) {
       case 'investment_risk':
@@ -349,10 +349,10 @@ export class FinancialServicesValidator extends IndustryValidator {
     return templates[disclosure] || '';
   }
 
-  protected getRelevantRegulation(term: string): string {
-    if (term.includes('return') || term.includes('guarantee')) return 'SEC Rule 206(4)-1';
-    if (term.includes('fdic') || term.includes('deposit')) return 'Federal Deposit Insurance Act';
-    if (term.includes('apr') || term.includes('loan')) return 'Regulation Z';
+  protected getRelevantRegulation(_term: string): string {
+    if (_term.includes('return') || _term.includes('guarantee')) return 'SEC Rule 206(4)-1';
+    if (_term.includes('fdic') || _term.includes('deposit')) return 'Federal Deposit Insurance Act';
+    if (_term.includes('apr') || _term.includes('loan')) return 'Regulation Z';
     return 'FINRA Rule 2210';
   }
 }
@@ -413,7 +413,7 @@ export class HealthcareValidator extends IndustryValidator {
 
   protected async performIndustrySpecificChecks(
     content: string,
-    context?: ValidationContext
+    _context?: ValidationContext
   ) {
     const violations: ComplianceViolation[] = [];
     const warnings: ComplianceWarning[] = [];
@@ -450,7 +450,7 @@ export class HealthcareValidator extends IndustryValidator {
   protected isDisclosureRequired(
     disclosure: string,
     content: string,
-    context?: ValidationContext
+    _context?: ValidationContext
   ): boolean {
     switch (disclosure) {
       case 'medical_advice':
@@ -488,10 +488,10 @@ export class HealthcareValidator extends IndustryValidator {
     return templates[disclosure] || '';
   }
 
-  protected getRelevantRegulation(term: string): string {
-    if (term.includes('FDA') || term.includes('approved')) return 'FDA Regulations';
-    if (term.includes('cure') || term.includes('treatment')) return 'FTC Health Claims';
-    if (term.includes('privacy') || term.includes('patient')) return 'HIPAA Privacy Rule';
+  protected getRelevantRegulation(_term: string): string {
+    if (_term.includes('FDA') || _term.includes('approved')) return 'FDA Regulations';
+    if (_term.includes('cure') || _term.includes('treatment')) return 'FTC Health Claims';
+    if (_term.includes('privacy') || _term.includes('patient')) return 'HIPAA Privacy Rule';
     return 'FTC Act Section 5';
   }
 }
@@ -547,7 +547,7 @@ export class LegalServicesValidator extends IndustryValidator {
 
   protected async performIndustrySpecificChecks(
     content: string,
-    context?: ValidationContext
+    _context?: ValidationContext
   ) {
     const violations: ComplianceViolation[] = [];
     const warnings: ComplianceWarning[] = [];
@@ -571,7 +571,7 @@ export class LegalServicesValidator extends IndustryValidator {
   protected isDisclosureRequired(
     disclosure: string,
     content: string,
-    context?: ValidationContext
+    _context?: ValidationContext
   ): boolean {
     switch (disclosure) {
       case 'attorney_advertising':
@@ -605,7 +605,7 @@ export class LegalServicesValidator extends IndustryValidator {
     return templates[disclosure] || '';
   }
 
-  protected getRelevantRegulation(term: string): string {
+  protected getRelevantRegulation(_term: string): string {
     return 'ABA Model Rules of Professional Conduct';
   }
 }

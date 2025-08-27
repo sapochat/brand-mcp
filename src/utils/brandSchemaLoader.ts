@@ -1,4 +1,3 @@
-import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { BrandSchema } from '../types/brandSchema.js';
@@ -14,7 +13,14 @@ export async function loadBrandSchema(): Promise<BrandSchema> {
     // Load from project root
     const schemaPath = path.resolve(__dirname, '../../brandSchema.js');
     const module = await import(schemaPath);
-    return module.default || module.brandSchema;
+    const schema = module.default || module.brandSchema;
+    
+    // Ensure gridSystem is always defined
+    if (schema?.visualIdentity?.layout && !schema.visualIdentity.layout.gridSystem) {
+      schema.visualIdentity.layout.gridSystem = '12-column';
+    }
+    
+    return schema;
   } catch (error) {
     throw new Error(`Failed to load brand schema: ${error instanceof Error ? error.message : String(error)}`);
   }

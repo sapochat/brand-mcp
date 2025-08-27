@@ -2,13 +2,11 @@
  * Multi-language support for content analysis
  */
 export class MultiLanguageAnalyzer {
-  private languageDetectors: Map<string, LanguageDetector>;
   private languageProcessors: Map<string, LanguageProcessor>;
   private translationCache: Map<string, TranslationResult>;
   private languagePatterns: Map<string, LanguagePatterns>;
 
   constructor() {
-    this.languageDetectors = new Map();
     this.languageProcessors = new Map();
     this.translationCache = new Map();
     this.languagePatterns = new Map();
@@ -323,7 +321,7 @@ export class MultiLanguageAnalyzer {
     let score = 0;
     const contentLower = content.toLowerCase();
 
-    for (const [category, pattern] of Object.entries(patterns.commonPatterns)) {
+    for (const [_category, pattern] of Object.entries(patterns.commonPatterns)) {
       const matches = contentLower.match(pattern);
       if (matches) {
         score += matches.length * 5;
@@ -610,7 +608,7 @@ export class MultiLanguageAnalyzer {
     words: number,
     sentences: number,
     syllables: number,
-    language: string
+    _language: string
   ): number {
     if (sentences === 0 || words === 0) return 0;
 
@@ -622,7 +620,7 @@ export class MultiLanguageAnalyzer {
       de: { a: 180, b: 1.0 }
     };
 
-    const coef = coefficients[language] || coefficients.en;
+    const coef = coefficients[_language] || coefficients.en;
     
     const score = coef.a - coef.b * (words / sentences) - 84.6 * (syllables / words);
     return Math.max(0, Math.min(100, score));
@@ -635,7 +633,7 @@ export class MultiLanguageAnalyzer {
     words: number,
     sentences: number,
     syllables: number,
-    language: string
+    _language: string
   ): number {
     if (sentences === 0 || words === 0) return 0;
 
@@ -661,8 +659,8 @@ export class MultiLanguageAnalyzer {
    * Get language-specific readability score
    */
   private async getLanguageSpecificReadabilityScore(
-    content: string,
-    language: string
+    _content: string,
+    _language: string
   ): Promise<number> {
     // Placeholder for language-specific calculations
     // Would implement LIX for Swedish, ARI for Arabic, etc.
@@ -674,7 +672,7 @@ export class MultiLanguageAnalyzer {
    */
   private generateLanguageRecommendations(
     features: LanguageFeatures,
-    sentiment: LanguageSentiment,
+    _sentiment: LanguageSentiment,
     culturalIssues: CulturalIssue[],
     language: string
   ): string[] {

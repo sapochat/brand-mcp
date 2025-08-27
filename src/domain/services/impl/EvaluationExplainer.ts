@@ -2,12 +2,10 @@
  * Evaluation explanation system for providing clear, actionable feedback
  */
 export class EvaluationExplainer {
-  private templateEngine: ExplanationTemplateEngine;
   private contextualizer: ExplanationContextualizer;
   private simplifier: ExplanationSimplifier;
 
   constructor() {
-    this.templateEngine = new ExplanationTemplateEngine();
     this.contextualizer = new ExplanationContextualizer();
     this.simplifier = new ExplanationSimplifier();
   }
@@ -441,7 +439,7 @@ export class EvaluationExplainer {
    */
   private buildNarrative(
     core: CoreExplanation,
-    breakdowns: DetailedBreakdown[],
+    _breakdowns: DetailedBreakdown[],
     insights: ActionableInsight[]
   ): NarrativeExplanation {
     const sections: NarrativeSection[] = [];
@@ -575,6 +573,7 @@ export class EvaluationExplainer {
 /**
  * Explanation Template Engine
  */
+// @ts-ignore - Unused class for future implementation
 class ExplanationTemplateEngine {
   private templates: Map<string, string> = new Map();
 

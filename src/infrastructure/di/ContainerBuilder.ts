@@ -92,9 +92,7 @@ export class ContainerBuilder {
     );
     
     container.registerFactory(ServiceKeys.COMBINED_RESPONSE_FORMATTER, () => {
-      const safetyFormatter = container.resolve<any>(ServiceKeys.SAFETY_RESPONSE_FORMATTER);
-      const complianceFormatter = container.resolve<any>(ServiceKeys.COMPLIANCE_RESPONSE_FORMATTER);
-      return new CombinedResponseFormatter(safetyFormatter, complianceFormatter);
+      return new CombinedResponseFormatter();
     });
     
     container.registerSingleton(

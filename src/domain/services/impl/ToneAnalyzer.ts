@@ -525,7 +525,7 @@ export class ToneAnalyzer {
    * Generate tone recommendations
    */
   private generateToneRecommendations(
-    tone: ToneType,
+    _tone: ToneType,
     formality: FormalityAnalysis,
     consistency: ConsistencyAnalysis,
     appropriateness: AppropriatenessAnalysis | null,

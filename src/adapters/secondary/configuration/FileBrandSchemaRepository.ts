@@ -15,7 +15,7 @@ export class FileBrandSchemaRepository implements BrandSchemaRepository {
     }
   }
 
-  async updateBrandSchema(schema: BrandSchema): Promise<void> {
+  async updateBrandSchema(_schema: BrandSchema): Promise<void> {
     throw new Error('Brand schema update not implemented for file-based repository');
   }
 

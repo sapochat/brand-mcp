@@ -1,16 +1,11 @@
 import { CombinedEvaluationResult } from '../../../../domain/value-objects/EvaluationResult.js';
-import { SafetyResponseFormatter } from './SafetyResponseFormatter.js';
-import { ComplianceResponseFormatter } from './ComplianceResponseFormatter.js';
 
 /**
  * Formats combined evaluation results for MCP responses
  */
 export class CombinedResponseFormatter {
   
-  constructor(
-    private readonly safetyFormatter: SafetyResponseFormatter,
-    private readonly complianceFormatter: ComplianceResponseFormatter
-  ) {}
+  constructor() {}
 
   format(result: CombinedEvaluationResult): string {
     let output = `# Combined Brand and Safety Evaluation\\n\\n`;

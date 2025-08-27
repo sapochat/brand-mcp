@@ -6,7 +6,8 @@ import { testCommand } from './commands/test.js';
 import { pluginCommand } from './commands/plugin.js';
 import { configCommand } from './commands/config.js';
 import { batchCommand } from './commands/batch.js';
-import { version } from '../../package.json';
+import packageData from '../../package.json' with { type: 'json' };
+const { version } = packageData;
 
 /**
  * Brand MCP CLI Tool
