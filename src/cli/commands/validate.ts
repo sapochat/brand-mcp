@@ -1,6 +1,5 @@
 import { Command } from 'commander';
 import { promises as fs } from 'fs';
-import path from 'path';
 import { ContainerBuilder } from '../../infrastructure/di/ContainerBuilder.js';
 import { ServiceKeys } from '../../infrastructure/di/Container.js';
 import chalk from 'chalk';

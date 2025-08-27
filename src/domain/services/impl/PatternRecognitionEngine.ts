@@ -155,7 +155,7 @@ export class PatternRecognitionEngine {
     const anomalies: ContentAnomaly[] = [];
     
     // Check built-in patterns
-    for (const [id, pattern] of this.patterns) {
+    for (const [_id, pattern] of this.patterns) {
       const detection = this.checkPattern(content, pattern, context);
       if (detection) {
         detectedPatterns.push(detection);
@@ -163,7 +163,7 @@ export class PatternRecognitionEngine {
     }
 
     // Check custom patterns
-    for (const [id, pattern] of this.customPatterns) {
+    for (const [_id, pattern] of this.customPatterns) {
       const detection = this.checkCustomPattern(content, pattern, context);
       if (detection) {
         detectedPatterns.push(detection);
@@ -198,7 +198,7 @@ export class PatternRecognitionEngine {
   private checkPattern(
     content: string, 
     pattern: ContentPattern, 
-    context?: PatternContext
+    _context?: PatternContext
   ): DetectedPattern | null {
     // Check if pattern requires certain conditions
     if (pattern.requiredWhen) {
@@ -259,9 +259,9 @@ export class PatternRecognitionEngine {
   private checkCustomPattern(
     content: string,
     pattern: CustomPattern,
-    context?: PatternContext
+    _context?: PatternContext
   ): DetectedPattern | null {
-    if (pattern.detector(content, context)) {
+    if (pattern.detector(content, _context)) {
       return {
         pattern: {
           id: pattern.id,
@@ -332,7 +332,7 @@ export class PatternRecognitionEngine {
    */
   private generateRecommendations(
     patterns: DetectedPattern[],
-    anomalies: ContentAnomaly[]
+    _anomalies: ContentAnomaly[]
   ): PatternRecommendation[] {
     const recommendations: PatternRecommendation[] = [];
 
@@ -365,14 +365,18 @@ export class PatternRecognitionEngine {
     const severityCounts = new Map<string, number>();
 
     for (const pattern of patterns) {
-      categoryCounts.set(
-        pattern.pattern.category,
-        (categoryCounts.get(pattern.pattern.category) || 0) + 1
-      );
-      severityCounts.set(
-        pattern.severity,
-        (severityCounts.get(pattern.severity) || 0) + 1
-      );
+      if (pattern.pattern.category) {
+        categoryCounts.set(
+          pattern.pattern.category,
+          (categoryCounts.get(pattern.pattern.category) || 0) + 1
+        );
+      }
+      if (pattern.severity) {
+        severityCounts.set(
+          pattern.severity,
+          (severityCounts.get(pattern.severity) || 0) + 1
+        );
+      }
     }
 
     return {
@@ -383,7 +387,8 @@ export class PatternRecognitionEngine {
       criticalIssues: patterns.filter(p => p.severity === 'critical').length,
       highPriorityActions: patterns
         .filter(p => p.severity === 'critical' || p.severity === 'high')
-        .map(p => p.pattern.name)
+        .map(p => p.pattern.name || '')
+        .filter(n => n !== '')
     };
   }
 

@@ -251,9 +251,9 @@ export class McpRequestValidator {
     
     if (Array.isArray(metadata.tags)) {
       result.tags = metadata.tags
-        .filter(tag => typeof tag === 'string')
-        .map(tag => tag.trim())
-        .filter(tag => tag.length > 0);
+        .filter((tag: any) => typeof tag === 'string')
+        .map((tag: string) => tag.trim())
+        .filter((tag: string) => tag.length > 0);
     }
     
     return Object.keys(result).length > 0 ? result : undefined;

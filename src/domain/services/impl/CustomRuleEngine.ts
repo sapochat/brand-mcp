@@ -134,7 +134,7 @@ export class CustomRuleEngine {
       // Execute actions if configured
       if (!passed && rule.actions) {
         for (const action of rule.actions) {
-          await this.executeAction(action, content, context, violations);
+          await this.executeAction(action, content, violations, context);
         }
       }
 
@@ -381,8 +381,8 @@ export class CustomRuleEngine {
   private async executeAction(
     action: RuleAction,
     content: string,
-    context?: RuleContext,
-    violations: RuleViolation[]
+    violations: RuleViolation[],
+    context?: RuleContext
   ): Promise<void> {
     switch (action.type) {
       case 'log':
@@ -522,7 +522,7 @@ export class CustomRuleEngine {
    */
   private generateRecommendations(
     violations: RuleViolation[],
-    context?: RuleContext
+    _context?: RuleContext
   ): string[] {
     const recommendations = new Set<string>();
 

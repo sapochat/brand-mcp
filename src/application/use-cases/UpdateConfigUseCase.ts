@@ -1,4 +1,4 @@
-import { SafetyEvaluationService, SafetyConfig } from '../../domain/services/SafetyEvaluationService.js';
+import { SafetyEvaluationService } from '../../domain/services/SafetyEvaluationService.js';
 
 /**
  * Use case for updating safety configuration

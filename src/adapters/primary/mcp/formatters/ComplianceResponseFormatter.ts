@@ -1,4 +1,4 @@
-import { ComplianceEvaluation, IssueType, IssueSeverity } from '../../../../domain/entities/ComplianceEvaluation.js';
+import { ComplianceEvaluation, IssueSeverity } from '../../../../domain/entities/ComplianceEvaluation.js';
 
 /**
  * Formats brand compliance evaluation results for MCP responses

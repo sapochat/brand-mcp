@@ -22,7 +22,7 @@ import { ComplianceResponseFormatter } from './formatters/ComplianceResponseForm
 import { CombinedResponseFormatter } from './formatters/CombinedResponseFormatter.js';
 import { BatchResponseFormatter } from './formatters/BatchResponseFormatter.js';
 import { McpRequestValidator } from './validators/McpRequestValidator.js';
-import { RateLimiter, SafeError, wrapError } from '../../../utils/security.js';
+import { RateLimiter, wrapError } from '../../../utils/security.js';
 
 /**
  * MCP Server Adapter - handles MCP protocol communication
@@ -102,7 +102,7 @@ export class McpServerAdapter {
   private getAvailableTools(): Tool[] {
     return [
       {
-        name: 'Safety_Check',
+        name: 'safety-check',
         description: 'Analyze text content for brand safety concerns',
         inputSchema: {
           type: 'object',
@@ -125,7 +125,7 @@ export class McpServerAdapter {
         }
       },
       {
-        name: 'Check_Compliance',
+        name: 'check-compliance',
         description: 'Evaluate content for compliance with brand guidelines',
         inputSchema: {
           type: 'object',
@@ -148,7 +148,7 @@ export class McpServerAdapter {
         }
       },
       {
-        name: 'Content_Evaluation',
+        name: 'evaluate-content',
         description: 'Perform a combined evaluation for both brand safety and brand compliance',
         inputSchema: {
           type: 'object',
@@ -187,7 +187,7 @@ export class McpServerAdapter {
         }
       },
       {
-        name: 'Batch_Evaluation',
+        name: 'batch-evaluation',
         description: 'Evaluate multiple content pieces in a single batch operation',
         inputSchema: {
           type: 'object',
@@ -228,7 +228,7 @@ export class McpServerAdapter {
         }
       },
       {
-        name: 'Update_Config',
+        name: 'update-config',
         description: 'Update brand safety configuration settings',
         inputSchema: {
           type: 'object',
@@ -267,7 +267,7 @@ export class McpServerAdapter {
     return [
       {
         name: 'evaluate-content',
-        description: 'Evaluate content for brand safety concerns',
+        description: 'Evaluate content against brand safety standards',
         arguments: [
           {
             name: 'content',
@@ -278,7 +278,7 @@ export class McpServerAdapter {
       },
       {
         name: 'get-brand-guidelines',
-        description: 'Get guidelines for the active brand',
+        description: 'Get current brand guidelines and safety requirements',
         arguments: []
       }
     ];
@@ -288,14 +288,14 @@ export class McpServerAdapter {
     return [
       {
         uri: 'brand-safety://guidelines',
-        name: 'Brand Safety Guidelines',
-        description: 'Guidelines for evaluating content against brand safety standards',
+        name: 'Safety Guidelines',
+        description: 'Brand safety standards and evaluation criteria',
         mimeType: 'text/plain'
       },
       {
         uri: 'brand://guidelines',
         name: 'Brand Guidelines',
-        description: 'Guidelines for brand compliance',
+        description: 'Brand voice, tone, and compliance requirements',
         mimeType: 'text/plain'
       }
     ];
@@ -314,19 +314,19 @@ export class McpServerAdapter {
 
     try {
       switch (request.params.name) {
-        case 'Safety_Check':
+        case 'safety-check':
           return this.handleSafetyCheck(request.params.arguments);
         
-        case 'Check_Compliance':
+        case 'check-compliance':
           return this.handleComplianceCheck(request.params.arguments);
         
-        case 'Content_Evaluation':
+        case 'evaluate-content':
           return this.handleCombinedEvaluation(request.params.arguments);
         
-        case 'Batch_Evaluation':
+        case 'batch-evaluation':
           return this.handleBatchEvaluation(request.params.arguments);
         
-        case 'Update_Config':
+        case 'update-config':
           return this.handleUpdateConfig(request.params.arguments);
         
         default:

@@ -86,7 +86,7 @@ export interface VisualIdentity {
   };
   readonly layout: {
     readonly preferences: string;
-    readonly gridSystem: string;
+    readonly gridSystem?: string;
   };
 }
 

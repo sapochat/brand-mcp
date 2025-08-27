@@ -6,7 +6,7 @@ import {
   ImprovementStrategy,
   RecommendationContext,
   RecommendationConfig
-} from '../../../types/brandSafety';
+} from '../../../types/brandSafety.js';
 
 interface RecommendationRule {
   id: string;
@@ -152,7 +152,7 @@ export class RecommendationEngine {
       name: 'Readability Enhancement',
       condition: (result) => {
         const avgScore = (result.safety.overallScore + result.compliance.overallScore) / 2;
-        return avgScore < 0.8 && result.metadata?.wordCount > 100;
+        return avgScore < 0.8 && (result.metadata?.wordCount || 0) > 100;
       },
       generate: (result) => ({
         title: 'Enhance Content Readability',
@@ -182,39 +182,39 @@ export class RecommendationEngine {
       id: 'quick-wins',
       name: 'Quick Wins Strategy',
       description: 'Focus on high-impact, low-effort improvements',
-      filter: (insights) => insights.filter(i => 
+      filter: (insights: any) => insights.filter((i: any) => 
         this.assessImpact(i).effort === 'low' && 
         this.assessImpact(i).impact !== 'low'
       ),
-      prioritize: (insights) => this.prioritizeByImpactEffortRatio(insights)
+      prioritize: (insights: any) => this.prioritizeByImpactEffortRatio(insights)
     });
 
     this.strategies.set('safety-first', {
       id: 'safety-first',
       name: 'Safety First Strategy',
       description: 'Prioritize safety and risk mitigation',
-      filter: (insights) => insights.filter(i => 
+      filter: (insights: any) => insights.filter((i: any) => 
         i.category === 'safety' || i.priority === 'critical'
       ),
-      prioritize: (insights) => this.prioritizeBySafety(insights)
+      prioritize: (insights: any) => this.prioritizeBySafety(insights)
     });
 
     this.strategies.set('compliance-focused', {
       id: 'compliance-focused',
       name: 'Compliance Focused Strategy',
       description: 'Ensure all regulatory and brand requirements are met',
-      filter: (insights) => insights.filter(i => 
+      filter: (insights: any) => insights.filter((i: any) => 
         i.category === 'compliance' || i.category === 'legal'
       ),
-      prioritize: (insights) => this.prioritizeByCompliance(insights)
+      prioritize: (insights: any) => this.prioritizeByCompliance(insights)
     });
 
     this.strategies.set('balanced', {
       id: 'balanced',
       name: 'Balanced Improvement Strategy',
       description: 'Balance all aspects for overall improvement',
-      filter: (insights) => insights,
-      prioritize: (insights) => this.prioritizeBalanced(insights)
+      filter: (insights: any) => insights,
+      prioritize: (insights: any) => this.prioritizeBalanced(insights)
     });
   }
 
