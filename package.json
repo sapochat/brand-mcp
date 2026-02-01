@@ -1,6 +1,6 @@
 {
   "name": "brand-safety-mcp",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "description": "Enterprise-grade Model Context Protocol server for AI content brand safety and compliance",
   "main": "dist/main.js",
   "type": "module",
