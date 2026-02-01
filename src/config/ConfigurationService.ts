@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { BrandSchema } from '../types/brandSchema.js';
 import { BrandSafetyConfig, RiskLevel } from '../types/brandSafety.js';
 import { validatePath, SafeError } from '../utils/security.js';
+import { deepMerge } from '../utils/objectUtils.js';
 
 /**
  * Application configuration interface
@@ -130,7 +131,7 @@ export class ConfigurationService {
         const loadedConfig = JSON.parse(configContent) as Partial<AppConfig>;
 
         // Deep merge with defaults
-        this.config = this.deepMerge(DEFAULT_CONFIG, loadedConfig);
+        this.config = deepMerge(DEFAULT_CONFIG, loadedConfig);
       } else {
         // Create default config file
         this.saveConfiguration();
@@ -218,7 +219,7 @@ export class ConfigurationService {
    * Update configuration
    */
   updateConfig(updates: Partial<AppConfig>): void {
-    this.config = this.deepMerge(this.config, updates);
+    this.config = deepMerge(this.config, updates);
     this.saveConfiguration();
   }
 
@@ -299,28 +300,6 @@ export class ConfigurationService {
     if (process.env.NODE_ENV !== 'production') {
       console.warn('Configuration reloaded');
     }
-  }
-
-  /**
-   * Deep merge objects
-   */
-  private deepMerge<T extends object>(target: T, source: Partial<T>): T {
-    const result = { ...target } as T;
-
-    for (const key in source) {
-      const sourceValue = source[key];
-      const targetValue = target[key];
-      if (sourceValue !== null && typeof sourceValue === 'object' && !Array.isArray(sourceValue)) {
-        (result as Record<string, unknown>)[key] = this.deepMerge(
-          (targetValue as object) || {},
-          sourceValue as Partial<object>
-        );
-      } else {
-        (result as Record<string, unknown>)[key] = sourceValue;
-      }
-    }
-
-    return result;
   }
 
   /**
