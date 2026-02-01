@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3%2B-blue.svg)](https://www.typescriptlang.org/)
-[![MCP](https://img.shields.io/badge/Model%20Context%20Protocol-1.11%2B-green.svg)](https://modelcontextprotocol.io/)
+[![MCP](https://img.shields.io/badge/Model%20Context%20Protocol-1.25%2B-green.svg)](https://modelcontextprotocol.io/)
 [![Architecture](https://img.shields.io/badge/Architecture-Hexagonal-brightgreen.svg)](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software))
 
 A Model Context Protocol (MCP) server that actually checks if your AI-generated content sounds like your brand and won't get you cancelled. Built with clean architecture so you can extend it without wanting to rewrite everything.
@@ -314,44 +314,12 @@ brand-mcp test --input "Test content" --expected-risk high
 
 ### Tools
 
-#### `Safety_Check`
+#### `safety-check`
 Analyzes content for safety risks across all categories.
 
 ```javascript
 {
-  name: 'Safety_Check',
-  arguments: {
-    content: string,
-    options?: {
-      categories?: string[],
-      threshold?: number
-    }
-  }
-}
-```
-
-#### `Check_Compliance`
-Evaluates brand compliance with detailed scoring.
-
-```javascript
-{
-  name: 'Check_Compliance',
-  arguments: {
-    content: string,
-    context?: string,
-    options?: {
-      strictMode?: boolean
-    }
-  }
-}
-```
-
-#### `Content_Evaluation`
-Combined safety and compliance evaluation.
-
-```javascript
-{
-  name: 'Content_Evaluation',
+  name: 'safety-check',
   arguments: {
     content: string,
     context?: string
@@ -359,19 +327,64 @@ Combined safety and compliance evaluation.
 }
 ```
 
-#### `Batch_Evaluation`
+#### `check-compliance`
+Evaluates brand compliance with detailed scoring.
+
+```javascript
+{
+  name: 'check-compliance',
+  arguments: {
+    content: string,
+    context?: string
+  }
+}
+```
+
+#### `evaluate-content`
+Combined safety and compliance evaluation.
+
+```javascript
+{
+  name: 'evaluate-content',
+  arguments: {
+    content: string,
+    context?: string,
+    includeSafety?: boolean,
+    includeBrand?: boolean,
+    brandWeight?: number,
+    safetyWeight?: number
+  }
+}
+```
+
+#### `batch-evaluation`
 Process multiple content items efficiently.
 
 ```javascript
 {
-  name: 'Batch_Evaluation',
+  name: 'batch-evaluation',
   arguments: {
     items: Array<{
-      id: string,
+      id?: string,
       content: string,
       context?: string
     }>,
-    type: 'safety' | 'compliance' | 'combined'
+    evaluationType?: 'safety' | 'compliance' | 'combined'
+  }
+}
+```
+
+#### `update-config`
+Update brand safety configuration at runtime.
+
+```javascript
+{
+  name: 'update-config',
+  arguments: {
+    sensitiveKeywords?: string[],
+    allowedTopics?: string[],
+    blockedTopics?: string[],
+    riskTolerances?: Record<string, string>
   }
 }
 ```
@@ -384,10 +397,10 @@ Process large content libraries efficiently:
 
 ```javascript
 const results = await client.callTool({
-  name: 'Batch_Evaluation',
+  name: 'batch-evaluation',
   arguments: {
     items: contentArray,
-    type: 'combined'
+    evaluationType: 'combined'
   }
 });
 
@@ -484,6 +497,26 @@ Once configured, interact naturally with Claude:
 > "Check this marketing copy for brand compliance: 'We're leveraging cutting-edge AI to disrupt the industry.'"
 
 Claude will automatically use the Brand MCP tools and provide formatted feedback.
+
+## Claude Code Skills
+
+This project includes Claude Code skills for AI-assisted development:
+
+```
+.claude/skills/
+├── evaluate.md    # Brand safety evaluation skill
+├── compliance.md  # Brand compliance check skill
+└── batch.md       # Batch evaluation skill
+```
+
+### Using Skills
+
+When working with Claude Code, reference the skills for guidance:
+- `/evaluate` - Check content for brand safety
+- `/compliance` - Verify brand guideline compliance
+- `/batch` - Process multiple content items
+
+See also `AGENTS.md` for multi-agent coordination guidelines.
 
 ## Development
 
