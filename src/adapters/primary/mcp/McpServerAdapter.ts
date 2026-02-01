@@ -637,7 +637,8 @@ export class McpServerAdapter {
       }
 
       return lines.join('\n');
-    } catch {
+    } catch (error) {
+      console.error('Failed to generate brand guidelines:', error);
       return '# Brand Guidelines\n\nFailed to load brand schema.';
     }
   }
