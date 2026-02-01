@@ -23,6 +23,8 @@ import { CombinedResponseFormatter } from './formatters/CombinedResponseFormatte
 import { BatchResponseFormatter } from './formatters/BatchResponseFormatter.js';
 import { McpRequestValidator } from './validators/McpRequestValidator.js';
 import { RateLimiter, wrapError } from '../../../utils/security.js';
+import { BrandSchemaRepository } from '../../../domain/repositories/BrandSchemaRepository.js';
+import { DEFAULT_BRAND_SAFETY_CONFIG } from '../../../types/brandSafety.js';
 
 /**
  * MCP Request types for tool calls
@@ -93,7 +95,8 @@ export class McpServerAdapter {
     private readonly complianceFormatter: ComplianceResponseFormatter,
     private readonly combinedFormatter: CombinedResponseFormatter,
     private readonly batchFormatter: BatchResponseFormatter | undefined,
-    private readonly requestValidator: McpRequestValidator
+    private readonly requestValidator: McpRequestValidator,
+    private readonly brandSchemaRepository?: BrandSchemaRepository
   ) {
     this.rateLimiter = new RateLimiter();
     this.server = this.createServer();
@@ -482,7 +485,6 @@ export class McpServerAdapter {
   }
 
   private async handleReadResource(request: McpResourceRequest): Promise<McpResourceResponse> {
-    // Implementation for resource reading
     switch (request.params.uri) {
       case 'brand-safety://guidelines':
         return {
@@ -490,7 +492,7 @@ export class McpServerAdapter {
             {
               uri: request.params.uri,
               mimeType: 'text/plain',
-              text: 'Brand safety guidelines content...', // This would be generated dynamically
+              text: this.generateSafetyGuidelines(),
             },
           ],
         };
@@ -501,13 +503,142 @@ export class McpServerAdapter {
             {
               uri: request.params.uri,
               mimeType: 'text/plain',
-              text: 'Brand guidelines content...', // This would be generated dynamically
+              text: await this.generateBrandGuidelines(),
             },
           ],
         };
 
       default:
         throw new Error(`Unknown resource URI: ${request.params.uri}`);
+    }
+  }
+
+  /**
+   * Generate brand safety guidelines from configuration
+   */
+  private generateSafetyGuidelines(): string {
+    const config = DEFAULT_BRAND_SAFETY_CONFIG;
+    const lines: string[] = [
+      '# Brand Safety Guidelines',
+      '',
+      '## Safety Categories',
+      '',
+      'Content is evaluated across the following safety categories:',
+      '',
+    ];
+
+    for (const category of config.categories) {
+      const tolerance = config.riskTolerances[category] || 'MEDIUM';
+      lines.push(`- **${category}**: Risk tolerance = ${tolerance}`);
+    }
+
+    lines.push('', '## Risk Levels', '');
+    lines.push('- **NONE**: No risk tolerance - content will be flagged');
+    lines.push('- **LOW**: Minor concerns acceptable');
+    lines.push('- **MEDIUM**: Moderate concerns may pass');
+    lines.push('- **HIGH**: Higher risk content acceptable');
+    lines.push('- **VERY_HIGH**: Most content acceptable');
+
+    if (config.sensitiveKeywords.length > 0) {
+      lines.push('', '## Sensitive Keywords', '');
+      lines.push('The following keywords are monitored:');
+      lines.push('');
+      for (const keyword of config.sensitiveKeywords) {
+        lines.push(`- ${keyword}`);
+      }
+    }
+
+    if (config.blockedTopics.length > 0) {
+      lines.push('', '## Blocked Topics', '');
+      for (const topic of config.blockedTopics) {
+        lines.push(`- ${topic}`);
+      }
+    }
+
+    if (config.allowedTopics.length > 0) {
+      lines.push('', '## Allowed Topics', '');
+      for (const topic of config.allowedTopics) {
+        lines.push(`- ${topic}`);
+      }
+    }
+
+    return lines.join('\n');
+  }
+
+  /**
+   * Generate brand guidelines from schema
+   */
+  private async generateBrandGuidelines(): Promise<string> {
+    if (!this.brandSchemaRepository) {
+      return '# Brand Guidelines\n\nNo brand schema configured.';
+    }
+
+    try {
+      const schema = await this.brandSchemaRepository.loadBrandSchema();
+      const lines: string[] = [
+        `# ${schema.name} Brand Guidelines`,
+        '',
+        schema.description || '',
+        '',
+      ];
+
+      // Tone Guidelines
+      if (schema.toneGuidelines) {
+        lines.push('## Tone Guidelines', '');
+        lines.push(`**Primary Tone**: ${schema.toneGuidelines.primaryTone}`);
+        if (schema.toneGuidelines.secondaryTones?.length) {
+          lines.push(`**Secondary Tones**: ${schema.toneGuidelines.secondaryTones.join(', ')}`);
+        }
+        if (schema.toneGuidelines.avoidedTones?.length) {
+          lines.push(`**Avoided Tones**: ${schema.toneGuidelines.avoidedTones.join(', ')}`);
+        }
+        lines.push('');
+      }
+
+      // Voice Guidelines
+      if (schema.voiceGuidelines) {
+        lines.push('## Voice Guidelines', '');
+        if (schema.voiceGuidelines.personality) {
+          lines.push(`**Personality**: ${schema.voiceGuidelines.personality}`);
+        }
+        if (schema.voiceGuidelines.sentence) {
+          const length = schema.voiceGuidelines.sentence.length || 'varied';
+          const structure = schema.voiceGuidelines.sentence.structure || 'clear';
+          lines.push(`**Sentence Length**: ${length}`);
+          lines.push(`**Sentence Structure**: ${structure}`);
+        }
+        lines.push(
+          `**Uses Contractions**: ${schema.voiceGuidelines.usesContractions ? 'Yes' : 'No'}`
+        );
+        lines.push('');
+      }
+
+      // Terminology Guidelines
+      if (schema.terminologyGuidelines) {
+        lines.push('## Terminology Guidelines', '');
+        if (schema.terminologyGuidelines.avoidedGlobalTerms?.length) {
+          lines.push('**Avoided Terms**:');
+          for (const term of schema.terminologyGuidelines.avoidedGlobalTerms) {
+            lines.push(`- ${term}`);
+          }
+        }
+        if (schema.terminologyGuidelines.terms?.length) {
+          lines.push('', '**Preferred Terms**:');
+          for (const term of schema.terminologyGuidelines.terms) {
+            if (term.preferred) {
+              const alts = term.alternatives?.length
+                ? ` (instead of: ${term.alternatives.join(', ')})`
+                : '';
+              lines.push(`- ${term.preferred}${alts}`);
+            }
+          }
+        }
+        lines.push('');
+      }
+
+      return lines.join('\n');
+    } catch {
+      return '# Brand Guidelines\n\nFailed to load brand schema.';
     }
   }
 }

@@ -295,8 +295,9 @@ export class ConfigurationService {
   private onConfigurationChange(): void {
     // Emit event or notify services about config change
     // This could be implemented with EventEmitter
+    // Note: Using warn since it's informational, not an error
     if (process.env.NODE_ENV !== 'production') {
-      console.error('Configuration reloaded');
+      console.warn('Configuration reloaded');
     }
   }
 
