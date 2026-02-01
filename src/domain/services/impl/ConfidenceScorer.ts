@@ -30,7 +30,7 @@ export class ConfidenceScorer {
         if (length < 5000) return { score: 95, reason: 'Good content length' };
         return { score: 100, reason: 'Comprehensive content' };
       },
-      weight: 1.5
+      weight: 1.5,
     });
 
     this.scoringFactors.set('language_clarity', {
@@ -39,7 +39,7 @@ export class ConfidenceScorer {
       evaluate: (context: ScoringContext) => {
         const { languageDetection } = context;
         if (!languageDetection) return { score: 50, reason: 'No language detection' };
-        
+
         if (languageDetection.confidence > 90) {
           return { score: 100, reason: 'Clear language identification' };
         } else if (languageDetection.confidence > 70) {
@@ -49,7 +49,7 @@ export class ConfidenceScorer {
         }
         return { score: 40, reason: 'Unclear language' };
       },
-      weight: 1.2
+      weight: 1.2,
     });
 
     this.scoringFactors.set('context_completeness', {
@@ -78,10 +78,11 @@ export class ConfidenceScorer {
 
         return {
           score: Math.max(50, score),
-          reason: missing.length > 0 ? `Missing context: ${missing.join(', ')}` : 'Complete context'
+          reason:
+            missing.length > 0 ? `Missing context: ${missing.join(', ')}` : 'Complete context',
         };
       },
-      weight: 1.0
+      weight: 1.0,
     });
 
     // Analysis depth factors
@@ -90,9 +91,9 @@ export class ConfidenceScorer {
       category: 'analysis_depth',
       evaluate: (context: ScoringContext) => {
         if (!context.patterns) return { score: 50, reason: 'No pattern analysis' };
-        
+
         const { patterns } = context;
-        const highConfidenceMatches = patterns.filter(p => p.confidence > 80).length;
+        const highConfidenceMatches = patterns.filter((p) => p.confidence > 80).length;
         const totalMatches = patterns.length;
 
         if (totalMatches === 0) {
@@ -102,10 +103,10 @@ export class ConfidenceScorer {
         const ratio = highConfidenceMatches / totalMatches;
         return {
           score: Math.round(ratio * 100),
-          reason: `${highConfidenceMatches}/${totalMatches} high confidence patterns`
+          reason: `${highConfidenceMatches}/${totalMatches} high confidence patterns`,
         };
       },
-      weight: 2.0
+      weight: 2.0,
     });
 
     this.scoringFactors.set('rule_coverage', {
@@ -117,13 +118,13 @@ export class ConfidenceScorer {
         }
 
         const coverage = (context.rulesApplied / context.totalRules) * 100;
-        
+
         if (coverage >= 90) return { score: 100, reason: 'Comprehensive rule coverage' };
         if (coverage >= 70) return { score: 85, reason: 'Good rule coverage' };
         if (coverage >= 50) return { score: 70, reason: 'Moderate rule coverage' };
         return { score: 50, reason: 'Limited rule coverage' };
       },
-      weight: 1.8
+      weight: 1.8,
     });
 
     this.scoringFactors.set('multi_analysis_agreement', {
@@ -140,9 +141,10 @@ export class ConfidenceScorer {
         }
 
         // Calculate agreement score
-        const scores = analyses.map(a => a.score);
+        const scores = analyses.map((a) => a.score);
         const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
-        const variance = scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / scores.length;
+        const variance =
+          scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / scores.length;
         const stdDev = Math.sqrt(variance);
 
         if (stdDev < 5) return { score: 100, reason: 'Strong agreement between analyses' };
@@ -150,7 +152,7 @@ export class ConfidenceScorer {
         if (stdDev < 20) return { score: 70, reason: 'Moderate agreement between analyses' };
         return { score: 50, reason: 'Low agreement between analyses' };
       },
-      weight: 1.5
+      weight: 1.5,
     });
 
     // Consistency factors
@@ -170,7 +172,7 @@ export class ConfidenceScorer {
         if (variance < 20) return { score: 70, reason: 'Moderate temporal consistency' };
         return { score: 50, reason: 'Inconsistent results over time' };
       },
-      weight: 1.3
+      weight: 1.3,
     });
 
     this.scoringFactors.set('cross_validator_consistency', {
@@ -181,7 +183,7 @@ export class ConfidenceScorer {
           return { score: 70, reason: 'Single validator result' };
         }
 
-        const scores = context.validatorResults.map(v => v.score);
+        const scores = context.validatorResults.map((v) => v.score);
         const variance = this.calculateVariance(scores);
 
         if (variance < 10) return { score: 100, reason: 'Validators strongly agree' };
@@ -189,7 +191,7 @@ export class ConfidenceScorer {
         if (variance < 30) return { score: 70, reason: 'Moderate validator agreement' };
         return { score: 50, reason: 'Validators disagree significantly' };
       },
-      weight: 1.4
+      weight: 1.4,
     });
 
     // Evidence strength factors
@@ -204,26 +206,31 @@ export class ConfidenceScorer {
         let qualityScore = 0;
         let totalWeight = 0;
 
-        context.violations.forEach(violation => {
-          const weight = violation.severity === 'critical' ? 3 :
-                        violation.severity === 'high' ? 2 : 1;
-          
-          const evidenceScore = violation.evidence && violation.evidence.length > 0 ? 100 :
-                               violation.position ? 80 :
-                               violation.description ? 60 : 30;
-          
+        context.violations.forEach((violation) => {
+          const weight =
+            violation.severity === 'critical' ? 3 : violation.severity === 'high' ? 2 : 1;
+
+          const evidenceScore =
+            violation.evidence && violation.evidence.length > 0
+              ? 100
+              : violation.position
+                ? 80
+                : violation.description
+                  ? 60
+                  : 30;
+
           qualityScore += evidenceScore * weight;
           totalWeight += weight;
         });
 
         const finalScore = totalWeight > 0 ? qualityScore / totalWeight : 70;
-        
+
         return {
           score: Math.round(finalScore),
-          reason: `Evidence quality: ${Math.round(finalScore)}%`
+          reason: `Evidence quality: ${Math.round(finalScore)}%`,
         };
       },
-      weight: 2.0
+      weight: 2.0,
     });
 
     this.scoringFactors.set('citation_strength', {
@@ -243,10 +250,10 @@ export class ConfidenceScorer {
 
         return {
           score: Math.min(100, score),
-          reason: `${(regulations?.length || 0) + (guidelines?.length || 0) + (policies?.length || 0)} citations`
+          reason: `${(regulations?.length || 0) + (guidelines?.length || 0) + (policies?.length || 0)} citations`,
         };
       },
-      weight: 1.2
+      weight: 1.2,
     });
   }
 
@@ -260,8 +267,8 @@ export class ConfidenceScorer {
         data_quality: 1.0,
         analysis_depth: 1.0,
         consistency: 1.0,
-        evidence: 1.0
-      }
+        evidence: 1.0,
+      },
     });
 
     this.weightProfiles.set('high_accuracy', {
@@ -270,8 +277,8 @@ export class ConfidenceScorer {
         data_quality: 1.5,
         analysis_depth: 2.0,
         consistency: 1.2,
-        evidence: 1.8
-      }
+        evidence: 1.8,
+      },
     });
 
     this.weightProfiles.set('quick_assessment', {
@@ -280,8 +287,8 @@ export class ConfidenceScorer {
         data_quality: 0.8,
         analysis_depth: 0.6,
         consistency: 0.5,
-        evidence: 1.0
-      }
+        evidence: 1.0,
+      },
     });
 
     this.weightProfiles.set('regulatory_focus', {
@@ -290,8 +297,8 @@ export class ConfidenceScorer {
         data_quality: 1.0,
         analysis_depth: 1.5,
         consistency: 1.0,
-        evidence: 2.5
-      }
+        evidence: 2.5,
+      },
     });
   }
 
@@ -308,27 +315,32 @@ export class ConfidenceScorer {
     const categoryWeights: Map<string, number> = new Map();
 
     // Get weight profile
-    const weightProfile = this.weightProfiles.get(profile) || this.weightProfiles.get('balanced')!;
+    const defaultProfile: WeightProfile = {
+      name: 'Balanced',
+      weights: { data_quality: 1.0, analysis_depth: 1.0, consistency: 1.0, evidence: 1.0 },
+    };
+    const weightProfile =
+      this.weightProfiles.get(profile) ?? this.weightProfiles.get('balanced') ?? defaultProfile;
 
     // Evaluate each factor
     for (const [factorId, factor] of this.scoringFactors) {
       const result = factor.evaluate(context);
       const categoryWeight = weightProfile.weights[factor.category] || 1.0;
-      
+
       factorResults.push({
         factorId,
         factorName: factor.name,
         category: factor.category,
         score: result.score,
         weight: factor.weight * categoryWeight,
-        reason: result.reason
+        reason: result.reason,
       });
 
       // Aggregate by category
       const currentScore = categoryScores.get(factor.category) || 0;
       const currentWeight = categoryWeights.get(factor.category) || 0;
-      
-      categoryScores.set(factor.category, currentScore + (result.score * factor.weight));
+
+      categoryScores.set(factor.category, currentScore + result.score * factor.weight);
       categoryWeights.set(factor.category, currentWeight + factor.weight);
     }
 
@@ -339,7 +351,7 @@ export class ConfidenceScorer {
       categoryResults.push({
         category,
         score: Math.round(totalScore / totalWeight),
-        weight: weightProfile.weights[category] || 1.0
+        weight: weightProfile.weights[category] || 1.0,
       });
     }
 
@@ -373,8 +385,8 @@ export class ConfidenceScorer {
       metadata: {
         factorsEvaluated: factorResults.length,
         profileUsed: profile,
-        timestamp: new Date()
-      }
+        timestamp: new Date(),
+      },
     };
   }
 
@@ -382,9 +394,9 @@ export class ConfidenceScorer {
    * Calculate overall score from factors
    */
   private calculateOverallScore(factors: FactorResult[]): number {
-    const totalWeightedScore = factors.reduce((sum, f) => sum + (f.score * f.weight), 0);
+    const totalWeightedScore = factors.reduce((sum, f) => sum + f.score * f.weight, 0);
     const totalWeight = factors.reduce((sum, f) => sum + f.weight, 0);
-    
+
     return totalWeight > 0 ? Math.round(totalWeightedScore / totalWeight) : 50;
   }
 
@@ -398,18 +410,21 @@ export class ConfidenceScorer {
 
     // Find similar contexts in history
     const similarContexts = this.findSimilarContexts(context);
-    
+
     if (similarContexts.length === 0) {
       return score;
     }
 
     // Calculate adjustment based on historical accuracy
-    const avgHistoricalScore = similarContexts.reduce((sum, c) => sum + c.predictedScore, 0) / similarContexts.length;
-    const avgActualScore = similarContexts.reduce((sum, c) => sum + (c.actualScore || c.predictedScore), 0) / similarContexts.length;
-    
+    const avgHistoricalScore =
+      similarContexts.reduce((sum, c) => sum + c.predictedScore, 0) / similarContexts.length;
+    const avgActualScore =
+      similarContexts.reduce((sum, c) => sum + (c.actualScore || c.predictedScore), 0) /
+      similarContexts.length;
+
     const adjustment = avgActualScore - avgHistoricalScore;
-    const calibratedScore = score + (adjustment * 0.3); // Apply 30% of the adjustment
-    
+    const calibratedScore = score + adjustment * 0.3; // Apply 30% of the adjustment
+
     return Math.max(0, Math.min(100, Math.round(calibratedScore)));
   }
 
@@ -417,14 +432,17 @@ export class ConfidenceScorer {
    * Find similar contexts in calibration history
    */
   private findSimilarContexts(context: ScoringContext): CalibrationData[] {
-    return this.calibrationHistory.filter(data => {
-      // Simple similarity check - could be more sophisticated
-      const contentLengthSimilar = Math.abs((data.context.content?.length || 0) - context.content.length) < 500;
-      const sameIndustry = data.context.metadata?.industry === context.metadata?.industry;
-      const sameChannel = data.context.metadata?.channel === context.metadata?.channel;
-      
-      return contentLengthSimilar && (sameIndustry || sameChannel);
-    }).slice(-20); // Use last 20 similar contexts
+    return this.calibrationHistory
+      .filter((data) => {
+        // Simple similarity check - could be more sophisticated
+        const contentLengthSimilar =
+          Math.abs((data.context.content?.length || 0) - context.content.length) < 500;
+        const sameIndustry = data.context.metadata?.industry === context.metadata?.industry;
+        const sameChannel = data.context.metadata?.channel === context.metadata?.channel;
+
+        return contentLengthSimilar && (sameIndustry || sameChannel);
+      })
+      .slice(-20); // Use last 20 similar contexts
   }
 
   /**
@@ -449,15 +467,18 @@ export class ConfidenceScorer {
   ): ConfidenceExplanation {
     // Find strongest and weakest factors
     const sortedFactors = [...factors].sort((a, b) => b.score - a.score);
-    const strengths = sortedFactors.slice(0, 3).map(f => ({
+    const strengths = sortedFactors.slice(0, 3).map((f) => ({
       factor: f.factorName,
-      reason: f.reason
+      reason: f.reason,
     }));
-    
-    const weaknesses = sortedFactors.slice(-3).filter(f => f.score < 70).map(f => ({
-      factor: f.factorName,
-      reason: f.reason
-    }));
+
+    const weaknesses = sortedFactors
+      .slice(-3)
+      .filter((f) => f.score < 70)
+      .map((f) => ({
+        factor: f.factorName,
+        reason: f.reason,
+      }));
 
     // Find best and worst categories
     const sortedCategories = [...categories].sort((a, b) => b.score - a.score);
@@ -466,7 +487,7 @@ export class ConfidenceScorer {
 
     // Generate summary
     let summary = `Confidence level: ${level} (${score}%). `;
-    
+
     if (level === 'very_high') {
       summary += 'The analysis shows strong reliability across all factors.';
     } else if (level === 'high') {
@@ -481,15 +502,15 @@ export class ConfidenceScorer {
 
     // Generate recommendations
     const recommendations: string[] = [];
-    
+
     if (score < 70) {
-      if (weaknesses.some(w => w.factor.includes('Context'))) {
+      if (weaknesses.some((w) => w.factor.includes('Context'))) {
         recommendations.push('Provide more complete context information');
       }
-      if (weaknesses.some(w => w.factor.includes('Language'))) {
+      if (weaknesses.some((w) => w.factor.includes('Language'))) {
         recommendations.push('Ensure content is in a clearly identifiable language');
       }
-      if (weaknesses.some(w => w.factor.includes('Evidence'))) {
+      if (weaknesses.some((w) => w.factor.includes('Evidence'))) {
         recommendations.push('Include more specific evidence and citations');
       }
     }
@@ -500,13 +521,13 @@ export class ConfidenceScorer {
       weaknesses,
       bestCategory: {
         name: bestCategory.category,
-        score: bestCategory.score
+        score: bestCategory.score,
       },
       worstCategory: {
         name: worstCategory.category,
-        score: worstCategory.score
+        score: worstCategory.score,
       },
-      recommendations
+      recommendations,
     };
   }
 
@@ -518,7 +539,7 @@ export class ConfidenceScorer {
       timestamp: new Date(),
       context,
       predictedScore,
-      actualScore: undefined // Will be updated if actual outcome is known
+      actualScore: undefined, // Will be updated if actual outcome is known
     });
 
     // Keep only last 1000 records
@@ -531,10 +552,10 @@ export class ConfidenceScorer {
    * Update calibration with actual outcome
    */
   updateCalibration(contextId: string, actualScore: number): void {
-    const record = this.calibrationHistory.find(c => 
-      c.context.id === contextId && !c.actualScore
+    const record = this.calibrationHistory.find(
+      (c) => c.context.id === contextId && !c.actualScore
     );
-    
+
     if (record) {
       record.actualScore = actualScore;
     }
@@ -545,9 +566,9 @@ export class ConfidenceScorer {
    */
   private calculateVariance(values: number[]): number {
     if (values.length === 0) return 0;
-    
+
     const mean = values.reduce((a, b) => a + b, 0) / values.length;
-    const squaredDiffs = values.map(v => Math.pow(v - mean, 2));
+    const squaredDiffs = values.map((v) => Math.pow(v - mean, 2));
     return squaredDiffs.reduce((a, b) => a + b, 0) / values.length;
   }
 
@@ -555,23 +576,25 @@ export class ConfidenceScorer {
    * Get confidence statistics
    */
   getStatistics(): ConfidenceStatistics {
-    const recentScores = this.calibrationHistory.slice(-100).map(c => c.predictedScore);
-    const withActual = this.calibrationHistory.filter(c => c.actualScore !== undefined);
-    
+    const recentScores = this.calibrationHistory.slice(-100).map((c) => c.predictedScore);
+    const withActual = this.calibrationHistory.filter((c) => c.actualScore !== undefined);
+
     let accuracy = 0;
     if (withActual.length > 0) {
-      const errors = withActual.map(c => Math.abs(c.predictedScore - c.actualScore!));
+      const errors = withActual.map((c) =>
+        Math.abs(c.predictedScore - (c.actualScore ?? c.predictedScore))
+      );
       const avgError = errors.reduce((a, b) => a + b, 0) / errors.length;
       accuracy = Math.max(0, 100 - avgError);
     }
 
     return {
       totalEvaluations: this.calibrationHistory.length,
-      averageConfidence: recentScores.length > 0 ? 
-        recentScores.reduce((a, b) => a + b, 0) / recentScores.length : 0,
+      averageConfidence:
+        recentScores.length > 0 ? recentScores.reduce((a, b) => a + b, 0) / recentScores.length : 0,
       confidenceVariance: this.calculateVariance(recentScores),
       calibrationAccuracy: accuracy,
-      evaluationsWithOutcome: withActual.length
+      evaluationsWithOutcome: withActual.length,
     };
   }
 }
@@ -601,7 +624,7 @@ export interface ScoringContext {
   violations?: Array<{
     severity: string;
     evidence?: string[];
-    position?: any;
+    position?: { start: number; end: number };
     description?: string;
   }>;
   multipleAnalyses?: {

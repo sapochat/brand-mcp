@@ -9,7 +9,7 @@ export interface SafetyEvaluationService {
    * Evaluate content for safety risks across all categories
    */
   evaluateContent(content: Content): Promise<SafetyEvaluation>;
-  
+
   /**
    * Update safety evaluation configuration
    */

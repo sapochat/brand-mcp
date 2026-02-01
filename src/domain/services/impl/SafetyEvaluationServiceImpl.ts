@@ -1,6 +1,10 @@
 import { SafetyEvaluationService, SafetyConfig } from '../SafetyEvaluationService.js';
 import { Content } from '../../entities/Content.js';
-import { SafetyEvaluation, CategoryEvaluation, RiskLevel } from '../../entities/SafetyEvaluation.js';
+import {
+  SafetyEvaluation,
+  CategoryEvaluation,
+  RiskLevel,
+} from '../../entities/SafetyEvaluation.js';
 
 /**
  * Domain service implementation for content safety evaluation
@@ -12,44 +16,54 @@ export class SafetyEvaluationServiceImpl implements SafetyEvaluationService {
   private readonly safetyCategories = {
     'Sexual Content': {
       patterns: ['sexual', 'explicit', 'adult', 'nsfw', 'pornographic', 'erotic'],
-      phrases: [/sexual content/i, /adult material/i, /explicit material/i]
+      phrases: [/sexual content/i, /adult material/i, /explicit material/i],
     },
-    'Violence': {
-      patterns: ['violence', 'violent', 'kill', 'murder', 'assault', 'attack', 'weapon', 'gun', 'knife'],
-      phrases: [/physical harm/i, /violent action/i, /deadly force/i]
+    Violence: {
+      patterns: [
+        'violence',
+        'violent',
+        'kill',
+        'murder',
+        'assault',
+        'attack',
+        'weapon',
+        'gun',
+        'knife',
+      ],
+      phrases: [/physical harm/i, /violent action/i, /deadly force/i],
     },
     'Hate Speech': {
       patterns: ['hate', 'racist', 'discrimination', 'prejudice', 'bigot'],
-      phrases: [/hate speech/i, /discriminatory language/i, /racial slurs/i]
+      phrases: [/hate speech/i, /discriminatory language/i, /racial slurs/i],
     },
-    'Harassment': {
+    Harassment: {
       patterns: ['harass', 'bully', 'intimidate', 'threaten', 'stalk'],
-      phrases: [/personal attack/i, /threatening behavior/i, /cyberbullying/i]
+      phrases: [/personal attack/i, /threatening behavior/i, /cyberbullying/i],
     },
     'Self-Harm': {
       patterns: ['suicide', 'self-harm', 'cutting', 'overdose', 'self-injury'],
-      phrases: [/suicidal thoughts/i, /self-destructive/i, /harm yourself/i]
+      phrases: [/suicidal thoughts/i, /self-destructive/i, /harm yourself/i],
     },
     'Illegal Activities': {
       patterns: ['illegal', 'crime', 'criminal', 'drugs', 'trafficking', 'fraud'],
-      phrases: [/illegal activity/i, /criminal behavior/i, /drug dealing/i]
+      phrases: [/illegal activity/i, /criminal behavior/i, /drug dealing/i],
     },
-    'Profanity': {
+    Profanity: {
       patterns: ['damn', 'hell', 'crap', 'shit', 'fuck', 'bitch', 'asshole'],
-      phrases: [/inappropriate language/i, /offensive terms/i]
+      phrases: [/inappropriate language/i, /offensive terms/i],
     },
     'Alcohol/Tobacco': {
       patterns: ['alcohol', 'beer', 'wine', 'tobacco', 'cigarette', 'smoking'],
-      phrases: [/alcoholic beverage/i, /tobacco product/i, /drinking alcohol/i]
+      phrases: [/alcoholic beverage/i, /tobacco product/i, /drinking alcohol/i],
     },
     'Political Content': {
       patterns: ['political', 'election', 'candidate', 'government', 'policy', 'politician'],
-      phrases: [/political opinion/i, /government policy/i, /election campaign/i]
+      phrases: [/political opinion/i, /government policy/i, /election campaign/i],
     },
     'Religious Content': {
       patterns: ['religious', 'religion', 'god', 'church', 'faith', 'prayer', 'bible'],
-      phrases: [/religious belief/i, /spiritual practice/i, /religious doctrine/i]
-    }
+      phrases: [/religious belief/i, /spiritual practice/i, /religious doctrine/i],
+    },
   };
 
   constructor(config: SafetyConfig) {
@@ -68,7 +82,7 @@ export class SafetyEvaluationServiceImpl implements SafetyEvaluationService {
 
     // Determine overall risk level
     const overallRisk = this.determineOverallRisk(categoryEvaluations);
-    
+
     // Generate summary
     const summary = this.generateSummary(overallRisk, categoryEvaluations);
 
@@ -80,44 +94,42 @@ export class SafetyEvaluationServiceImpl implements SafetyEvaluationService {
   }
 
   private evaluateCategory(
-    categoryName: string, 
-    categoryData: { patterns: string[], phrases: RegExp[] }, 
+    categoryName: string,
+    categoryData: { patterns: string[]; phrases: RegExp[] },
     text: string
   ): CategoryEvaluation {
     let riskLevel = RiskLevel.NONE;
     let explanation = `No ${categoryName.toLowerCase()} detected.`;
 
     // Check for sensitive keywords from config
-    const sensitivematches = this.config.sensitiveKeywords.some(keyword => 
+    const sensitivematches = this.config.sensitiveKeywords.some((keyword) =>
       text.includes(keyword.toLowerCase())
     );
 
     // Check patterns
-    const patternMatches = categoryData.patterns.some(pattern => 
+    const patternMatches = categoryData.patterns.some((pattern) =>
       text.includes(pattern.toLowerCase())
     );
 
     // Check phrase patterns
-    const phraseMatches = categoryData.phrases.some(phrase => 
-      phrase.test(text)
-    );
+    const phraseMatches = categoryData.phrases.some((phrase) => phrase.test(text));
 
     // Determine risk level based on matches
     if (sensitivematches || patternMatches || phraseMatches) {
       // Check blocked topics
-      const isBlockedTopic = this.config.blockedTopics.some(topic => 
+      const isBlockedTopic = this.config.blockedTopics.some((topic) =>
         text.includes(topic.toLowerCase())
       );
-      
+
       if (isBlockedTopic) {
         riskLevel = RiskLevel.HIGH;
         explanation = `High risk ${categoryName.toLowerCase()} detected in blocked topic area.`;
       } else {
         // Check allowed topics for mitigation
-        const isAllowedTopic = this.config.allowedTopics.some(topic => 
+        const isAllowedTopic = this.config.allowedTopics.some((topic) =>
           text.includes(topic.toLowerCase())
         );
-        
+
         if (isAllowedTopic) {
           riskLevel = RiskLevel.LOW;
           explanation = `${categoryName} detected but within allowed topic context.`;
@@ -132,32 +144,32 @@ export class SafetyEvaluationServiceImpl implements SafetyEvaluationService {
   }
 
   private determineOverallRisk(evaluations: CategoryEvaluation[]): RiskLevel {
-    const riskLevels = evaluations.map(e => e.riskLevel);
+    const riskLevels = evaluations.map((e) => e.riskLevel);
 
     // If any category has VERY_HIGH risk, overall is VERY_HIGH
     if (riskLevels.includes(RiskLevel.VERY_HIGH)) return RiskLevel.VERY_HIGH;
-    
+
     // If any category has HIGH risk, overall is HIGH
     if (riskLevels.includes(RiskLevel.HIGH)) return RiskLevel.HIGH;
-    
+
     // If multiple categories have MEDIUM risk, escalate to HIGH
-    const mediumCount = riskLevels.filter(r => r === RiskLevel.MEDIUM).length;
+    const mediumCount = riskLevels.filter((r) => r === RiskLevel.MEDIUM).length;
     if (mediumCount >= 2) return RiskLevel.HIGH;
-    
+
     // If any category has MEDIUM risk, overall is MEDIUM
     if (riskLevels.includes(RiskLevel.MEDIUM)) return RiskLevel.MEDIUM;
-    
+
     // If any category has LOW risk, overall is LOW
     if (riskLevels.includes(RiskLevel.LOW)) return RiskLevel.LOW;
-    
+
     // If no risks detected, overall is NONE
     return RiskLevel.NONE;
   }
 
   private generateSummary(overallRisk: RiskLevel, evaluations: CategoryEvaluation[]): string {
     const riskyCategories = evaluations
-      .filter(e => e.riskLevel !== RiskLevel.NONE && e.riskLevel !== RiskLevel.LOW)
-      .map(e => e.category);
+      .filter((e) => e.riskLevel !== RiskLevel.NONE && e.riskLevel !== RiskLevel.LOW)
+      .map((e) => e.category);
 
     switch (overallRisk) {
       case RiskLevel.NONE:

@@ -14,14 +14,17 @@ export class InMemoryCacheRepository<T> implements CacheRepository<T> {
 
   constructor() {
     // Clean up expired entries every 5 minutes
-    this.cleanupInterval = setInterval(() => {
-      this.cleanup();
-    }, 5 * 60 * 1000);
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanup();
+      },
+      5 * 60 * 1000
+    );
   }
 
   async get(key: string): Promise<T | null> {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       return null;
     }
@@ -38,7 +41,7 @@ export class InMemoryCacheRepository<T> implements CacheRepository<T> {
   async set(key: string, value: T, ttlSeconds?: number): Promise<void> {
     const entry: CacheEntry<T> = {
       value,
-      expiresAt: ttlSeconds ? Date.now() + (ttlSeconds * 1000) : undefined
+      expiresAt: ttlSeconds ? Date.now() + ttlSeconds * 1000 : undefined,
     };
 
     this.cache.set(key, entry);
@@ -54,7 +57,7 @@ export class InMemoryCacheRepository<T> implements CacheRepository<T> {
 
   async has(key: string): Promise<boolean> {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       return false;
     }
@@ -73,7 +76,7 @@ export class InMemoryCacheRepository<T> implements CacheRepository<T> {
    */
   private cleanup(): void {
     const now = Date.now();
-    
+
     for (const [key, entry] of this.cache.entries()) {
       if (entry.expiresAt && now > entry.expiresAt) {
         this.cache.delete(key);
@@ -87,7 +90,7 @@ export class InMemoryCacheRepository<T> implements CacheRepository<T> {
   getStats(): { size: number; keys: string[] } {
     return {
       size: this.cache.size,
-      keys: Array.from(this.cache.keys())
+      keys: Array.from(this.cache.keys()),
     };
   }
 

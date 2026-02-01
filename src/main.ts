@@ -11,13 +11,12 @@ async function main(): Promise<void> {
   try {
     // Build dependency injection container
     const container = await ContainerBuilder.build();
-    
+
     // Resolve the MCP server adapter
     const mcpServer = container.resolve<McpServerAdapter>(ServiceKeys.MCP_SERVER_ADAPTER);
-    
+
     // Start the server
     await mcpServer.start();
-    
   } catch (error) {
     console.error('Failed to start Brand MCP Server:', error);
     process.exit(1);

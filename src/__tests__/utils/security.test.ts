@@ -43,7 +43,7 @@ describe('Security Utils', () => {
     });
 
     it('should handle non-string input', () => {
-      const result = sanitizeInput(123 as any);
+      const result = sanitizeInput(123 as unknown as string);
       expect(result).toBe('');
     });
   });
@@ -98,7 +98,7 @@ describe('Security Utils', () => {
       expect(rateLimiter.isAllowed('user5')).toBe(true);
       expect(rateLimiter.isAllowed('user5')).toBe(true);
       expect(rateLimiter.isAllowed('user5')).toBe(false);
-      
+
       rateLimiter.reset('user5');
       expect(rateLimiter.isAllowed('user5')).toBe(true);
     });
@@ -122,7 +122,7 @@ describe('Security Utils', () => {
     it('should wrap regular errors', () => {
       const originalError = new Error('Original error');
       const wrapped = wrapError(originalError, 'Safe message', 'SAFE_CODE');
-      
+
       expect(wrapped.userMessage).toBe('Safe message');
       expect(wrapped.code).toBe('SAFE_CODE');
       expect(wrapped.internalMessage).toBe('Original error');
@@ -131,13 +131,13 @@ describe('Security Utils', () => {
     it('should return SafeError unchanged', () => {
       const safeError = new SafeError('Already safe', 'SAFE');
       const wrapped = wrapError(safeError);
-      
+
       expect(wrapped).toBe(safeError);
     });
 
     it('should handle non-Error objects', () => {
       const wrapped = wrapError('String error', 'Safe message', 'CODE');
-      
+
       expect(wrapped.userMessage).toBe('Safe message');
       expect(wrapped.internalMessage).toBe('String error');
     });

@@ -5,7 +5,15 @@ import {
   ActionableInsight,
   ImprovementStrategy,
   RecommendationContext,
-  RecommendationConfig
+  RecommendationConfig,
+  PriorityMatrix,
+  Roadmap,
+  RoadmapPhases,
+  RoadmapMilestone,
+  RoadmapTimeline,
+  RoadmapDependency,
+  ImpactEstimate,
+  ResourceSuggestion,
 } from '../../../types/brandSafety.js';
 
 interface RecommendationRule {
@@ -24,6 +32,69 @@ interface ImpactAssessment {
   dependencies: string[];
 }
 
+interface ScoreEntry {
+  safety: number;
+  compliance: number;
+  overall: number;
+}
+
+interface ScoreDistribution {
+  excellent: number;
+  good: number;
+  fair: number;
+  poor: number;
+}
+
+interface ResultComparison {
+  best: number;
+  worst: number;
+  average: number;
+  variance: number;
+  distribution: ScoreDistribution;
+}
+
+interface TrendData {
+  safety: string;
+  compliance: string;
+  overall: string;
+}
+
+interface TrendAnalysis extends TrendData {
+  interpretation: string;
+}
+
+interface CommonIssue {
+  rule: string;
+  frequency: number;
+  percentage: string;
+  priority: RecommendationPriority;
+}
+
+interface SystemicRecommendation {
+  title: string;
+  description: string;
+  scope: string;
+  priority: RecommendationPriority;
+  estimatedImpact: string;
+  implementation: {
+    approach: string;
+    timeline: string;
+    resources: string[];
+  };
+}
+
+interface BulkRecommendations {
+  systemic: SystemicRecommendation[];
+  individual: ContentRecommendation[];
+}
+
+interface ComparativeRecommendations {
+  comparisons: ResultComparison | null;
+  trends: TrendAnalysis | null;
+  commonIssues: CommonIssue[];
+  recommendations: BulkRecommendations;
+}
+
 export class RecommendationEngine {
   private rules: Map<string, RecommendationRule> = new Map();
   private strategies: Map<string, ImprovementStrategy> = new Map();
@@ -31,7 +102,7 @@ export class RecommendationEngine {
     critical: 1.0,
     high: 0.75,
     medium: 0.5,
-    low: 0.25
+    low: 0.25,
   };
 
   constructor() {
@@ -52,7 +123,7 @@ export class RecommendationEngine {
           'Identify specific toxic phrases or sections',
           'Replace with neutral or positive alternatives',
           'Consider the tone and emotional impact',
-          'Review against community guidelines'
+          'Review against community guidelines',
         ],
         expectedImpact: 'Significant improvement in safety score and user engagement',
         priority: 'critical' as RecommendationPriority,
@@ -60,11 +131,13 @@ export class RecommendationEngine {
         metrics: {
           currentValue: result.safety.toxicityScore,
           targetValue: 0.2,
-          improvement: ((result.safety.toxicityScore - 0.2) / result.safety.toxicityScore * 100).toFixed(1) + '%'
-        }
+          improvement:
+            (((result.safety.toxicityScore - 0.2) / result.safety.toxicityScore) * 100).toFixed(1) +
+            '%',
+        },
       }),
       priority: 'critical' as RecommendationPriority,
-      categories: ['safety', 'content-quality']
+      categories: ['safety', 'content-quality'],
     });
 
     this.addRule({
@@ -78,7 +151,7 @@ export class RecommendationEngine {
           'Review language for implicit bias',
           'Include diverse perspectives',
           'Use inclusive terminology',
-          'Validate facts and sources'
+          'Validate facts and sources',
         ],
         expectedImpact: 'Improved inclusivity and broader audience appeal',
         priority: 'high' as RecommendationPriority,
@@ -86,11 +159,12 @@ export class RecommendationEngine {
         metrics: {
           currentValue: result.safety.biasScore,
           targetValue: 0.3,
-          improvement: ((result.safety.biasScore - 0.3) / result.safety.biasScore * 100).toFixed(1) + '%'
-        }
+          improvement:
+            (((result.safety.biasScore - 0.3) / result.safety.biasScore) * 100).toFixed(1) + '%',
+        },
       }),
       priority: 'high' as RecommendationPriority,
-      categories: ['safety', 'inclusivity']
+      categories: ['safety', 'inclusivity'],
     });
 
     // Compliance-related rules
@@ -105,7 +179,7 @@ export class RecommendationEngine {
           'Review brand guidelines and tone of voice',
           'Incorporate key brand messaging',
           'Ensure visual consistency',
-          'Align with brand values and mission'
+          'Align with brand values and mission',
         ],
         expectedImpact: 'Stronger brand recognition and consistency',
         priority: 'medium' as RecommendationPriority,
@@ -113,11 +187,16 @@ export class RecommendationEngine {
         metrics: {
           currentValue: result.compliance.brandAlignmentScore,
           targetValue: 0.85,
-          improvement: ((0.85 - result.compliance.brandAlignmentScore) / result.compliance.brandAlignmentScore * 100).toFixed(1) + '%'
-        }
+          improvement:
+            (
+              ((0.85 - result.compliance.brandAlignmentScore) /
+                result.compliance.brandAlignmentScore) *
+              100
+            ).toFixed(1) + '%',
+        },
       }),
       priority: 'medium' as RecommendationPriority,
-      categories: ['compliance', 'brand']
+      categories: ['compliance', 'brand'],
     });
 
     this.addRule({
@@ -131,7 +210,7 @@ export class RecommendationEngine {
           'Add required disclaimers or disclosures',
           'Verify claims and statements',
           'Include necessary legal language',
-          'Document compliance measures'
+          'Document compliance measures',
         ],
         expectedImpact: 'Full regulatory compliance and reduced legal risk',
         priority: 'critical' as RecommendationPriority,
@@ -139,11 +218,11 @@ export class RecommendationEngine {
         metrics: {
           currentValue: result.compliance.regulatoryCompliance,
           targetValue: 1.0,
-          improvement: 'Required for compliance'
-        }
+          improvement: 'Required for compliance',
+        },
       }),
       priority: 'critical' as RecommendationPriority,
-      categories: ['compliance', 'legal']
+      categories: ['compliance', 'legal'],
     });
 
     // Quality improvement rules
@@ -161,7 +240,7 @@ export class RecommendationEngine {
           'Break up long paragraphs',
           'Use clear headings and subheadings',
           'Simplify complex sentences',
-          'Add bullet points or lists where appropriate'
+          'Add bullet points or lists where appropriate',
         ],
         expectedImpact: 'Better user engagement and comprehension',
         priority: 'low' as RecommendationPriority,
@@ -169,11 +248,11 @@ export class RecommendationEngine {
         metrics: {
           currentValue: (result.safety.overallScore + result.compliance.overallScore) / 2,
           targetValue: 0.85,
-          improvement: 'Improved readability'
-        }
+          improvement: 'Improved readability',
+        },
       }),
       priority: 'low' as RecommendationPriority,
-      categories: ['quality', 'ux']
+      categories: ['quality', 'ux'],
     });
   }
 
@@ -182,39 +261,46 @@ export class RecommendationEngine {
       id: 'quick-wins',
       name: 'Quick Wins Strategy',
       description: 'Focus on high-impact, low-effort improvements',
-      filter: (insights: any) => insights.filter((i: any) => 
-        this.assessImpact(i).effort === 'low' && 
-        this.assessImpact(i).impact !== 'low'
-      ),
-      prioritize: (insights: any) => this.prioritizeByImpactEffortRatio(insights)
+      filter: (insights: ActionableInsight[]): ActionableInsight[] =>
+        insights.filter(
+          (i: ActionableInsight) =>
+            this.assessImpact(i).effort === 'low' && this.assessImpact(i).impact !== 'low'
+        ),
+      prioritize: (insights: ActionableInsight[]): ActionableInsight[] =>
+        this.prioritizeByImpactEffortRatio(insights),
     });
 
     this.strategies.set('safety-first', {
       id: 'safety-first',
       name: 'Safety First Strategy',
       description: 'Prioritize safety and risk mitigation',
-      filter: (insights: any) => insights.filter((i: any) => 
-        i.category === 'safety' || i.priority === 'critical'
-      ),
-      prioritize: (insights: any) => this.prioritizeBySafety(insights)
+      filter: (insights: ActionableInsight[]): ActionableInsight[] =>
+        insights.filter(
+          (i: ActionableInsight) => i.category === 'safety' || i.priority === 'critical'
+        ),
+      prioritize: (insights: ActionableInsight[]): ActionableInsight[] =>
+        this.prioritizeBySafety(insights),
     });
 
     this.strategies.set('compliance-focused', {
       id: 'compliance-focused',
       name: 'Compliance Focused Strategy',
       description: 'Ensure all regulatory and brand requirements are met',
-      filter: (insights: any) => insights.filter((i: any) => 
-        i.category === 'compliance' || i.category === 'legal'
-      ),
-      prioritize: (insights: any) => this.prioritizeByCompliance(insights)
+      filter: (insights: ActionableInsight[]): ActionableInsight[] =>
+        insights.filter(
+          (i: ActionableInsight) => i.category === 'compliance' || i.category === 'legal'
+        ),
+      prioritize: (insights: ActionableInsight[]): ActionableInsight[] =>
+        this.prioritizeByCompliance(insights),
     });
 
     this.strategies.set('balanced', {
       id: 'balanced',
       name: 'Balanced Improvement Strategy',
       description: 'Balance all aspects for overall improvement',
-      filter: (insights: any) => insights,
-      prioritize: (insights: any) => this.prioritizeBalanced(insights)
+      filter: (insights: ActionableInsight[]): ActionableInsight[] => insights,
+      prioritize: (insights: ActionableInsight[]): ActionableInsight[] =>
+        this.prioritizeBalanced(insights),
     });
   }
 
@@ -239,7 +325,7 @@ export class RecommendationEngine {
       roadmap,
       estimatedImpact: this.estimateOverallImpact(prioritized, result),
       nextSteps: this.identifyNextSteps(prioritized),
-      resources: this.suggestResources(prioritized)
+      resources: this.suggestResources(prioritized),
     };
   }
 
@@ -252,14 +338,14 @@ export class RecommendationEngine {
     for (const rule of this.rules.values()) {
       if (rule.condition(result)) {
         const insight = rule.generate(result);
-        
+
         // Add context-specific adjustments
         if (context) {
           insight.context = {
             industry: context.industry,
             audience: context.audience,
             platform: context.platform,
-            constraints: context.constraints
+            constraints: context.constraints,
           };
         }
 
@@ -280,15 +366,16 @@ export class RecommendationEngine {
     if (result.safety.overallScore < 0.5 && result.compliance.overallScore > 0.8) {
       patterns.push({
         title: 'Safety-Compliance Imbalance',
-        description: 'Strong compliance but weak safety scores indicate content may be too aggressive or controversial.',
+        description:
+          'Strong compliance but weak safety scores indicate content may be too aggressive or controversial.',
         actionItems: [
           'Review content tone and messaging',
           'Consider audience sensitivities',
-          'Balance brand expression with safety'
+          'Balance brand expression with safety',
         ],
         expectedImpact: 'More balanced and acceptable content',
         priority: 'high',
-        category: 'pattern'
+        category: 'pattern',
       });
     }
 
@@ -301,11 +388,11 @@ export class RecommendationEngine {
         actionItems: [
           'Review evaluation criteria',
           'Ensure consistent standards',
-          'Align safety and compliance goals'
+          'Align safety and compliance goals',
         ],
         expectedImpact: 'More consistent evaluation results',
         priority: 'medium',
-        category: 'consistency'
+        category: 'consistency',
       });
     }
 
@@ -316,20 +403,33 @@ export class RecommendationEngine {
     context?: RecommendationContext,
     config?: RecommendationConfig
   ): ImprovementStrategy {
+    const balancedStrategy = this.getBalancedStrategy();
+
     if (config?.strategy) {
-      return this.strategies.get(config.strategy) || this.strategies.get('balanced')!;
+      return this.strategies.get(config.strategy) ?? balancedStrategy;
     }
 
     // Auto-select based on context
     if (context?.urgency === 'high') {
-      return this.strategies.get('quick-wins')!;
+      return this.strategies.get('quick-wins') ?? balancedStrategy;
     }
 
     if (context?.industry && ['healthcare', 'finance', 'legal'].includes(context.industry)) {
-      return this.strategies.get('compliance-focused')!;
+      return this.strategies.get('compliance-focused') ?? balancedStrategy;
     }
 
-    return this.strategies.get('balanced')!;
+    return balancedStrategy;
+  }
+
+  private getBalancedStrategy(): ImprovementStrategy {
+    return {
+      id: 'balanced',
+      name: 'Balanced Improvement Strategy',
+      description: 'Balance all aspects for overall improvement',
+      filter: (insights: ActionableInsight[]): ActionableInsight[] => insights,
+      prioritize: (insights: ActionableInsight[]): ActionableInsight[] =>
+        this.prioritizeBalanced(insights),
+    };
   }
 
   private applyStrategy(
@@ -354,7 +454,7 @@ export class RecommendationEngine {
       const bSafety = b.category === 'safety' ? 2 : 1;
       const aPriority = this.priorityWeights[a.priority];
       const bPriority = this.priorityWeights[b.priority];
-      return (bSafety * bPriority) - (aSafety * aPriority);
+      return bSafety * bPriority - aSafety * aPriority;
     });
   }
 
@@ -364,7 +464,7 @@ export class RecommendationEngine {
       const bCompliance = ['compliance', 'legal'].includes(b.category) ? 2 : 1;
       const aPriority = this.priorityWeights[a.priority];
       const bPriority = this.priorityWeights[b.priority];
-      return (bCompliance * bPriority) - (aCompliance * aPriority);
+      return bCompliance * bPriority - aCompliance * aPriority;
     });
   }
 
@@ -372,7 +472,7 @@ export class RecommendationEngine {
     return insights.sort((a, b) => {
       const aPriority = this.priorityWeights[a.priority];
       const bPriority = this.priorityWeights[b.priority];
-      
+
       if (aPriority !== bPriority) {
         return bPriority - aPriority;
       }
@@ -388,7 +488,7 @@ export class RecommendationEngine {
     const impact = this.assessImpact(insight);
     const impactScore = { low: 1, medium: 2, high: 3 }[impact.impact];
     const effortScore = { low: 3, medium: 2, high: 1 }[impact.effort];
-    return (impactScore * effortScore) * this.priorityWeights[insight.priority];
+    return impactScore * effortScore * this.priorityWeights[insight.priority];
   }
 
   private assessImpact(insight: ActionableInsight): ImpactAssessment {
@@ -399,41 +499,41 @@ export class RecommendationEngine {
       brand: 'medium',
       quality: 'low',
       pattern: 'low',
-      consistency: 'low'
+      consistency: 'low',
     };
 
     const impactMap: Record<RecommendationPriority, ImpactAssessment['impact']> = {
       critical: 'high',
       high: 'high',
       medium: 'medium',
-      low: 'low'
+      low: 'low',
     };
 
     const timeframeMap: Record<RecommendationPriority, ImpactAssessment['timeframe']> = {
       critical: 'immediate',
       high: 'short-term',
       medium: 'short-term',
-      low: 'long-term'
+      low: 'long-term',
     };
 
     return {
       effort: effortMap[insight.category] || 'medium',
       impact: impactMap[insight.priority],
       timeframe: timeframeMap[insight.priority],
-      dependencies: []
+      dependencies: [],
     };
   }
 
-  private createPriorityMatrix(insights: ActionableInsight[]): any {
-    const matrix = {
+  private createPriorityMatrix(insights: ActionableInsight[]): PriorityMatrix {
+    const matrix: PriorityMatrix = {
       urgent: {
         important: [] as ActionableInsight[],
-        notImportant: [] as ActionableInsight[]
+        notImportant: [] as ActionableInsight[],
       },
       notUrgent: {
         important: [] as ActionableInsight[],
-        notImportant: [] as ActionableInsight[]
-      }
+        notImportant: [] as ActionableInsight[],
+      },
     };
 
     for (const insight of insights) {
@@ -455,16 +555,16 @@ export class RecommendationEngine {
     return matrix;
   }
 
-  private createRoadmap(insights: ActionableInsight[]): any {
-    const phases = {
+  private createRoadmap(insights: ActionableInsight[]): Roadmap {
+    const phases: RoadmapPhases = {
       immediate: [] as ActionableInsight[],
       shortTerm: [] as ActionableInsight[],
-      longTerm: [] as ActionableInsight[]
+      longTerm: [] as ActionableInsight[],
     };
 
     for (const insight of insights) {
       const impact = this.assessImpact(insight);
-      
+
       switch (impact.timeframe) {
         case 'immediate':
           phases.immediate.push(insight);
@@ -482,19 +582,19 @@ export class RecommendationEngine {
       phases,
       milestones: this.identifyMilestones(phases),
       timeline: this.estimateTimeline(phases),
-      dependencies: this.mapDependencies(insights)
+      dependencies: this.mapDependencies(insights),
     };
   }
 
-  private identifyMilestones(phases: any): any[] {
-    const milestones = [];
+  private identifyMilestones(phases: RoadmapPhases): RoadmapMilestone[] {
+    const milestones: RoadmapMilestone[] = [];
 
     if (phases.immediate.length > 0) {
       milestones.push({
         name: 'Critical Issues Resolution',
         target: '1-2 days',
         items: phases.immediate.length,
-        priority: 'critical'
+        priority: 'critical',
       });
     }
 
@@ -503,7 +603,7 @@ export class RecommendationEngine {
         name: 'Core Improvements',
         target: '1-2 weeks',
         items: phases.shortTerm.length,
-        priority: 'high'
+        priority: 'high',
       });
     }
 
@@ -512,14 +612,14 @@ export class RecommendationEngine {
         name: 'Optimization & Enhancement',
         target: '1-3 months',
         items: phases.longTerm.length,
-        priority: 'medium'
+        priority: 'medium',
       });
     }
 
     return milestones;
   }
 
-  private estimateTimeline(phases: any): any {
+  private estimateTimeline(phases: RoadmapPhases): RoadmapTimeline {
     let totalDays = 0;
 
     // Estimate based on number and complexity of items
@@ -532,23 +632,23 @@ export class RecommendationEngine {
       breakdown: {
         immediate: Math.ceil(phases.immediate.length * 0.5),
         shortTerm: phases.shortTerm.length * 2,
-        longTerm: phases.longTerm.length * 5
-      }
+        longTerm: phases.longTerm.length * 5,
+      },
     };
   }
 
-  private mapDependencies(insights: ActionableInsight[]): any[] {
-    const dependencies = [];
+  private mapDependencies(insights: ActionableInsight[]): RoadmapDependency[] {
+    const dependencies: RoadmapDependency[] = [];
 
     // Safety must come before compliance
-    const safetyInsights = insights.filter(i => i.category === 'safety');
-    const complianceInsights = insights.filter(i => i.category === 'compliance');
+    const safetyInsights = insights.filter((i) => i.category === 'safety');
+    const complianceInsights = insights.filter((i) => i.category === 'compliance');
 
     if (safetyInsights.length > 0 && complianceInsights.length > 0) {
       dependencies.push({
         prerequisite: 'Safety improvements',
         dependent: 'Compliance updates',
-        reason: 'Safety issues must be resolved before compliance can be properly assessed'
+        reason: 'Safety issues must be resolved before compliance can be properly assessed',
       });
     }
 
@@ -556,16 +656,16 @@ export class RecommendationEngine {
   }
 
   private generateSummary(result: EvaluationResult, insights: ActionableInsight[]): string {
-    const criticalCount = insights.filter(i => i.priority === 'critical').length;
-    const highCount = insights.filter(i => i.priority === 'high').length;
+    const criticalCount = insights.filter((i) => i.priority === 'critical').length;
+    const highCount = insights.filter((i) => i.priority === 'high').length;
     const overallScore = (result.safety.overallScore + result.compliance.overallScore) / 2;
 
     let summary = `Content evaluation score: ${(overallScore * 100).toFixed(1)}%. `;
-    
+
     if (criticalCount > 0) {
       summary += `Found ${criticalCount} critical issue${criticalCount > 1 ? 's' : ''} requiring immediate attention. `;
     }
-    
+
     if (highCount > 0) {
       summary += `${highCount} high-priority improvement${highCount > 1 ? 's' : ''} recommended. `;
     }
@@ -579,14 +679,14 @@ export class RecommendationEngine {
   private estimateOverallImpact(
     insights: ActionableInsight[],
     currentResult: EvaluationResult
-  ): any {
+  ): ImpactEstimate {
     let potentialSafetyImprovement = 0;
     let potentialComplianceImprovement = 0;
 
     for (const insight of insights) {
       if (insight.metrics) {
         const improvement = parseFloat(insight.metrics.improvement?.replace('%', '') || '0') / 100;
-        
+
         if (insight.category === 'safety') {
           potentialSafetyImprovement += improvement * this.priorityWeights[insight.priority];
         } else if (insight.category === 'compliance') {
@@ -595,7 +695,8 @@ export class RecommendationEngine {
       }
     }
 
-    const currentOverall = (currentResult.safety.overallScore + currentResult.compliance.overallScore) / 2;
+    const currentOverall =
+      (currentResult.safety.overallScore + currentResult.compliance.overallScore) / 2;
     const estimatedImprovement = (potentialSafetyImprovement + potentialComplianceImprovement) / 2;
     const projectedScore = Math.min(1, currentOverall + estimatedImprovement);
 
@@ -603,13 +704,13 @@ export class RecommendationEngine {
       current: currentOverall,
       projected: projectedScore,
       improvement: projectedScore - currentOverall,
-      percentageGain: ((projectedScore - currentOverall) / currentOverall * 100).toFixed(1) + '%',
-      confidence: this.calculateConfidenceInEstimate(insights)
+      percentageGain: (((projectedScore - currentOverall) / currentOverall) * 100).toFixed(1) + '%',
+      confidence: this.calculateConfidenceInEstimate(insights),
     };
   }
 
   private calculateConfidenceInEstimate(insights: ActionableInsight[]): string {
-    const hasMetrics = insights.filter(i => i.metrics).length;
+    const hasMetrics = insights.filter((i) => i.metrics).length;
     const ratio = hasMetrics / insights.length;
 
     if (ratio > 0.8) return 'high';
@@ -619,13 +720,13 @@ export class RecommendationEngine {
 
   private identifyNextSteps(insights: ActionableInsight[]): string[] {
     const steps: string[] = [];
-    const immediate = insights.filter(i => 
-      this.assessImpact(i).timeframe === 'immediate'
-    );
+    const immediate = insights.filter((i) => this.assessImpact(i).timeframe === 'immediate');
 
     if (immediate.length > 0) {
-      steps.push(`Address ${immediate.length} critical issue${immediate.length > 1 ? 's' : ''} immediately`);
-      
+      steps.push(
+        `Address ${immediate.length} critical issue${immediate.length > 1 ? 's' : ''} immediately`
+      );
+
       // Add first 3 specific actions
       for (let i = 0; i < Math.min(3, immediate.length); i++) {
         if (immediate[i].actionItems && immediate[i].actionItems.length > 0) {
@@ -635,12 +736,12 @@ export class RecommendationEngine {
     }
 
     // Add general next steps
-    const hasCompliance = insights.some(i => i.category === 'compliance');
+    const hasCompliance = insights.some((i) => i.category === 'compliance');
     if (hasCompliance) {
       steps.push('Review and update compliance documentation');
     }
 
-    const hasSafety = insights.some(i => i.category === 'safety');
+    const hasSafety = insights.some((i) => i.category === 'safety');
     if (hasSafety) {
       steps.push('Conduct safety review with stakeholders');
     }
@@ -648,16 +749,16 @@ export class RecommendationEngine {
     return steps;
   }
 
-  private suggestResources(insights: ActionableInsight[]): any[] {
-    const resources = [];
-    const categories = new Set(insights.map(i => i.category));
+  private suggestResources(insights: ActionableInsight[]): ResourceSuggestion[] {
+    const resources: ResourceSuggestion[] = [];
+    const categories = new Set(insights.map((i) => i.category));
 
     if (categories.has('safety')) {
       resources.push({
         type: 'guide',
         title: 'Content Safety Best Practices',
         url: '#safety-guide',
-        relevance: 'high'
+        relevance: 'high',
       });
     }
 
@@ -666,7 +767,7 @@ export class RecommendationEngine {
         type: 'checklist',
         title: 'Compliance Requirements Checklist',
         url: '#compliance-checklist',
-        relevance: 'high'
+        relevance: 'high',
       });
     }
 
@@ -675,7 +776,7 @@ export class RecommendationEngine {
         type: 'guidelines',
         title: 'Brand Voice and Tone Guidelines',
         url: '#brand-guidelines',
-        relevance: 'medium'
+        relevance: 'medium',
       });
     }
 
@@ -683,7 +784,7 @@ export class RecommendationEngine {
       type: 'tool',
       title: 'Content Evaluation Dashboard',
       url: '#dashboard',
-      relevance: 'medium'
+      relevance: 'medium',
     });
 
     return resources;
@@ -694,7 +795,7 @@ export class RecommendationEngine {
   async generateComparativeRecommendations(
     results: EvaluationResult[],
     context?: RecommendationContext
-  ): Promise<any> {
+  ): Promise<ComparativeRecommendations> {
     const comparisons = this.compareResults(results);
     const trends = this.identifyTrends(results);
     const commonIssues = this.findCommonIssues(results);
@@ -703,40 +804,40 @@ export class RecommendationEngine {
       comparisons,
       trends,
       commonIssues,
-      recommendations: await this.generateBulkRecommendations(results, commonIssues, context)
+      recommendations: await this.generateBulkRecommendations(results, commonIssues, context),
     };
   }
 
-  private compareResults(results: EvaluationResult[]): any {
+  private compareResults(results: EvaluationResult[]): ResultComparison | null {
     if (results.length < 2) return null;
 
-    const scores = results.map(r => ({
+    const scores: ScoreEntry[] = results.map((r) => ({
       safety: r.safety.overallScore,
       compliance: r.compliance.overallScore,
-      overall: (r.safety.overallScore + r.compliance.overallScore) / 2
+      overall: (r.safety.overallScore + r.compliance.overallScore) / 2,
     }));
 
     return {
-      best: Math.max(...scores.map(s => s.overall)),
-      worst: Math.min(...scores.map(s => s.overall)),
+      best: Math.max(...scores.map((s) => s.overall)),
+      worst: Math.min(...scores.map((s) => s.overall)),
       average: scores.reduce((sum, s) => sum + s.overall, 0) / scores.length,
-      variance: this.calculateVariance(scores.map(s => s.overall)),
-      distribution: this.getDistribution(scores)
+      variance: this.calculateVariance(scores.map((s) => s.overall)),
+      distribution: this.getDistribution(scores),
     };
   }
 
   private calculateVariance(values: number[]): number {
     const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-    const squaredDiffs = values.map(val => Math.pow(val - mean, 2));
+    const squaredDiffs = values.map((val) => Math.pow(val - mean, 2));
     return squaredDiffs.reduce((sum, diff) => sum + diff, 0) / values.length;
   }
 
-  private getDistribution(scores: any[]): any {
-    const ranges = {
+  private getDistribution(scores: ScoreEntry[]): ScoreDistribution {
+    const ranges: ScoreDistribution = {
       excellent: 0,
       good: 0,
       fair: 0,
-      poor: 0
+      poor: 0,
     };
 
     for (const score of scores) {
@@ -749,20 +850,20 @@ export class RecommendationEngine {
     return ranges;
   }
 
-  private identifyTrends(results: EvaluationResult[]): any {
+  private identifyTrends(results: EvaluationResult[]): TrendAnalysis | null {
     if (results.length < 3) return null;
 
-    const trends = {
-      safety: this.calculateTrend(results.map(r => r.safety.overallScore)),
-      compliance: this.calculateTrend(results.map(r => r.compliance.overallScore)),
-      overall: this.calculateTrend(results.map(r => 
-        (r.safety.overallScore + r.compliance.overallScore) / 2
-      ))
+    const trends: TrendData = {
+      safety: this.calculateTrend(results.map((r) => r.safety.overallScore)),
+      compliance: this.calculateTrend(results.map((r) => r.compliance.overallScore)),
+      overall: this.calculateTrend(
+        results.map((r) => (r.safety.overallScore + r.compliance.overallScore) / 2)
+      ),
     };
 
     return {
       ...trends,
-      interpretation: this.interpretTrends(trends)
+      interpretation: this.interpretTrends(trends),
     };
   }
 
@@ -782,7 +883,7 @@ export class RecommendationEngine {
     return 'declining';
   }
 
-  private interpretTrends(trends: any): string {
+  private interpretTrends(trends: TrendData): string {
     if (trends.overall === 'improving') {
       return 'Content quality is showing positive improvement over time';
     } else if (trends.overall === 'declining') {
@@ -792,7 +893,7 @@ export class RecommendationEngine {
     }
   }
 
-  private findCommonIssues(results: EvaluationResult[]): any[] {
+  private findCommonIssues(results: EvaluationResult[]): CommonIssue[] {
     const issueFrequency = new Map<string, number>();
 
     for (const result of results) {
@@ -804,7 +905,7 @@ export class RecommendationEngine {
       }
     }
 
-    const commonIssues = [];
+    const commonIssues: CommonIssue[] = [];
     const threshold = results.length * 0.5; // Issue appears in >50% of results
 
     for (const [ruleId, frequency] of issueFrequency.entries()) {
@@ -814,8 +915,8 @@ export class RecommendationEngine {
           commonIssues.push({
             rule: rule.name,
             frequency,
-            percentage: (frequency / results.length * 100).toFixed(1) + '%',
-            priority: rule.priority
+            percentage: ((frequency / results.length) * 100).toFixed(1) + '%',
+            priority: rule.priority,
           });
         }
       }
@@ -826,10 +927,10 @@ export class RecommendationEngine {
 
   private async generateBulkRecommendations(
     results: EvaluationResult[],
-    commonIssues: any[],
+    commonIssues: CommonIssue[],
     context?: RecommendationContext
-  ): Promise<any> {
-    const systemicRecommendations = [];
+  ): Promise<BulkRecommendations> {
+    const systemicRecommendations: SystemicRecommendation[] = [];
 
     for (const issue of commonIssues) {
       systemicRecommendations.push({
@@ -841,16 +942,16 @@ export class RecommendationEngine {
         implementation: {
           approach: 'Update guidelines and training',
           timeline: '2-4 weeks',
-          resources: ['Content team', 'Quality assurance', 'Training materials']
-        }
+          resources: ['Content team', 'Quality assurance', 'Training materials'],
+        },
       });
     }
 
     return {
       systemic: systemicRecommendations,
       individual: await Promise.all(
-        results.slice(0, 3).map(r => this.generateRecommendations(r, context))
-      )
+        results.slice(0, 3).map((r) => this.generateRecommendations(r, context))
+      ),
     };
   }
 }

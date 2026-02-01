@@ -10,12 +10,12 @@ export interface BrandComplianceService {
    * Check if content complies with brand guidelines
    */
   checkCompliance(content: Content, brand: Brand, context?: string): ComplianceEvaluation;
-  
+
   /**
    * Set the active brand for compliance checking
    */
   setBrand(brand: Brand): void;
-  
+
   /**
    * Get the currently active brand
    */

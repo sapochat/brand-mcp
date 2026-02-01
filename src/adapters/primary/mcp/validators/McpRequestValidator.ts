@@ -2,14 +2,21 @@ import { CheckSafetyInput } from '../../../../application/use-cases/CheckSafetyU
 import { CheckComplianceInput } from '../../../../application/use-cases/CheckComplianceUseCase.js';
 import { CombinedEvaluationInput } from '../../../../application/use-cases/CombinedEvaluationUseCase.js';
 import { UpdateConfigInput } from '../../../../application/use-cases/UpdateConfigUseCase.js';
-import { BatchEvaluationInput } from '../../../../application/use-cases/BatchEvaluationUseCase.js';
+import {
+  BatchEvaluationInput,
+  BatchItemMetadata,
+} from '../../../../application/use-cases/BatchEvaluationUseCase.js';
+
+/**
+ * Type for raw MCP request arguments
+ */
+type RawArgs = Record<string, unknown> | undefined;
 
 /**
  * Validates and sanitizes MCP requests
  */
 export class McpRequestValidator {
-  
-  validateSafetyInput(args: any): CheckSafetyInput {
+  validateSafetyInput(args: RawArgs): CheckSafetyInput {
     if (!args || typeof args !== 'object') {
       throw new Error('Invalid arguments: expected object');
     }
@@ -18,22 +25,22 @@ export class McpRequestValidator {
       throw new Error('Content is required and must be a string');
     }
 
-    if (args.content.trim().length === 0) {
+    if ((args.content as string).trim().length === 0) {
       throw new Error('Content cannot be empty');
     }
 
-    if (args.content.length > 10000) {
+    if ((args.content as string).length > 10000) {
       throw new Error('Content too long (max 10000 characters)');
     }
 
     return {
-      content: this.sanitizeContent(args.content),
+      content: this.sanitizeContent(args.content as string),
       context: this.sanitizeContext(args.context),
-      metadata: this.sanitizeMetadata(args.metadata)
+      metadata: this.sanitizeMetadata(args.metadata),
     };
   }
 
-  validateComplianceInput(args: any): CheckComplianceInput {
+  validateComplianceInput(args: RawArgs): CheckComplianceInput {
     if (!args || typeof args !== 'object') {
       throw new Error('Invalid arguments: expected object');
     }
@@ -42,22 +49,22 @@ export class McpRequestValidator {
       throw new Error('Content is required and must be a string');
     }
 
-    if (args.content.trim().length === 0) {
+    if ((args.content as string).trim().length === 0) {
       throw new Error('Content cannot be empty');
     }
 
-    if (args.content.length > 10000) {
+    if ((args.content as string).length > 10000) {
       throw new Error('Content too long (max 10000 characters)');
     }
 
     return {
-      content: this.sanitizeContent(args.content),
+      content: this.sanitizeContent(args.content as string),
       context: this.sanitizeContext(args.context),
-      metadata: this.sanitizeMetadata(args.metadata)
+      metadata: this.sanitizeMetadata(args.metadata),
     };
   }
 
-  validateCombinedInput(args: any): CombinedEvaluationInput {
+  validateCombinedInput(args: RawArgs): CombinedEvaluationInput {
     if (!args || typeof args !== 'object') {
       throw new Error('Invalid arguments: expected object');
     }
@@ -66,11 +73,11 @@ export class McpRequestValidator {
       throw new Error('Content is required and must be a string');
     }
 
-    if (args.content.trim().length === 0) {
+    if ((args.content as string).trim().length === 0) {
       throw new Error('Content cannot be empty');
     }
 
-    if (args.content.length > 10000) {
+    if ((args.content as string).length > 10000) {
       throw new Error('Content too long (max 10000 characters)');
     }
 
@@ -79,25 +86,32 @@ export class McpRequestValidator {
     const safetyWeight = this.validateWeight(args.safetyWeight, 'safetyWeight', 1.0);
 
     // Validate boolean flags
-    const includeSafety = args.includeSafety !== undefined ? 
-      this.validateBoolean(args.includeSafety, 'includeSafety') : true;
-    const includeBrand = args.includeBrand !== undefined ?
-      this.validateBoolean(args.includeBrand, 'includeBrand') : true;
+    const includeSafety =
+      args.includeSafety !== undefined
+        ? this.validateBoolean(args.includeSafety, 'includeSafety')
+        : true;
+    const includeBrand =
+      args.includeBrand !== undefined
+        ? this.validateBoolean(args.includeBrand, 'includeBrand')
+        : true;
 
     return {
-      content: this.sanitizeContent(args.content),
+      content: this.sanitizeContent(args.content as string),
       context: this.sanitizeContext(args.context),
       includeSafety,
       includeBrand,
-      weights: brandWeight !== undefined && safetyWeight !== undefined ? {
-        brand: brandWeight,
-        safety: safetyWeight
-      } : undefined,
-      metadata: this.sanitizeMetadata(args.metadata)
+      weights:
+        brandWeight !== undefined && safetyWeight !== undefined
+          ? {
+              brand: brandWeight,
+              safety: safetyWeight,
+            }
+          : undefined,
+      metadata: this.sanitizeMetadata(args.metadata),
     };
   }
 
-  validateBatchInput(args: any): BatchEvaluationInput {
+  validateBatchInput(args: RawArgs): BatchEvaluationInput {
     if (!args || typeof args !== 'object') {
       throw new Error('Invalid arguments: expected object');
     }
@@ -115,156 +129,203 @@ export class McpRequestValidator {
     }
 
     // Validate each item
-    const validatedItems = args.items.map((item: any, index: number) => {
+    const validatedItems = (args.items as unknown[]).map((item: unknown, index: number) => {
       if (!item || typeof item !== 'object') {
         throw new Error(`Invalid item at index ${index}: expected object`);
       }
 
-      if (!item.content || typeof item.content !== 'string') {
-        throw new Error(`Invalid content at index ${index}: content is required and must be a string`);
+      const itemObj = item as Record<string, unknown>;
+
+      if (!itemObj.content || typeof itemObj.content !== 'string') {
+        throw new Error(
+          `Invalid content at index ${index}: content is required and must be a string`
+        );
       }
 
-      if (item.content.trim().length === 0) {
+      if ((itemObj.content as string).trim().length === 0) {
         throw new Error(`Invalid content at index ${index}: content cannot be empty`);
       }
 
       return {
-        id: item.id ? String(item.id) : undefined,
-        content: this.sanitizeContent(item.content),
-        context: this.sanitizeContext(item.context),
-        metadata: this.sanitizeMetadata(item.metadata)
+        id: itemObj.id ? String(itemObj.id) : undefined,
+        content: this.sanitizeContent(itemObj.content as string),
+        context: this.sanitizeContext(itemObj.context),
+        metadata: this.sanitizeBatchMetadata(itemObj.metadata),
       };
     });
 
     // Validate evaluation type
-    const validTypes = ['safety', 'compliance', 'combined'];
-    const evaluationType = args.evaluationType;
-    if (evaluationType && !validTypes.includes(evaluationType)) {
-      throw new Error(`Invalid evaluation type: ${evaluationType}. Must be one of: ${validTypes.join(', ')}`);
+    const validTypes = ['safety', 'compliance', 'combined'] as const;
+    const evaluationType = args.evaluationType as string | undefined;
+    if (evaluationType && !validTypes.includes(evaluationType as (typeof validTypes)[number])) {
+      throw new Error(
+        `Invalid evaluation type: ${evaluationType}. Must be one of: ${validTypes.join(', ')}`
+      );
     }
+
+    const typedEvalType = (evaluationType as 'safety' | 'compliance' | 'combined') || 'combined';
 
     return {
       items: validatedItems,
-      evaluationType: evaluationType || 'combined',
+      evaluationType: typedEvalType,
       options: {
         includeSafety: args.includeSafety !== false,
         includeBrand: args.includeBrand !== false,
-        weights: args.weights ? {
-          safety: this.validateWeight(args.weights.safety, 'safety weight', 1.0),
-          brand: this.validateWeight(args.weights.brand, 'brand weight', 2.0)
-        } : undefined
-      }
+        weights: args.weights
+          ? {
+              safety: this.validateWeight(
+                (args.weights as Record<string, unknown>).safety,
+                'safety weight',
+                1.0
+              ),
+              brand: this.validateWeight(
+                (args.weights as Record<string, unknown>).brand,
+                'brand weight',
+                2.0
+              ),
+            }
+          : undefined,
+      },
     };
   }
 
-  validateConfigInput(args: any): UpdateConfigInput {
+  validateConfigInput(args: RawArgs): UpdateConfigInput {
     if (!args || typeof args !== 'object') {
       throw new Error('Invalid arguments: expected object');
     }
 
-    const result: any = {};
+    const sensitiveKeywords =
+      args.sensitiveKeywords !== undefined
+        ? this.validateStringArray(args.sensitiveKeywords, 'sensitiveKeywords')
+        : undefined;
 
-    // Validate sensitive keywords
-    if (args.sensitiveKeywords !== undefined) {
-      if (!Array.isArray(args.sensitiveKeywords)) {
-        throw new Error('sensitiveKeywords must be an array');
-      }
-      result.sensitiveKeywords = args.sensitiveKeywords
-        .map((k: any) => this.validateStringArrayItem(k, 'sensitiveKeywords'))
-        .filter((k: string) => k.length > 0);
+    const allowedTopics =
+      args.allowedTopics !== undefined
+        ? this.validateStringArray(args.allowedTopics, 'allowedTopics')
+        : undefined;
+
+    const blockedTopics =
+      args.blockedTopics !== undefined
+        ? this.validateStringArray(args.blockedTopics, 'blockedTopics')
+        : undefined;
+
+    const riskTolerances =
+      args.riskTolerances !== undefined
+        ? this.validateRiskTolerances(args.riskTolerances as Record<string, unknown>)
+        : undefined;
+
+    return {
+      sensitiveKeywords,
+      allowedTopics,
+      blockedTopics,
+      riskTolerances,
+    };
+  }
+
+  private validateStringArray(value: unknown, arrayName: string): readonly string[] {
+    if (!Array.isArray(value)) {
+      throw new Error(`${arrayName} must be an array`);
     }
-
-    // Validate allowed topics
-    if (args.allowedTopics !== undefined) {
-      if (!Array.isArray(args.allowedTopics)) {
-        throw new Error('allowedTopics must be an array');
-      }
-      result.allowedTopics = args.allowedTopics
-        .map((t: any) => this.validateStringArrayItem(t, 'allowedTopics'))
-        .filter((t: string) => t.length > 0);
-    }
-
-    // Validate blocked topics
-    if (args.blockedTopics !== undefined) {
-      if (!Array.isArray(args.blockedTopics)) {
-        throw new Error('blockedTopics must be an array');
-      }
-      result.blockedTopics = args.blockedTopics
-        .map((t: any) => this.validateStringArrayItem(t, 'blockedTopics'))
-        .filter((t: string) => t.length > 0);
-    }
-
-    // Validate risk tolerances
-    if (args.riskTolerances !== undefined) {
-      if (typeof args.riskTolerances !== 'object' || args.riskTolerances === null) {
-        throw new Error('riskTolerances must be an object');
-      }
-      result.riskTolerances = this.validateRiskTolerances(args.riskTolerances);
-    }
-
-    return result;
+    return (value as unknown[])
+      .map((item: unknown) => this.validateStringArrayItem(item, arrayName))
+      .filter((item: string) => item.length > 0);
   }
 
   private sanitizeContent(content: string): string {
     if (typeof content !== 'string') return '';
-    
-    // Remove potentially harmful content
-    return content
-      .replace(/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]/g, '') // Remove control characters
-      .trim();
+
+    // Remove potentially harmful control characters
+    // eslint-disable-next-line no-control-regex
+    const controlCharRegex = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
+    return content.replace(controlCharRegex, '').trim();
   }
 
-  private sanitizeContext(context: any): string | undefined {
+  private sanitizeContext(context: unknown): string | undefined {
     if (context === undefined || context === null) return undefined;
     if (typeof context !== 'string') return undefined;
-    
+
     const sanitized = context.trim().toLowerCase();
-    
+
     // Only allow alphanumeric, dashes, and underscores
     if (!/^[a-z0-9_-]+$/.test(sanitized)) {
       return undefined;
     }
-    
+
     return sanitized;
   }
 
-  private sanitizeMetadata(metadata: any): any {
+  private sanitizeMetadata(metadata: unknown):
+    | {
+        source?: string;
+        contentType?: string;
+        language?: string;
+        createdAt?: Date;
+        tags?: readonly string[];
+      }
+    | undefined {
     if (!metadata || typeof metadata !== 'object') return undefined;
-    
-    const result: any = {};
-    
-    if (typeof metadata.source === 'string') {
-      result.source = metadata.source.trim();
+
+    const metadataObj = metadata as Record<string, unknown>;
+    const result: {
+      source?: string;
+      contentType?: string;
+      language?: string;
+      createdAt?: Date;
+      tags?: string[];
+    } = {};
+
+    if (typeof metadataObj.source === 'string') {
+      result.source = metadataObj.source.trim();
     }
-    
-    if (typeof metadata.contentType === 'string') {
-      result.contentType = metadata.contentType.trim();
+
+    if (typeof metadataObj.contentType === 'string') {
+      result.contentType = metadataObj.contentType.trim();
     }
-    
-    if (typeof metadata.language === 'string') {
-      result.language = metadata.language.trim();
+
+    if (typeof metadataObj.language === 'string') {
+      result.language = metadataObj.language.trim();
     }
-    
-    if (metadata.createdAt instanceof Date || typeof metadata.createdAt === 'string') {
-      result.createdAt = new Date(metadata.createdAt);
+
+    if (metadataObj.createdAt instanceof Date || typeof metadataObj.createdAt === 'string') {
+      result.createdAt = new Date(metadataObj.createdAt as string | Date);
     }
-    
-    if (Array.isArray(metadata.tags)) {
-      result.tags = metadata.tags
-        .filter((tag: any) => typeof tag === 'string')
-        .map((tag: string) => tag.trim())
+
+    if (Array.isArray(metadataObj.tags)) {
+      result.tags = (metadataObj.tags as unknown[])
+        .filter((tag: unknown) => typeof tag === 'string')
+        .map((tag: unknown) => (tag as string).trim())
         .filter((tag: string) => tag.length > 0);
     }
-    
+
     return Object.keys(result).length > 0 ? result : undefined;
   }
 
-  private validateWeight(weight: any, fieldName: string, defaultValue: number): number {
+  private sanitizeBatchMetadata(metadata: unknown): BatchItemMetadata | undefined {
+    if (!metadata || typeof metadata !== 'object') return undefined;
+
+    const metadataObj = metadata as Record<string, unknown>;
+    const result: BatchItemMetadata = {};
+
+    for (const [key, value] of Object.entries(metadataObj)) {
+      if (
+        typeof value === 'string' ||
+        typeof value === 'number' ||
+        typeof value === 'boolean' ||
+        value === null
+      ) {
+        (result as Record<string, string | number | boolean | null>)[key] = value;
+      }
+    }
+
+    return Object.keys(result).length > 0 ? result : undefined;
+  }
+
+  private validateWeight(weight: unknown, fieldName: string, defaultValue: number): number {
     if (weight === undefined || weight === null) {
       return defaultValue;
     }
 
-    const numWeight = parseFloat(weight);
+    const numWeight = parseFloat(String(weight));
     if (isNaN(numWeight)) {
       throw new Error(`${fieldName} must be a number`);
     }
@@ -276,11 +337,11 @@ export class McpRequestValidator {
     return numWeight;
   }
 
-  private validateBoolean(value: any, fieldName: string): boolean {
+  private validateBoolean(value: unknown, fieldName: string): boolean {
     if (typeof value === 'boolean') {
       return value;
     }
-    
+
     if (typeof value === 'string') {
       const lowerValue = value.toLowerCase();
       if (lowerValue === 'true') return true;
@@ -290,24 +351,28 @@ export class McpRequestValidator {
     throw new Error(`${fieldName} must be a boolean`);
   }
 
-  private validateStringArrayItem(item: any, arrayName: string): string {
+  private validateStringArrayItem(item: unknown, arrayName: string): string {
     if (typeof item !== 'string') {
       throw new Error(`All items in ${arrayName} must be strings`);
     }
-    
+
     const sanitized = item.trim();
     if (sanitized.length === 0) {
       throw new Error(`Empty strings not allowed in ${arrayName}`);
     }
-    
+
     if (sanitized.length > 100) {
       throw new Error(`Items in ${arrayName} must be 100 characters or less`);
     }
-    
+
     return sanitized;
   }
 
-  private validateRiskTolerances(tolerances: Record<string, any>): Record<string, string> {
+  private validateRiskTolerances(tolerances: Record<string, unknown>): Record<string, string> {
+    if (typeof tolerances !== 'object' || tolerances === null) {
+      throw new Error('riskTolerances must be an object');
+    }
+
     const validRiskLevels = ['NONE', 'LOW', 'MEDIUM', 'HIGH', 'VERY_HIGH'];
     const result: Record<string, string> = {};
 
@@ -317,7 +382,9 @@ export class McpRequestValidator {
       }
 
       if (typeof level !== 'string' || !validRiskLevels.includes(level)) {
-        throw new Error(`Invalid risk level '${level}' for category '${category}'. Valid levels: ${validRiskLevels.join(', ')}`);
+        throw new Error(
+          `Invalid risk level '${level}' for category '${category}'. Valid levels: ${validRiskLevels.join(', ')}`
+        );
       }
 
       result[category.trim()] = level;

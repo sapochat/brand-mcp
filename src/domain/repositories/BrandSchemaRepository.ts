@@ -8,12 +8,12 @@ export interface BrandSchemaRepository {
    * Load the active brand schema
    */
   loadBrandSchema(): Promise<BrandSchema>;
-  
+
   /**
    * Update the brand schema
    */
   updateBrandSchema(schema: BrandSchema): Promise<void>;
-  
+
   /**
    * Check if a brand schema exists
    */

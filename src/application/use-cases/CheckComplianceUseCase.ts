@@ -30,7 +30,7 @@ export class CheckComplianceUseCase {
 
     // Create domain entities
     const content = new Content(input.content, input.context, input.metadata);
-    
+
     // Check cache first if available
     if (this.cacheRepository) {
       const cacheKey = this.generateCacheKey(content, brand, input.context);

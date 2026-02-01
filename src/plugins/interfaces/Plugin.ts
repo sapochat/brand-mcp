@@ -70,7 +70,7 @@ export interface ContentEnricherPlugin extends Plugin {
   /**
    * Enrich content before evaluation
    */
-  enrich(content: string, metadata?: any): Promise<EnrichedContent>;
+  enrich(content: string, metadata?: Record<string, unknown>): Promise<EnrichedContent>;
 }
 
 /**
@@ -85,7 +85,7 @@ export interface FormatterPlugin extends Plugin {
   /**
    * Format evaluation result
    */
-  format(result: any, format: string): Promise<string>;
+  format(result: unknown, format: string): Promise<string>;
 }
 
 /**
@@ -95,7 +95,7 @@ export interface PluginContext {
   /**
    * Current brand configuration
    */
-  brandConfig?: any;
+  brandConfig?: Record<string, unknown>;
 
   /**
    * User-provided context
@@ -144,7 +144,7 @@ export interface PluginEvaluationResult {
   /**
    * Plugin-specific metadata
    */
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -197,9 +197,46 @@ export interface EnrichedContent {
   /**
    * Additional metadata added by enricher
    */
-  metadata: {
-    [key: string]: any;
-  };
+  metadata: Record<string, unknown>;
+}
+
+/**
+ * JSON Schema type definition
+ */
+export interface JsonSchema {
+  type?: string | string[];
+  properties?: Record<string, JsonSchema>;
+  required?: string[];
+  items?: JsonSchema;
+  enum?: unknown[];
+  const?: unknown;
+  anyOf?: JsonSchema[];
+  oneOf?: JsonSchema[];
+  allOf?: JsonSchema[];
+  $ref?: string;
+  $defs?: Record<string, JsonSchema>;
+  additionalProperties?: boolean | JsonSchema;
+  description?: string;
+  default?: unknown;
+  minimum?: number;
+  maximum?: number;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+  format?: string;
+}
+
+/**
+ * UI Schema for rendering configuration forms
+ */
+export interface UiSchema {
+  'ui:widget'?: string;
+  'ui:options'?: Record<string, unknown>;
+  'ui:order'?: string[];
+  'ui:placeholder'?: string;
+  'ui:disabled'?: boolean;
+  'ui:readonly'?: boolean;
+  [key: string]: UiSchema | string | boolean | string[] | Record<string, unknown> | undefined;
 }
 
 /**
@@ -209,17 +246,17 @@ export interface PluginConfigSchema {
   /**
    * JSON Schema for configuration validation
    */
-  schema: any;
+  schema: JsonSchema;
 
   /**
    * Default configuration values
    */
-  defaults?: any;
+  defaults?: Record<string, unknown>;
 
   /**
    * UI hints for configuration
    */
-  uiSchema?: any;
+  uiSchema?: UiSchema;
 }
 
 /**

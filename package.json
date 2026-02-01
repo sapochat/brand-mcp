@@ -36,7 +36,7 @@
     "start": "node dist/main.js",
     "dev": "tsc-watch --onSuccess \"node dist/main.js\"",
     "cli": "node dist/cli/index.js",
-    "test": "tsc && node dist/examples/testClient.js",
+    "test": "npm run test:unit",
     "demo": "tsc && node dist/examples/brandComplianceClient.js",
     "sdk-demo": "tsc && node dist/examples/sdkExampleClient.js",
     "enhanced-test": "node dist/examples/enhancedTestClient.js",
@@ -52,12 +52,13 @@
     "audit:fix": "npm audit fix"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.11.0",
+    "@modelcontextprotocol/sdk": "^1.25.3",
     "chalk": "^5.3.0",
     "commander": "^11.1.0",
-    "zod": "^3.24.4"
+    "zod": "^3.25.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@jest/globals": "^30.0.5",
     "@types/jest": "^30.0.0",
     "@types/node": "^20.9.0",
@@ -70,6 +71,7 @@
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.1",
     "tsc-watch": "^6.0.4",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.54.0"
   }
 }

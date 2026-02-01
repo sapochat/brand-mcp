@@ -77,7 +77,7 @@ export interface VisualIdentity {
   readonly typography: {
     readonly headingFont: string;
     readonly bodyFont: string;
-    readonly fontSizes: Record<string, any>;
+    readonly fontSizes: Record<string, string | number>;
   };
   readonly imagery: {
     readonly style: string;

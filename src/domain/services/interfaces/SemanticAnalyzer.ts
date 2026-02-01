@@ -141,7 +141,7 @@ export interface Concept {
   /**
    * Associated metadata
    */
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -378,7 +378,7 @@ export enum ConceptType {
   VALUE = 'value',
   RELATIONSHIP = 'relationship',
   EVENT = 'event',
-  STATE = 'state'
+  STATE = 'state',
 }
 
 /**
@@ -395,7 +395,7 @@ export enum EntityType {
   PERCENTAGE = 'percentage',
   EMAIL = 'email',
   URL = 'url',
-  PHONE = 'phone'
+  PHONE = 'phone',
 }
 
 /**
@@ -410,7 +410,7 @@ export enum RelationshipType {
   PRECEDES = 'precedes',
   FOLLOWS = 'follows',
   CONTRADICTS = 'contradicts',
-  SUPPORTS = 'supports'
+  SUPPORTS = 'supports',
 }
 
 /**
@@ -426,7 +426,7 @@ export enum IntentType {
   COMPLAIN = 'complain',
   PRAISE = 'praise',
   WARN = 'warn',
-  THREATEN = 'threaten'
+  THREATEN = 'threaten',
 }
 
 /**
@@ -440,7 +440,7 @@ export enum SemanticIssueType {
   INCONSISTENCY = 'inconsistency',
   MISSING_CONTEXT = 'missing_context',
   UNCLEAR_REFERENCE = 'unclear_reference',
-  LOGICAL_FALLACY = 'logical_fallacy'
+  LOGICAL_FALLACY = 'logical_fallacy',
 }
 
 /**

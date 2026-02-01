@@ -55,7 +55,7 @@ export abstract class IndustryValidator {
       warnings,
       requirements,
       regulations: this.regulations,
-      recommendations: this.generateRecommendations(violations, warnings, requirements)
+      recommendations: this.generateRecommendations(violations, warnings, requirements),
     };
   }
 
@@ -64,11 +64,11 @@ export abstract class IndustryValidator {
    */
   protected checkProhibitedTerms(content: string): ComplianceViolation[] {
     const violations: ComplianceViolation[] = [];
-    
+
     for (const [term, reason] of this.prohibitedTerms) {
       const regex = new RegExp(`\\b${term}\\b`, 'gi');
       const matches = content.match(regex);
-      
+
       if (matches) {
         violations.push({
           type: 'prohibited_term',
@@ -76,7 +76,7 @@ export abstract class IndustryValidator {
           description: `Prohibited term "${term}" found`,
           reason,
           occurrences: matches.length,
-          regulation: this.getRelevantRegulation(term)
+          regulation: this.getRelevantRegulation(term),
         });
       }
     }
@@ -88,7 +88,7 @@ export abstract class IndustryValidator {
    * Check for required disclosures
    */
   protected checkRequiredDisclosures(
-    content: string, 
+    content: string,
     _context?: ValidationContext
   ): MissingRequirement[] {
     const missing: MissingRequirement[] = [];
@@ -96,13 +96,13 @@ export abstract class IndustryValidator {
     for (const [disclosure, requirement] of this.requiredDisclosures) {
       if (this.isDisclosureRequired(disclosure, content, _context)) {
         const hasDisclosure = this.hasDisclosure(content, disclosure);
-        
+
         if (!hasDisclosure) {
           missing.push({
             type: 'disclosure',
             requirement,
             template: this.getDisclosureTemplate(disclosure),
-            regulation: this.getRelevantRegulation(disclosure)
+            regulation: this.getRelevantRegulation(disclosure),
           });
         }
       }
@@ -117,13 +117,13 @@ export abstract class IndustryValidator {
   protected async checkSpecialRequirements(
     content: string,
     _context?: ValidationContext
-  ): Promise<{ violations: ComplianceViolation[], warnings: ComplianceWarning[] }> {
+  ): Promise<{ violations: ComplianceViolation[]; warnings: ComplianceWarning[] }> {
     const violations: ComplianceViolation[] = [];
     const warnings: ComplianceWarning[] = [];
 
     for (const requirement of this.specialRequirements) {
       const result = await requirement.check(content, _context);
-      
+
       if (!result.passed) {
         if (result.severity === 'violation') {
           violations.push({
@@ -131,13 +131,13 @@ export abstract class IndustryValidator {
             severity: 'high',
             description: result.message || '',
             reason: requirement.reason,
-            regulation: requirement.regulation
+            regulation: requirement.regulation,
           });
         } else {
           warnings.push({
             type: 'special_requirement',
             message: result.message || '',
-            recommendation: result.recommendation || ''
+            recommendation: result.recommendation || '',
           });
         }
       }
@@ -157,9 +157,8 @@ export abstract class IndustryValidator {
     let score = 100;
 
     // Deduct for violations
-    violations.forEach(v => {
-      score -= v.severity === 'critical' ? 30 : 
-               v.severity === 'high' ? 20 : 10;
+    violations.forEach((v) => {
+      score -= v.severity === 'critical' ? 30 : v.severity === 'high' ? 20 : 10;
     });
 
     // Deduct for missing requirements
@@ -203,9 +202,9 @@ export abstract class IndustryValidator {
     content: string,
     _context?: ValidationContext
   ): Promise<{
-    violations: ComplianceViolation[],
-    warnings: ComplianceWarning[],
-    requirements: MissingRequirement[]
+    violations: ComplianceViolation[];
+    warnings: ComplianceWarning[];
+    requirements: MissingRequirement[];
   }>;
 
   protected abstract isDisclosureRequired(
@@ -239,14 +238,20 @@ export class FinancialServicesValidator extends IndustryValidator {
     );
 
     // Prohibited terms
-    this.prohibitedTerms.set('guaranteed returns', 'SEC prohibits guarantees of investment performance');
+    this.prohibitedTerms.set(
+      'guaranteed returns',
+      'SEC prohibits guarantees of investment performance'
+    );
     this.prohibitedTerms.set('risk-free', 'All investments carry risk');
     this.prohibitedTerms.set('sure thing', 'Misleading investment claim');
-    this.prohibitedTerms.set('can\'t lose', 'False security claim');
+    this.prohibitedTerms.set("can't lose", 'False security claim');
     this.prohibitedTerms.set('bank guarantee', 'Requires specific authorization');
 
     // Required disclosures
-    this.requiredDisclosures.set('investment_risk', 'Past performance does not guarantee future results');
+    this.requiredDisclosures.set(
+      'investment_risk',
+      'Past performance does not guarantee future results'
+    );
     this.requiredDisclosures.set('fdic', 'FDIC insurance disclosure when mentioning deposits');
     this.requiredDisclosures.set('apr', 'Annual Percentage Rate disclosure for loans');
     this.requiredDisclosures.set('fees', 'Clear disclosure of all fees and charges');
@@ -257,26 +262,30 @@ export class FinancialServicesValidator extends IndustryValidator {
       check: async (content: string) => {
         const hasPositive = /\b(profit|gain|return|growth)\b/gi.test(content);
         const hasRisk = /\b(risk|loss|volatility|uncertainty)\b/gi.test(content);
-        
+
         if (hasPositive && !hasRisk) {
           return {
             passed: false,
             severity: 'violation',
             message: 'Investment content must present balanced view of risks and benefits',
-            recommendation: 'Add risk disclosure alongside benefit claims'
+            recommendation: 'Add risk disclosure alongside benefit claims',
           };
         }
         return { passed: true };
       },
       reason: 'FINRA requires balanced presentation',
-      regulation: 'FINRA Rule 2210'
+      regulation: 'FINRA Rule 2210',
     });
   }
 
   protected async performIndustrySpecificChecks(
     content: string,
     _context?: ValidationContext
-  ) {
+  ): Promise<{
+    violations: ComplianceViolation[];
+    warnings: ComplianceWarning[];
+    requirements: MissingRequirement[];
+  }> {
     const violations: ComplianceViolation[] = [];
     const warnings: ComplianceWarning[] = [];
     const requirements: MissingRequirement[] = [];
@@ -287,8 +296,9 @@ export class FinancialServicesValidator extends IndustryValidator {
         requirements.push({
           type: 'disclosure',
           requirement: 'Testimonial disclosure required',
-          template: 'Individual results may vary. Past performance is not indicative of future results.',
-          regulation: 'SEC Rule 206(4)-1'
+          template:
+            'Individual results may vary. Past performance is not indicative of future results.',
+          regulation: 'SEC Rule 206(4)-1',
         });
       }
     }
@@ -300,7 +310,7 @@ export class FinancialServicesValidator extends IndustryValidator {
         warnings.push({
           type: 'clarity',
           message: 'Percentage rates should specify time period',
-          recommendation: 'Clarify if rate is annual, monthly, etc.'
+          recommendation: 'Clarify if rate is annual, monthly, etc.',
         });
       }
     }
@@ -329,10 +339,10 @@ export class FinancialServicesValidator extends IndustryValidator {
 
   protected hasDisclosure(content: string, disclosure: string): boolean {
     const disclosurePatterns: Record<string, RegExp> = {
-      'investment_risk': /past performance.*not.*guarantee|risk.*loss.*principal/gi,
-      'fdic': /FDIC insured|member FDIC|Federal Deposit Insurance/gi,
-      'apr': /annual percentage rate|APR/gi,
-      'fees': /fee schedule|charges may apply|see.*fees/gi
+      investment_risk: /past performance.*not.*guarantee|risk.*loss.*principal/gi,
+      fdic: /FDIC insured|member FDIC|Federal Deposit Insurance/gi,
+      apr: /annual percentage rate|APR/gi,
+      fees: /fee schedule|charges may apply|see.*fees/gi,
     };
 
     return disclosurePatterns[disclosure]?.test(content) || false;
@@ -340,10 +350,11 @@ export class FinancialServicesValidator extends IndustryValidator {
 
   protected getDisclosureTemplate(disclosure: string): string {
     const templates: Record<string, string> = {
-      'investment_risk': 'Past performance is not a guarantee of future results. All investments involve risk, including possible loss of principal.',
-      'fdic': 'Member FDIC. Deposits insured up to $250,000 per depositor.',
-      'apr': 'See terms for Annual Percentage Rate (APR) details.',
-      'fees': 'Fees may apply. See fee schedule for details.'
+      investment_risk:
+        'Past performance is not a guarantee of future results. All investments involve risk, including possible loss of principal.',
+      fdic: 'Member FDIC. Deposits insured up to $250,000 per depositor.',
+      apr: 'See terms for Annual Percentage Rate (APR) details.',
+      fees: 'Fees may apply. See fee schedule for details.',
     };
 
     return templates[disclosure] || '';
@@ -384,10 +395,16 @@ export class HealthcareValidator extends IndustryValidator {
     this.prohibitedTerms.set('scientifically proven', 'Requires peer-reviewed evidence');
 
     // Required disclosures
-    this.requiredDisclosures.set('medical_advice', 'Not a substitute for professional medical advice');
+    this.requiredDisclosures.set(
+      'medical_advice',
+      'Not a substitute for professional medical advice'
+    );
     this.requiredDisclosures.set('results', 'Individual results may vary');
     this.requiredDisclosures.set('side_effects', 'See full list of side effects');
-    this.requiredDisclosures.set('dietary_supplement', 'These statements have not been evaluated by the FDA');
+    this.requiredDisclosures.set(
+      'dietary_supplement',
+      'These statements have not been evaluated by the FDA'
+    );
 
     // Special requirements
     this.specialRequirements.push({
@@ -395,26 +412,30 @@ export class HealthcareValidator extends IndustryValidator {
       check: async (content: string) => {
         const medicalClaims = /\b(treats?|prevents?|cures?|heals?|eliminates?)\s+\w+/gi;
         const hasEvidence = /\b(study|studies|research|clinical trial|evidence)\b/gi;
-        
+
         if (medicalClaims.test(content) && !hasEvidence.test(content)) {
           return {
             passed: false,
             severity: 'violation',
             message: 'Medical claims must be supported by evidence',
-            recommendation: 'Add references to clinical studies or remove claims'
+            recommendation: 'Add references to clinical studies or remove claims',
           };
         }
         return { passed: true };
       },
       reason: 'FTC requires substantiation for health claims',
-      regulation: 'FTC Health Claims Guide'
+      regulation: 'FTC Health Claims Guide',
     });
   }
 
   protected async performIndustrySpecificChecks(
     content: string,
     _context?: ValidationContext
-  ) {
+  ): Promise<{
+    violations: ComplianceViolation[];
+    warnings: ComplianceWarning[];
+    requirements: MissingRequirement[];
+  }> {
     const violations: ComplianceViolation[] = [];
     const warnings: ComplianceWarning[] = [];
     const requirements: MissingRequirement[] = [];
@@ -426,8 +447,9 @@ export class HealthcareValidator extends IndustryValidator {
         requirements.push({
           type: 'disclosure',
           requirement: 'Medical disclaimer required when discussing diseases',
-          template: 'This information is not intended to diagnose, treat, cure, or prevent any disease. Consult your healthcare provider.',
-          regulation: 'FDA Regulations'
+          template:
+            'This information is not intended to diagnose, treat, cure, or prevent any disease. Consult your healthcare provider.',
+          regulation: 'FDA Regulations',
         });
       }
     }
@@ -438,8 +460,9 @@ export class HealthcareValidator extends IndustryValidator {
         requirements.push({
           type: 'disclosure',
           requirement: 'Dietary supplement disclaimer required',
-          template: 'These statements have not been evaluated by the Food and Drug Administration. This product is not intended to diagnose, treat, cure, or prevent any disease.',
-          regulation: 'DSHEA'
+          template:
+            'These statements have not been evaluated by the Food and Drug Administration. This product is not intended to diagnose, treat, cure, or prevent any disease.',
+          regulation: 'DSHEA',
         });
       }
     }
@@ -468,10 +491,10 @@ export class HealthcareValidator extends IndustryValidator {
 
   protected hasDisclosure(content: string, disclosure: string): boolean {
     const disclosurePatterns: Record<string, RegExp> = {
-      'medical_advice': /not.*substitute.*medical advice|consult.*doctor|healthcare provider/gi,
-      'results': /individual results|results may vary|not typical/gi,
-      'side_effects': /side effects|adverse reactions|contraindications/gi,
-      'dietary_supplement': /not.*evaluated.*FDA|statements.*not.*evaluated/gi
+      medical_advice: /not.*substitute.*medical advice|consult.*doctor|healthcare provider/gi,
+      results: /individual results|results may vary|not typical/gi,
+      side_effects: /side effects|adverse reactions|contraindications/gi,
+      dietary_supplement: /not.*evaluated.*FDA|statements.*not.*evaluated/gi,
     };
 
     return disclosurePatterns[disclosure]?.test(content) || false;
@@ -479,10 +502,12 @@ export class HealthcareValidator extends IndustryValidator {
 
   protected getDisclosureTemplate(disclosure: string): string {
     const templates: Record<string, string> = {
-      'medical_advice': 'This information is not a substitute for professional medical advice, diagnosis, or treatment.',
-      'results': 'Individual results may vary. Results not typical.',
-      'side_effects': 'May cause side effects. See full prescribing information.',
-      'dietary_supplement': 'These statements have not been evaluated by the FDA. This product is not intended to diagnose, treat, cure, or prevent any disease.'
+      medical_advice:
+        'This information is not a substitute for professional medical advice, diagnosis, or treatment.',
+      results: 'Individual results may vary. Results not typical.',
+      side_effects: 'May cause side effects. See full prescribing information.',
+      dietary_supplement:
+        'These statements have not been evaluated by the FDA. This product is not intended to diagnose, treat, cure, or prevent any disease.',
     };
 
     return templates[disclosure] || '';
@@ -528,27 +553,33 @@ export class LegalServicesValidator extends IndustryValidator {
       name: 'confidentiality_warning',
       check: async (content: string) => {
         const hasContactForm = /\b(contact|email|call|message) us\b/gi.test(content);
-        const hasConfidentialityWarning = /\b(confidential|privileged|attorney-client)\b/gi.test(content);
-        
+        const hasConfidentialityWarning = /\b(confidential|privileged|attorney-client)\b/gi.test(
+          content
+        );
+
         if (hasContactForm && !hasConfidentialityWarning) {
           return {
             passed: false,
             severity: 'warning',
             message: 'Contact forms should warn about confidentiality',
-            recommendation: 'Add warning about not sending confidential information'
+            recommendation: 'Add warning about not sending confidential information',
           };
         }
         return { passed: true };
       },
       reason: 'Ethics rules on confidentiality',
-      regulation: 'ABA Model Rule 1.6'
+      regulation: 'ABA Model Rule 1.6',
     });
   }
 
   protected async performIndustrySpecificChecks(
     content: string,
     _context?: ValidationContext
-  ) {
+  ): Promise<{
+    violations: ComplianceViolation[];
+    warnings: ComplianceWarning[];
+    requirements: MissingRequirement[];
+  }> {
     const violations: ComplianceViolation[] = [];
     const warnings: ComplianceWarning[] = [];
     const requirements: MissingRequirement[] = [];
@@ -560,7 +591,7 @@ export class LegalServicesValidator extends IndustryValidator {
           type: 'disclosure',
           requirement: 'Prior results disclaimer required',
           template: 'Prior results do not guarantee a similar outcome.',
-          regulation: 'ABA Model Rule 7.1'
+          regulation: 'ABA Model Rule 7.1',
         });
       }
     }
@@ -587,9 +618,9 @@ export class LegalServicesValidator extends IndustryValidator {
 
   protected hasDisclosure(content: string, disclosure: string): boolean {
     const disclosurePatterns: Record<string, RegExp> = {
-      'attorney_advertising': /attorney advertising|advertisement/gi,
-      'no_attorney_client': /no attorney.client relationship|not legal advice/gi,
-      'prior_results': /prior results.*not guarantee|past results/gi
+      attorney_advertising: /attorney advertising|advertisement/gi,
+      no_attorney_client: /no attorney.client relationship|not legal advice/gi,
+      prior_results: /prior results.*not guarantee|past results/gi,
     };
 
     return disclosurePatterns[disclosure]?.test(content) || false;
@@ -597,9 +628,9 @@ export class LegalServicesValidator extends IndustryValidator {
 
   protected getDisclosureTemplate(disclosure: string): string {
     const templates: Record<string, string> = {
-      'attorney_advertising': 'Attorney Advertising',
-      'no_attorney_client': 'This information does not create an attorney-client relationship.',
-      'prior_results': 'Prior results do not guarantee a similar outcome.'
+      attorney_advertising: 'Attorney Advertising',
+      no_attorney_client: 'This information does not create an attorney-client relationship.',
+      prior_results: 'Prior results do not guarantee a similar outcome.',
     };
 
     return templates[disclosure] || '';
@@ -655,7 +686,10 @@ export interface MissingRequirement {
 
 export interface SpecialRequirement {
   name: string;
-  check: (content: string, context?: ValidationContext) => Promise<{
+  check: (
+    content: string,
+    context?: ValidationContext
+  ) => Promise<{
     passed: boolean;
     severity?: 'warning' | 'violation';
     message?: string;

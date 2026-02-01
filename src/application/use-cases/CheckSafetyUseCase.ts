@@ -15,7 +15,7 @@ export class CheckSafetyUseCase {
   async execute(input: CheckSafetyInput): Promise<SafetyEvaluation> {
     // Create domain entity
     const content = new Content(input.content, input.context, input.metadata);
-    
+
     // Check cache first if available
     if (this.cacheRepository) {
       const cacheKey = this.generateCacheKey(content);

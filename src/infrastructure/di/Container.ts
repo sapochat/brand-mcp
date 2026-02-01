@@ -2,9 +2,9 @@
  * Simple dependency injection container for managing service instances
  */
 export class Container {
-  private services = new Map<string, any>();
-  private singletons = new Map<string, any>();
-  private factories = new Map<string, () => any>();
+  private services = new Map<string, unknown>();
+  private singletons = new Map<string, unknown>();
+  private factories = new Map<string, () => unknown>();
 
   /**
    * Register a singleton service
@@ -33,7 +33,7 @@ export class Container {
   resolve<T>(key: string): T {
     // Check singletons first
     if (this.singletons.has(key)) {
-      return this.singletons.get(key);
+      return this.singletons.get(key) as T;
     }
 
     // Check if we have a factory
@@ -41,16 +41,16 @@ export class Container {
       const factory = this.factories.get(key);
       if (factory) {
         const instance = factory();
-        
+
         // Store as singleton for future requests
         this.singletons.set(key, instance);
-        return instance;
+        return instance as T;
       }
     }
 
     // Check transient services
     if (this.services.has(key)) {
-      return this.services.get(key);
+      return this.services.get(key) as T;
     }
 
     throw new Error(`Service '${key}' not found in container`);
@@ -60,9 +60,7 @@ export class Container {
    * Check if a service is registered
    */
   has(key: string): boolean {
-    return this.singletons.has(key) || 
-           this.factories.has(key) || 
-           this.services.has(key);
+    return this.singletons.has(key) || this.factories.has(key) || this.services.has(key);
   }
 
   /**
@@ -79,11 +77,11 @@ export class Container {
    */
   getRegisteredKeys(): string[] {
     const keys = new Set<string>();
-    
+
     this.singletons.forEach((_, key) => keys.add(key));
     this.factories.forEach((_, key) => keys.add(key));
     this.services.forEach((_, key) => keys.add(key));
-    
+
     return Array.from(keys);
   }
 }
@@ -95,33 +93,33 @@ export const ServiceKeys = {
   // Domain Services
   SAFETY_EVALUATION_SERVICE: 'SafetyEvaluationService',
   BRAND_COMPLIANCE_SERVICE: 'BrandComplianceService',
-  
+
   // Repositories
   BRAND_SCHEMA_REPOSITORY: 'BrandSchemaRepository',
   CACHE_REPOSITORY: 'CacheRepository',
-  
+
   // Use Cases
   CHECK_SAFETY_USE_CASE: 'CheckSafetyUseCase',
   CHECK_COMPLIANCE_USE_CASE: 'CheckComplianceUseCase',
   COMBINED_EVALUATION_USE_CASE: 'CombinedEvaluationUseCase',
   UPDATE_CONFIG_USE_CASE: 'UpdateConfigUseCase',
   BATCH_EVALUATION_USE_CASE: 'BatchEvaluationUseCase',
-  
+
   // Formatters
   SAFETY_RESPONSE_FORMATTER: 'SafetyResponseFormatter',
   COMPLIANCE_RESPONSE_FORMATTER: 'ComplianceResponseFormatter',
   COMBINED_RESPONSE_FORMATTER: 'CombinedResponseFormatter',
   BATCH_RESPONSE_FORMATTER: 'BatchResponseFormatter',
-  
+
   // Validators
   MCP_REQUEST_VALIDATOR: 'McpRequestValidator',
-  
+
   // Adapters
   MCP_SERVER_ADAPTER: 'McpServerAdapter',
-  
+
   // Advanced Services
   MULTI_LANGUAGE_ANALYZER: 'MultiLanguageAnalyzer',
   CONFIDENCE_SCORER: 'ConfidenceScorer',
   EVALUATION_EXPLAINER: 'EvaluationExplainer',
-  RECOMMENDATION_ENGINE: 'RecommendationEngine'
+  RECOMMENDATION_ENGINE: 'RecommendationEngine',
 } as const;

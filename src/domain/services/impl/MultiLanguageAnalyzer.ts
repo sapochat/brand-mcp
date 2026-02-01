@@ -19,74 +19,162 @@ export class MultiLanguageAnalyzer {
   private initializeLanguageSupport(): void {
     // English patterns
     this.languagePatterns.set('en', {
-      stopWords: new Set(['the', 'is', 'at', 'which', 'on', 'and', 'a', 'an', 'as', 'are', 'was', 'were', 'been', 'be']),
+      stopWords: new Set([
+        'the',
+        'is',
+        'at',
+        'which',
+        'on',
+        'and',
+        'a',
+        'an',
+        'as',
+        'are',
+        'was',
+        'were',
+        'been',
+        'be',
+      ]),
       sentenceDelimiters: /[.!?]+/g,
       wordDelimiters: /\s+/g,
       commonPatterns: {
         greeting: /\b(hello|hi|hey|good morning|good evening)\b/gi,
         thanks: /\b(thank you|thanks|appreciate)\b/gi,
-        apology: /\b(sorry|apologize|excuse me)\b/gi
-      }
+        apology: /\b(sorry|apologize|excuse me)\b/gi,
+      },
     });
 
     // Spanish patterns
     this.languagePatterns.set('es', {
-      stopWords: new Set(['el', 'la', 'de', 'que', 'y', 'a', 'en', 'un', 'ser', 'se', 'no', 'haber', 'por', 'con']),
+      stopWords: new Set([
+        'el',
+        'la',
+        'de',
+        'que',
+        'y',
+        'a',
+        'en',
+        'un',
+        'ser',
+        'se',
+        'no',
+        'haber',
+        'por',
+        'con',
+      ]),
       sentenceDelimiters: /[.!?¡¿]+/g,
       wordDelimiters: /\s+/g,
       commonPatterns: {
         greeting: /\b(hola|buenos días|buenas tardes|buenas noches)\b/gi,
         thanks: /\b(gracias|agradezco|muchas gracias)\b/gi,
-        apology: /\b(perdón|disculpe|lo siento)\b/gi
-      }
+        apology: /\b(perdón|disculpe|lo siento)\b/gi,
+      },
     });
 
     // French patterns
     this.languagePatterns.set('fr', {
-      stopWords: new Set(['le', 'de', 'un', 'être', 'et', 'à', 'il', 'avoir', 'ne', 'je', 'son', 'que', 'se', 'qui']),
+      stopWords: new Set([
+        'le',
+        'de',
+        'un',
+        'être',
+        'et',
+        'à',
+        'il',
+        'avoir',
+        'ne',
+        'je',
+        'son',
+        'que',
+        'se',
+        'qui',
+      ]),
       sentenceDelimiters: /[.!?]+/g,
       wordDelimiters: /\s+/g,
       commonPatterns: {
         greeting: /\b(bonjour|bonsoir|salut|bonne journée)\b/gi,
         thanks: /\b(merci|je vous remercie)\b/gi,
-        apology: /\b(pardon|excusez-moi|désolé)\b/gi
-      }
+        apology: /\b(pardon|excusez-moi|désolé)\b/gi,
+      },
     });
 
     // German patterns
     this.languagePatterns.set('de', {
-      stopWords: new Set(['der', 'die', 'und', 'in', 'den', 'von', 'zu', 'das', 'mit', 'sich', 'des', 'auf', 'für']),
+      stopWords: new Set([
+        'der',
+        'die',
+        'und',
+        'in',
+        'den',
+        'von',
+        'zu',
+        'das',
+        'mit',
+        'sich',
+        'des',
+        'auf',
+        'für',
+      ]),
       sentenceDelimiters: /[.!?]+/g,
       wordDelimiters: /\s+/g,
       commonPatterns: {
         greeting: /\b(hallo|guten tag|guten morgen|guten abend)\b/gi,
         thanks: /\b(danke|vielen dank|danke schön)\b/gi,
-        apology: /\b(entschuldigung|es tut mir leid|verzeihung)\b/gi
-      }
+        apology: /\b(entschuldigung|es tut mir leid|verzeihung)\b/gi,
+      },
     });
 
     // Japanese patterns (simplified)
     this.languagePatterns.set('ja', {
-      stopWords: new Set(['の', 'に', 'は', 'を', 'た', 'が', 'で', 'て', 'と', 'し', 'れ', 'さ', 'ある']),
+      stopWords: new Set([
+        'の',
+        'に',
+        'は',
+        'を',
+        'た',
+        'が',
+        'で',
+        'て',
+        'と',
+        'し',
+        'れ',
+        'さ',
+        'ある',
+      ]),
       sentenceDelimiters: /[。！？]/g,
       wordDelimiters: /[\s、]+/g,
       commonPatterns: {
         greeting: /(こんにちは|おはよう|こんばんは|はじめまして)/g,
         thanks: /(ありがとう|感謝|お礼)/g,
-        apology: /(すみません|申し訳|ごめん)/g
-      }
+        apology: /(すみません|申し訳|ごめん)/g,
+      },
     });
 
     // Chinese patterns (simplified)
     this.languagePatterns.set('zh', {
-      stopWords: new Set(['的', '了', '在', '是', '我', '有', '和', '就', '不', '人', '都', '一', '一个', '上']),
+      stopWords: new Set([
+        '的',
+        '了',
+        '在',
+        '是',
+        '我',
+        '有',
+        '和',
+        '就',
+        '不',
+        '人',
+        '都',
+        '一',
+        '一个',
+        '上',
+      ]),
       sentenceDelimiters: /[。！？]/g,
       wordDelimiters: /[\s，]+/g,
       commonPatterns: {
         greeting: /(你好|您好|早上好|晚上好)/g,
         thanks: /(谢谢|感谢|多谢)/g,
-        apology: /(对不起|抱歉|不好意思)/g
-      }
+        apology: /(对不起|抱歉|不好意思)/g,
+      },
     });
 
     // Initialize processors
@@ -99,8 +187,8 @@ export class MultiLanguageAnalyzer {
   private initializeProcessors(): void {
     // Add base processors for each language
     const languages = ['en', 'es', 'fr', 'de', 'ja', 'zh', 'pt', 'it', 'ru', 'ar'];
-    
-    languages.forEach(lang => {
+
+    languages.forEach((lang) => {
       this.languageProcessors.set(lang, new BaseLanguageProcessor(lang));
     });
   }
@@ -114,13 +202,13 @@ export class MultiLanguageAnalyzer {
 
     // Character set detection
     const charsetLanguages = this.detectByCharset(content);
-    charsetLanguages.forEach(lang => {
+    charsetLanguages.forEach((lang) => {
       scores.set(lang, (scores.get(lang) || 0) + 30);
       indicators.push({
         type: 'charset',
         language: lang,
         confidence: 30,
-        evidence: 'Character set match'
+        evidence: 'Character set match',
       });
     });
 
@@ -133,7 +221,7 @@ export class MultiLanguageAnalyzer {
           type: 'pattern',
           language: lang,
           confidence: patternScore,
-          evidence: 'Language pattern match'
+          evidence: 'Language pattern match',
         });
       }
     }
@@ -147,7 +235,7 @@ export class MultiLanguageAnalyzer {
           type: 'stopwords',
           language: lang,
           confidence: stopWordScore,
-          evidence: `${stopWordScore} stop words found`
+          evidence: `${stopWordScore} stop words found`,
         });
       }
     }
@@ -174,7 +262,7 @@ export class MultiLanguageAnalyzer {
       .slice(0, 2)
       .map(([lang, score]) => ({
         language: lang,
-        confidence: (score / totalScore) * 100
+        confidence: (score / totalScore) * 100,
       }));
 
     return {
@@ -182,18 +270,15 @@ export class MultiLanguageAnalyzer {
       confidence,
       alternatives,
       indicators,
-      isMultilingual: alternatives.some(alt => alt.confidence > 30),
-      supportedLanguages: this.getSupportedLanguages()
+      isMultilingual: alternatives.some((alt) => alt.confidence > 30),
+      supportedLanguages: this.getSupportedLanguages(),
     };
   }
 
   /**
    * Analyze content in specific language
    */
-  async analyzeInLanguage(
-    content: string,
-    language: string
-  ): Promise<LanguageAnalysisResult> {
+  async analyzeInLanguage(content: string, language: string): Promise<LanguageAnalysisResult> {
     const processor = this.languageProcessors.get(language);
     if (!processor) {
       throw new Error(`Language ${language} not supported`);
@@ -206,7 +291,7 @@ export class MultiLanguageAnalyzer {
 
     // Tokenize content
     const tokens = await processor.tokenize(content);
-    
+
     // Extract language-specific features
     const features = await this.extractLanguageFeatures(content, language, patterns);
 
@@ -237,8 +322,8 @@ export class MultiLanguageAnalyzer {
       recommendations,
       metadata: {
         processedAt: new Date(),
-        processorVersion: processor.version
-      }
+        processorVersion: processor.version,
+      },
     };
   }
 
@@ -251,10 +336,11 @@ export class MultiLanguageAnalyzer {
     toLanguage: string = 'en'
   ): Promise<TranslationResult> {
     const cacheKey = `${fromLanguage}:${toLanguage}:${this.hashContent(content)}`;
-    
+
     // Check cache
-    if (this.translationCache.has(cacheKey)) {
-      return this.translationCache.get(cacheKey)!;
+    const cached = this.translationCache.get(cacheKey);
+    if (cached) {
+      return cached;
     }
 
     // For demo purposes, we'll create a mock translation
@@ -266,7 +352,7 @@ export class MultiLanguageAnalyzer {
       translatedContent: await this.mockTranslate(content, fromLanguage, toLanguage),
       confidence: 85,
       preservedElements: this.extractPreservedElements(content),
-      warnings: []
+      warnings: [],
     };
 
     // Cache result
@@ -321,7 +407,7 @@ export class MultiLanguageAnalyzer {
     let score = 0;
     const contentLower = content.toLowerCase();
 
-    for (const [_category, pattern] of Object.entries(patterns.commonPatterns)) {
+    for (const [, pattern] of Object.entries(patterns.commonPatterns)) {
       const matches = contentLower.match(pattern);
       if (matches) {
         score += matches.length * 5;
@@ -357,18 +443,19 @@ export class MultiLanguageAnalyzer {
     language: string,
     patterns: LanguagePatterns
   ): Promise<LanguageFeatures> {
-    const sentences = content.split(patterns.sentenceDelimiters).filter(s => s.trim());
-    const words = content.split(patterns.wordDelimiters).filter(w => w.trim());
+    const sentences = content.split(patterns.sentenceDelimiters).filter((s) => s.trim());
+    const words = content.split(patterns.wordDelimiters).filter((w) => w.trim());
 
     return {
       sentenceCount: sentences.length,
       wordCount: words.length,
       averageSentenceLength: words.length / Math.max(sentences.length, 1),
       averageWordLength: words.reduce((sum, w) => sum + w.length, 0) / Math.max(words.length, 1),
-      vocabularyDiversity: new Set(words.map(w => w.toLowerCase())).size / words.length,
-      stopWordRatio: words.filter(w => patterns.stopWords.has(w.toLowerCase())).length / words.length,
+      vocabularyDiversity: new Set(words.map((w) => w.toLowerCase())).size / words.length,
+      stopWordRatio:
+        words.filter((w) => patterns.stopWords.has(w.toLowerCase())).length / words.length,
       punctuationDensity: (content.match(/[.,;:!?]/g) || []).length / content.length,
-      languageSpecificMetrics: await this.getLanguageSpecificMetrics(content, language)
+      languageSpecificMetrics: await this.getLanguageSpecificMetrics(content, language),
     };
   }
 
@@ -384,20 +471,22 @@ export class MultiLanguageAnalyzer {
     switch (language) {
       case 'en':
         // Passive voice usage
-        metrics.passiveVoice = (content.match(/\b(was|were|been|being|is|are|be)\s+\w+ed\b/gi) || []).length;
+        metrics.passiveVoice = (
+          content.match(/\b(was|were|been|being|is|are|be)\s+\w+ed\b/gi) || []
+        ).length;
         break;
-      
+
       case 'de':
         // Compound word usage
         metrics.compoundWords = (content.match(/[A-Z][a-z]+[A-Z][a-z]+/g) || []).length;
         break;
-      
+
       case 'ja':
         // Politeness levels
         metrics.politeForm = (content.match(/です|ます/g) || []).length;
         metrics.casualForm = (content.match(/だ|る/g) || []).length;
         break;
-      
+
       case 'es':
       case 'fr':
         // Formal vs informal address
@@ -418,7 +507,7 @@ export class MultiLanguageAnalyzer {
   ): Promise<LanguageSentiment> {
     // Language-specific sentiment words
     const sentimentWords = this.getSentimentWords(language);
-    
+
     let positiveScore = 0;
     let negativeScore = 0;
     let neutralScore = 0;
@@ -432,14 +521,18 @@ export class MultiLanguageAnalyzer {
     }
 
     const total = positiveScore + negativeScore + neutralScore;
-    
+
     return {
       positive: total > 0 ? (positiveScore / total) * 100 : 0,
       negative: total > 0 ? (negativeScore / total) * 100 : 0,
       neutral: total > 0 ? (neutralScore / total) * 100 : 0,
-      overall: positiveScore > negativeScore ? 'positive' : 
-               negativeScore > positiveScore ? 'negative' : 'neutral',
-      confidence: Math.min(total * 10, 100)
+      overall:
+        positiveScore > negativeScore
+          ? 'positive'
+          : negativeScore > positiveScore
+            ? 'negative'
+            : 'neutral',
+      confidence: Math.min(total * 10, 100),
     };
   }
 
@@ -447,26 +540,56 @@ export class MultiLanguageAnalyzer {
    * Get sentiment words for language
    */
   private getSentimentWords(language: string): {
-    positive: Set<string>,
-    negative: Set<string>,
-    neutral: Set<string>
+    positive: Set<string>;
+    negative: Set<string>;
+    neutral: Set<string>;
   } {
-    const sentimentMaps: Record<string, any> = {
+    type SentimentWordSet = {
+      positive: Set<string>;
+      negative: Set<string>;
+      neutral: Set<string>;
+    };
+    const sentimentMaps: Record<string, SentimentWordSet> = {
       en: {
-        positive: new Set(['good', 'great', 'excellent', 'wonderful', 'amazing', 'happy', 'love', 'beautiful']),
+        positive: new Set([
+          'good',
+          'great',
+          'excellent',
+          'wonderful',
+          'amazing',
+          'happy',
+          'love',
+          'beautiful',
+        ]),
         negative: new Set(['bad', 'terrible', 'awful', 'horrible', 'hate', 'angry', 'sad', 'ugly']),
-        neutral: new Set(['okay', 'fine', 'normal', 'average', 'regular', 'standard'])
+        neutral: new Set(['okay', 'fine', 'normal', 'average', 'regular', 'standard']),
       },
       es: {
-        positive: new Set(['bueno', 'excelente', 'maravilloso', 'feliz', 'amor', 'hermoso', 'genial']),
+        positive: new Set([
+          'bueno',
+          'excelente',
+          'maravilloso',
+          'feliz',
+          'amor',
+          'hermoso',
+          'genial',
+        ]),
         negative: new Set(['malo', 'terrible', 'horrible', 'odio', 'triste', 'feo', 'peor']),
-        neutral: new Set(['bien', 'normal', 'regular', 'promedio'])
+        neutral: new Set(['bien', 'normal', 'regular', 'promedio']),
       },
       fr: {
-        positive: new Set(['bon', 'excellent', 'merveilleux', 'heureux', 'amour', 'beau', 'génial']),
+        positive: new Set([
+          'bon',
+          'excellent',
+          'merveilleux',
+          'heureux',
+          'amour',
+          'beau',
+          'génial',
+        ]),
         negative: new Set(['mauvais', 'terrible', 'horrible', 'déteste', 'triste', 'laid', 'pire']),
-        neutral: new Set(['bien', 'normal', 'moyen', 'ordinaire'])
-      }
+        neutral: new Set(['bien', 'normal', 'moyen', 'ordinaire']),
+      },
     };
 
     return sentimentMaps[language] || sentimentMaps.en;
@@ -475,10 +598,7 @@ export class MultiLanguageAnalyzer {
   /**
    * Detect cultural issues
    */
-  private async detectCulturalIssues(
-    content: string,
-    language: string
-  ): Promise<CulturalIssue[]> {
+  private async detectCulturalIssues(content: string, language: string): Promise<CulturalIssue[]> {
     const issues: CulturalIssue[] = [];
     const culturalPatterns = this.getCulturalPatterns(language);
 
@@ -489,7 +609,7 @@ export class MultiLanguageAnalyzer {
           severity: pattern.severity,
           description: pattern.description,
           affectedRegions: pattern.regions,
-          recommendation: pattern.recommendation
+          recommendation: pattern.recommendation,
         });
       }
     }
@@ -509,8 +629,8 @@ export class MultiLanguageAnalyzer {
           severity: 'low',
           description: 'Number 13 considered unlucky in Western cultures',
           regions: ['US', 'UK', 'CA'],
-          recommendation: 'Consider avoiding if targeting superstitious audiences'
-        }
+          recommendation: 'Consider avoiding if targeting superstitious audiences',
+        },
       ],
       zh: [
         {
@@ -519,7 +639,7 @@ export class MultiLanguageAnalyzer {
           severity: 'medium',
           description: 'Number 4 sounds like "death" in Chinese',
           regions: ['CN', 'TW', 'HK'],
-          recommendation: 'Avoid using number 4 in Chinese markets'
+          recommendation: 'Avoid using number 4 in Chinese markets',
         },
         {
           type: 'color_symbolism',
@@ -527,8 +647,8 @@ export class MultiLanguageAnalyzer {
           severity: 'high',
           description: 'White flowers symbolize death in Chinese culture',
           regions: ['CN', 'TW', 'HK'],
-          recommendation: 'Use red or other colors for positive contexts'
-        }
+          recommendation: 'Use red or other colors for positive contexts',
+        },
       ],
       ja: [
         {
@@ -537,9 +657,9 @@ export class MultiLanguageAnalyzer {
           severity: 'medium',
           description: 'Numbers 4 and 9 are unlucky in Japanese',
           regions: ['JP'],
-          recommendation: 'Avoid these numbers in Japanese content'
-        }
-      ]
+          recommendation: 'Avoid these numbers in Japanese content',
+        },
+      ],
     };
 
     return patterns[language] || [];
@@ -553,9 +673,12 @@ export class MultiLanguageAnalyzer {
     language: string,
     tokens: Token[]
   ): Promise<LanguageReadability> {
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim());
-    const words = tokens.filter(t => t.type === 'word');
-    const syllables = this.countSyllables(words.map(w => w.text), language);
+    const sentences = content.split(/[.!?]+/).filter((s) => s.trim());
+    const words = tokens.filter((t) => t.type === 'word');
+    const syllables = this.countSyllables(
+      words.map((w) => w.text),
+      language
+    );
 
     // Calculate language-adjusted scores
     const fleschScore = this.calculateFleschScore(
@@ -577,8 +700,9 @@ export class MultiLanguageAnalyzer {
       gradeLevel,
       difficulty: this.getDifficultyLevel(fleschScore),
       averageSentenceLength: words.length / Math.max(sentences.length, 1),
-      averageWordLength: words.reduce((sum, w) => sum + w.text.length, 0) / Math.max(words.length, 1),
-      languageSpecificScore: await this.getLanguageSpecificReadabilityScore(content, language)
+      averageWordLength:
+        words.reduce((sum, w) => sum + w.text.length, 0) / Math.max(words.length, 1),
+      languageSpecificScore: await this.getLanguageSpecificReadabilityScore(content, language),
     };
   }
 
@@ -613,15 +737,15 @@ export class MultiLanguageAnalyzer {
     if (sentences === 0 || words === 0) return 0;
 
     // Language-specific coefficients
-    const coefficients: Record<string, { a: number, b: number }> = {
+    const coefficients: Record<string, { a: number; b: number }> = {
       en: { a: 206.835, b: 1.015 },
       es: { a: 206.84, b: 1.02 },
       fr: { a: 207, b: 1.015 },
-      de: { a: 180, b: 1.0 }
+      de: { a: 180, b: 1.0 },
     };
 
     const coef = coefficients[_language] || coefficients.en;
-    
+
     const score = coef.a - coef.b * (words / sentences) - 84.6 * (syllables / words);
     return Math.max(0, Math.min(100, score));
   }
@@ -727,11 +851,7 @@ export class MultiLanguageAnalyzer {
   /**
    * Mock translate function
    */
-  private async mockTranslate(
-    content: string,
-    from: string,
-    to: string
-  ): Promise<string> {
+  private async mockTranslate(content: string, from: string, to: string): Promise<string> {
     // In production, this would call a real translation API
     return `[Translated from ${from} to ${to}]: ${content}`;
   }
@@ -745,7 +865,7 @@ export class MultiLanguageAnalyzer {
     // Extract URLs
     const urls = content.match(/https?:\/\/[^\s]+/g);
     if (urls) {
-      urls.forEach(url => {
+      urls.forEach((url) => {
         elements.push({ type: 'url', value: url, position: content.indexOf(url) });
       });
     }
@@ -753,7 +873,7 @@ export class MultiLanguageAnalyzer {
     // Extract emails
     const emails = content.match(/[\w.-]+@[\w.-]+\.\w+/g);
     if (emails) {
-      emails.forEach(email => {
+      emails.forEach((email) => {
         elements.push({ type: 'email', value: email, position: content.indexOf(email) });
       });
     }
@@ -761,7 +881,7 @@ export class MultiLanguageAnalyzer {
     // Extract numbers
     const numbers = content.match(/\b\d+([.,]\d+)?\b/g);
     if (numbers) {
-      numbers.forEach(num => {
+      numbers.forEach((num) => {
         elements.push({ type: 'number', value: num, position: content.indexOf(num) });
       });
     }
@@ -776,7 +896,7 @@ export class MultiLanguageAnalyzer {
     let hash = 0;
     for (let i = 0; i < content.length; i++) {
       const char = content.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash;
     }
     return hash.toString(36);

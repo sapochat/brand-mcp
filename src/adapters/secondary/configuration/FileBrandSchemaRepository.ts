@@ -6,12 +6,13 @@ import { loadBrandSchema } from '../../../utils/brandSchemaLoader.js';
  * File-based implementation of brand schema repository
  */
 export class FileBrandSchemaRepository implements BrandSchemaRepository {
-  
   async loadBrandSchema(): Promise<BrandSchema> {
     try {
       return await loadBrandSchema();
     } catch (error) {
-      throw new Error(`Failed to load brand schema: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to load brand schema: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 

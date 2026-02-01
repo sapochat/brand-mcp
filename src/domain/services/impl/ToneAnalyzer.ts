@@ -24,19 +24,19 @@ export class ToneAnalyzer {
           /\b(accordingly|furthermore|moreover|consequently)\b/gi,
           /\b(regarding|concerning|pertaining to)\b/gi,
           /\b(implement|utilize|facilitate|optimize)\b/gi,
-          /\b(strategic|comprehensive|innovative|efficient)\b/gi
+          /\b(strategic|comprehensive|innovative|efficient)\b/gi,
         ],
         weight: 1.5,
-        context: 'formal vocabulary'
+        context: 'formal vocabulary',
       },
       {
         patterns: [
           /\b(we are pleased to|we would like to|it is important to)\b/gi,
-          /\b(please be advised|for your consideration)\b/gi
+          /\b(please be advised|for your consideration)\b/gi,
         ],
         weight: 1.2,
-        context: 'professional phrases'
-      }
+        context: 'professional phrases',
+      },
     ]);
 
     // Casual tone indicators
@@ -46,20 +46,16 @@ export class ToneAnalyzer {
           /\b(hey|hi|yeah|yep|nope|gonna|wanna)\b/gi,
           /\b(stuff|thing|guy|guys)\b/gi,
           /\b(awesome|cool|great|nice)\b/gi,
-          /\b(ok|okay|alright)\b/gi
+          /\b(ok|okay|alright)\b/gi,
         ],
         weight: 1.5,
-        context: 'informal vocabulary'
+        context: 'informal vocabulary',
       },
       {
-        patterns: [
-          /['']ll|['']ve|['']re|['']d|won['']t|can['']t/gi,
-          /!{2,}/g,
-          /\.\.\./g
-        ],
+        patterns: [/['']ll|['']ve|['']re|['']d|won['']t|can['']t/gi, /!{2,}/g, /\.\.\./g],
         weight: 1.0,
-        context: 'contractions and informal punctuation'
-      }
+        context: 'contractions and informal punctuation',
+      },
     ]);
 
     // Aggressive tone indicators
@@ -69,20 +65,20 @@ export class ToneAnalyzer {
           /\b(stupid|idiotic|ridiculous|absurd)\b/gi,
           /\b(terrible|horrible|awful|pathetic)\b/gi,
           /\b(hate|despise|detest)\b/gi,
-          /\b(destroy|crush|demolish|annihilate)\b/gi
+          /\b(destroy|crush|demolish|annihilate)\b/gi,
         ],
         weight: 2.0,
-        context: 'hostile vocabulary'
+        context: 'hostile vocabulary',
       },
       {
         patterns: [
           /!{3,}/g,
           /\b[A-Z]{4,}\b/g, // SHOUTING
-          /\b(never|always|completely|totally) wrong\b/gi
+          /\b(never|always|completely|totally) wrong\b/gi,
         ],
         weight: 1.5,
-        context: 'aggressive emphasis'
-      }
+        context: 'aggressive emphasis',
+      },
     ]);
 
     // Friendly tone indicators
@@ -92,19 +88,16 @@ export class ToneAnalyzer {
           /\b(thanks|thank you|please|appreciate)\b/gi,
           /\b(happy|glad|delighted|pleased)\b/gi,
           /\b(help|assist|support|collaborate)\b/gi,
-          /\b(welcome|warmly|kindly)\b/gi
+          /\b(welcome|warmly|kindly)\b/gi,
         ],
         weight: 1.5,
-        context: 'positive vocabulary'
+        context: 'positive vocabulary',
       },
       {
-        patterns: [
-          /😊|😄|🙂|👍|❤️/g,
-          /\b(hope you|wish you|looking forward)\b/gi
-        ],
+        patterns: [/😊|😄|🙂|👍|❤️/g, /\b(hope you|wish you|looking forward)\b/gi],
         weight: 1.2,
-        context: 'friendly expressions'
-      }
+        context: 'friendly expressions',
+      },
     ]);
 
     // Authoritative tone indicators
@@ -114,19 +107,19 @@ export class ToneAnalyzer {
           /\b(must|shall|will|require|mandate)\b/gi,
           /\b(clearly|obviously|undoubtedly|certainly)\b/gi,
           /\b(proven|established|demonstrated|confirmed)\b/gi,
-          /\b(directive|policy|regulation|standard)\b/gi
+          /\b(directive|policy|regulation|standard)\b/gi,
         ],
         weight: 1.5,
-        context: 'authoritative vocabulary'
+        context: 'authoritative vocabulary',
       },
       {
         patterns: [
           /\b(it is essential|it is critical|it is mandatory)\b/gi,
-          /\b(you must|you shall|you are required to)\b/gi
+          /\b(you must|you shall|you are required to)\b/gi,
         ],
         weight: 1.8,
-        context: 'directive language'
-      }
+        context: 'directive language',
+      },
     ]);
 
     // Formality indicators
@@ -137,7 +130,7 @@ export class ToneAnalyzer {
       { indicator: /\b(one|one's)\b/gi, score: 2, type: 'impersonal' },
       { indicator: /['']t\b/gi, score: -1.5, type: 'contraction' },
       { indicator: /\b[a-z]+ly\b/gi, score: 0.5, type: 'adverb' },
-      { indicator: /\b(however|therefore|thus|hence)\b/gi, score: 1.5, type: 'formal_connector' }
+      { indicator: /\b(however|therefore|thus|hence)\b/gi, score: 1.5, type: 'formal_connector' },
     ];
 
     // Emotional indicators
@@ -152,35 +145,35 @@ export class ToneAnalyzer {
       /\b(happy|joy|joyful|cheerful|delighted|excited|thrilled)\b/gi,
       /\b(wonderful|fantastic|amazing|excellent|great)\b/gi,
       /\b(celebrate|celebrating|celebration)\b/gi,
-      /😀|😁|😃|😄|🎉|🎊/g
+      /😀|😁|😃|😄|🎉|🎊/g,
     ]);
 
     this.emotionalIndicators.set(EmotionType.ANGER, [
       /\b(angry|furious|rage|mad|irritated|annoyed)\b/gi,
       /\b(hate|despise|loathe|detest)\b/gi,
       /\b(damn|hell|crap)\b/gi,
-      /😠|😡|🤬|😤/g
+      /😠|😡|🤬|😤/g,
     ]);
 
     this.emotionalIndicators.set(EmotionType.SADNESS, [
       /\b(sad|unhappy|depressed|miserable|gloomy)\b/gi,
       /\b(cry|crying|tears|weep|weeping)\b/gi,
       /\b(unfortunately|sadly|regret|sorry)\b/gi,
-      /😢|😭|😞|😔/g
+      /😢|😭|😞|😔/g,
     ]);
 
     this.emotionalIndicators.set(EmotionType.FEAR, [
       /\b(afraid|scared|frightened|terrified|anxious|worried)\b/gi,
       /\b(danger|dangerous|threat|threatening|risk)\b/gi,
       /\b(panic|alarmed|nervous)\b/gi,
-      /😨|😰|😱|😟/g
+      /😨|😰|😱|😟/g,
     ]);
 
     this.emotionalIndicators.set(EmotionType.SURPRISE, [
       /\b(surprised|amazed|astonished|shocked|stunned)\b/gi,
       /\b(unexpected|suddenly|wow|omg|oh my)\b/gi,
       /\b(unbelievable|incredible)\b/gi,
-      /😮|😲|🤯|😯/g
+      /😮|😲|🤯|😯/g,
     ]);
   }
 
@@ -203,8 +196,9 @@ export class ToneAnalyzer {
     const consistency = this.analyzeConsistency(toneScores);
 
     // Analyze appropriateness
-    const appropriateness = context ? 
-      this.analyzeAppropriateness(primaryTone, formality, context) : null;
+    const appropriateness = context
+      ? this.analyzeAppropriateness(primaryTone, formality, context)
+      : null;
 
     // Generate recommendations
     const recommendations = this.generateToneRecommendations(
@@ -224,7 +218,7 @@ export class ToneAnalyzer {
       consistency,
       appropriateness,
       recommendations,
-      confidence: this.calculateConfidence(toneScores, consistency)
+      confidence: this.calculateConfidence(toneScores, consistency),
     };
   }
 
@@ -236,13 +230,11 @@ export class ToneAnalyzer {
 
     for (const [tone, indicators] of this.toneIndicators) {
       let score = 0;
-      let matchCount = 0;
 
       for (const indicator of indicators) {
         for (const pattern of indicator.patterns) {
           const matches = content.match(pattern);
           if (matches) {
-            matchCount += matches.length;
             score += matches.length * indicator.weight;
           }
         }
@@ -283,20 +275,18 @@ export class ToneAnalyzer {
    * Determine secondary tones
    */
   private determineSecondaryTones(
-    scores: Map<ToneType, number>, 
+    scores: Map<ToneType, number>,
     primaryTone: ToneType
   ): ToneType[] {
     const secondary: ToneType[] = [];
-    
+
     for (const [tone, score] of scores) {
       if (tone !== primaryTone && score > 3) {
         secondary.push(tone);
       }
     }
 
-    return secondary.sort((a, b) => 
-      (scores.get(b) || 0) - (scores.get(a) || 0)
-    ).slice(0, 2);
+    return secondary.sort((a, b) => (scores.get(b) || 0) - (scores.get(a) || 0)).slice(0, 2);
   }
 
   /**
@@ -316,8 +306,9 @@ export class ToneAnalyzer {
 
     // Check sentence structure complexity
     const sentences = content.split(/[.!?]+/);
-    const avgSentenceLength = sentences.reduce((sum, s) => sum + s.split(/\s+/).length, 0) / sentences.length;
-    
+    const avgSentenceLength =
+      sentences.reduce((sum, s) => sum + s.split(/\s+/).length, 0) / sentences.length;
+
     if (avgSentenceLength > 20) {
       formalityScore += 10;
       indicators.push('complex sentences');
@@ -332,7 +323,7 @@ export class ToneAnalyzer {
     return {
       score: formalityScore,
       level: this.determineFormalityLevel(formalityScore),
-      indicators
+      indicators,
     };
   }
 
@@ -370,7 +361,7 @@ export class ToneAnalyzer {
         detected.push({
           emotion,
           intensity: Math.min(100, score * 20),
-          indicators: matches
+          indicators: matches,
         });
       }
     }
@@ -379,7 +370,7 @@ export class ToneAnalyzer {
       primaryEmotion: this.determinePrimaryEmotion(emotionScores),
       emotionScores: Object.fromEntries(emotionScores),
       detected,
-      valence: this.calculateValence(emotionScores)
+      valence: this.calculateValence(emotionScores),
     };
   }
 
@@ -426,8 +417,7 @@ export class ToneAnalyzer {
    * Analyze tone consistency
    */
   private analyzeConsistency(toneScores: Map<ToneType, number>): ConsistencyAnalysis {
-    const significantTones = Array.from(toneScores.entries())
-      .filter(([_, score]) => score > 5);
+    const significantTones = Array.from(toneScores.entries()).filter(([_, score]) => score > 5);
 
     const isConsistent = significantTones.length <= 2;
     const conflictingTones = this.findConflictingTones(significantTones.map(([tone, _]) => tone));
@@ -436,7 +426,7 @@ export class ToneAnalyzer {
       isConsistent,
       score: isConsistent ? 100 - (significantTones.length - 1) * 20 : 50,
       conflictingTones,
-      dominantToneStrength: Math.max(...toneScores.values())
+      dominantToneStrength: Math.max(...toneScores.values()),
     };
   }
 
@@ -448,7 +438,7 @@ export class ToneAnalyzer {
     const conflictPairs = [
       [ToneType.CASUAL, ToneType.PROFESSIONAL],
       [ToneType.FRIENDLY, ToneType.AGGRESSIVE],
-      [ToneType.CONFIDENT, ToneType.UNCERTAIN]
+      [ToneType.CONFIDENT, ToneType.UNCERTAIN],
     ];
 
     for (const [tone1, tone2] of conflictPairs) {
@@ -456,7 +446,7 @@ export class ToneAnalyzer {
         conflicts.push({
           tone1,
           tone2,
-          severity: 'high'
+          severity: 'high',
         });
       }
     }
@@ -475,13 +465,10 @@ export class ToneAnalyzer {
     const expectedTone = context.expectedTone;
     const expectedFormality = context.expectedFormality;
 
-    const toneMatch = tone === expectedTone || 
-                     (expectedTone === ToneType.NEUTRAL && tone !== ToneType.AGGRESSIVE);
-    
-    const formalityMatch = this.isFormalityAppropriate(
-      formality.level, 
-      expectedFormality
-    );
+    const toneMatch =
+      tone === expectedTone || (expectedTone === ToneType.NEUTRAL && tone !== ToneType.AGGRESSIVE);
+
+    const formalityMatch = this.isFormalityAppropriate(formality.level, expectedFormality);
 
     const issues: string[] = [];
     if (!toneMatch) {
@@ -496,22 +483,19 @@ export class ToneAnalyzer {
       toneMatch,
       formalityMatch,
       score: (toneMatch ? 50 : 0) + (formalityMatch ? 50 : 0),
-      issues
+      issues,
     };
   }
 
   /**
    * Check if formality is appropriate
    */
-  private isFormalityAppropriate(
-    actual: FormalityLevel,
-    expected: FormalityLevel
-  ): boolean {
+  private isFormalityAppropriate(actual: FormalityLevel, expected: FormalityLevel): boolean {
     const levels = [
       FormalityLevel.CASUAL,
       FormalityLevel.CONVERSATIONAL,
       FormalityLevel.PROFESSIONAL,
-      FormalityLevel.FORMAL
+      FormalityLevel.FORMAL,
     ];
 
     const actualIndex = levels.indexOf(actual);
@@ -540,35 +524,36 @@ export class ToneAnalyzer {
         priority: 'high',
         description: 'Tone is inconsistent throughout the content',
         suggestion: 'Maintain a consistent tone by removing conflicting language',
-        impact: 'Improves message clarity and professionalism'
+        impact: 'Improves message clarity and professionalism',
       });
     }
 
     // Appropriateness recommendations
     if (appropriateness && !appropriateness.isAppropriate) {
-      appropriateness.issues.forEach(issue => {
+      appropriateness.issues.forEach((issue) => {
         recommendations.push({
           type: 'appropriateness',
           priority: 'high',
           description: issue,
           suggestion: `Adjust tone to match ${context?.expectedTone} expectations`,
-          impact: 'Ensures message is well-received by target audience'
+          impact: 'Ensures message is well-received by target audience',
         });
       });
     }
 
     // Formality recommendations
     if (context && formality.level !== context.expectedFormality) {
-      const suggestion = formality.score > 50 ? 
-        'Use simpler language and shorter sentences' :
-        'Use more professional language and complete sentences';
-      
+      const suggestion =
+        formality.score > 50
+          ? 'Use simpler language and shorter sentences'
+          : 'Use more professional language and complete sentences';
+
       recommendations.push({
         type: 'formality',
         priority: 'medium',
         description: `Formality level (${formality.level}) doesn't match expectations`,
         suggestion,
-        impact: 'Better aligns with audience expectations'
+        impact: 'Better aligns with audience expectations',
       });
     }
 
@@ -584,7 +569,7 @@ export class ToneAnalyzer {
   ): number {
     const maxScore = Math.max(...toneScores.values());
     const consistencyFactor = consistency.score / 100;
-    
+
     // Higher confidence when tone is clear and consistent
     return Math.min(100, maxScore * 2 * consistencyFactor);
   }
@@ -602,14 +587,14 @@ export enum ToneType {
   CONFIDENT = 'confident',
   UNCERTAIN = 'uncertain',
   ENTHUSIASTIC = 'enthusiastic',
-  NEUTRAL = 'neutral'
+  NEUTRAL = 'neutral',
 }
 
 export enum FormalityLevel {
   CASUAL = 'casual',
   CONVERSATIONAL = 'conversational',
   PROFESSIONAL = 'professional',
-  FORMAL = 'formal'
+  FORMAL = 'formal',
 }
 
 export enum EmotionType {
@@ -620,7 +605,7 @@ export enum EmotionType {
   SURPRISE = 'surprise',
   DISGUST = 'disgust',
   TRUST = 'trust',
-  ANTICIPATION = 'anticipation'
+  ANTICIPATION = 'anticipation',
 }
 
 export interface ToneContext {
