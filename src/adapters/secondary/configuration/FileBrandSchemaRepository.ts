@@ -1,6 +1,7 @@
 import { BrandSchemaRepository } from '../../../domain/repositories/BrandSchemaRepository.js';
 import { BrandSchema } from '../../../domain/entities/Brand.js';
 import { loadBrandSchema } from '../../../utils/brandSchemaLoader.js';
+import { deepMerge } from '../../../utils/objectUtils.js';
 
 /**
  * File-based implementation of brand schema repository with runtime override support.
@@ -77,53 +78,18 @@ export class FileBrandSchemaRepository implements BrandSchemaRepository {
       ...base,
       ...overrides,
       toneGuidelines: overrides.toneGuidelines
-        ? this.deepMerge(base.toneGuidelines, overrides.toneGuidelines)
+        ? deepMerge(base.toneGuidelines, overrides.toneGuidelines)
         : base.toneGuidelines,
       voiceGuidelines: overrides.voiceGuidelines
-        ? this.deepMerge(base.voiceGuidelines, overrides.voiceGuidelines)
+        ? deepMerge(base.voiceGuidelines, overrides.voiceGuidelines)
         : base.voiceGuidelines,
       visualIdentity:
         overrides.visualIdentity && base.visualIdentity
-          ? this.deepMerge(base.visualIdentity, overrides.visualIdentity)
+          ? deepMerge(base.visualIdentity, overrides.visualIdentity)
           : overrides.visualIdentity || base.visualIdentity,
       terminologyGuidelines: overrides.terminologyGuidelines
-        ? this.deepMerge(base.terminologyGuidelines, overrides.terminologyGuidelines)
+        ? deepMerge(base.terminologyGuidelines, overrides.terminologyGuidelines)
         : base.terminologyGuidelines,
     };
-  }
-
-  /**
-   * Deep merge two objects recursively
-   * Arrays are replaced, not merged
-   */
-  private deepMerge<T extends object>(target: T, source: Partial<T>): T {
-    const result = { ...target } as T;
-
-    for (const key in source) {
-      const sourceValue = source[key];
-      const targetValue = target[key];
-
-      if (sourceValue === null || sourceValue === undefined) {
-        continue;
-      }
-
-      if (
-        sourceValue !== null &&
-        typeof sourceValue === 'object' &&
-        !Array.isArray(sourceValue) &&
-        targetValue !== null &&
-        typeof targetValue === 'object' &&
-        !Array.isArray(targetValue)
-      ) {
-        (result as Record<string, unknown>)[key] = this.deepMerge(
-          targetValue as object,
-          sourceValue as Partial<object>
-        );
-      } else {
-        (result as Record<string, unknown>)[key] = sourceValue;
-      }
-    }
-
-    return result;
   }
 }
