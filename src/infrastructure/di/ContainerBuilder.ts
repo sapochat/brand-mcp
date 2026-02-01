@@ -156,6 +156,9 @@ export class ContainerBuilder {
       const complianceFormatter = container.resolve<ComplianceResponseFormatter>(
         ServiceKeys.COMPLIANCE_RESPONSE_FORMATTER
       );
+      const brandSchemaRepo = container.resolve<BrandSchemaRepository>(
+        ServiceKeys.BRAND_SCHEMA_REPOSITORY
+      );
       const combinedFormatter = container.resolve<CombinedResponseFormatter>(
         ServiceKeys.COMBINED_RESPONSE_FORMATTER
       );
@@ -176,7 +179,8 @@ export class ContainerBuilder {
         complianceFormatter,
         combinedFormatter,
         batchFormatter,
-        requestValidator
+        requestValidator,
+        brandSchemaRepo
       );
     });
 

@@ -124,7 +124,8 @@ export class PluginManager {
       await plugin.onLoad();
     }
 
-    console.error(`Loaded plugin: ${plugin.name} (${plugin.id}) v${plugin.version}`);
+    // Log successful plugin load (using warn since console.log is not allowed by linting)
+    console.warn(`Loaded plugin: ${plugin.name} (${plugin.id}) v${plugin.version}`);
   }
 
   /**

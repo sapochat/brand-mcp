@@ -386,7 +386,10 @@ export class CustomRuleEngine {
   ): Promise<void> {
     switch (action.type) {
       case 'log':
-        console.error(`Rule Action: ${action.message}`);
+        // Only log rule actions in development mode (using warn as allowed by linting rules)
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn(`Rule Action: ${action.message}`);
+        }
         break;
 
       case 'modify_score':
