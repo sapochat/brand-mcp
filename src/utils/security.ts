@@ -25,8 +25,13 @@ export function validatePath(filePath: string, allowedBasePath: string): boolean
     const normalizedPath = path.normalize(path.resolve(filePath));
     const normalizedBase = path.normalize(path.resolve(allowedBasePath));
 
-    // Check if the normalized path starts with the allowed base path
-    if (!normalizedPath.startsWith(normalizedBase)) {
+    // Reject if path equals the base (trying to use root directory itself)
+    if (normalizedPath === normalizedBase) {
+      return false;
+    }
+
+    // Path must be a child of the base by checking for separator
+    if (!normalizedPath.startsWith(normalizedBase + path.sep)) {
       return false;
     }
 

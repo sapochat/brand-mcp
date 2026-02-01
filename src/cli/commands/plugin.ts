@@ -143,7 +143,7 @@ function installPlugin(): Command {
     .argument('<source>', 'Path to plugin directory')
     .action(async (sourcePath: string) => {
       let pluginCopied = false;
-      let targetPath = '';
+      let targetPath: string | null = null;
 
       try {
         // Resolve absolute path
@@ -164,17 +164,15 @@ function installPlugin(): Command {
           process.exit(1);
         }
 
-        // Use validated plugin name from manifest (not filesystem basename)
+        // Use validated plugin name from manifest (already validated for filesystem safety)
         const pluginName = validation.name ?? path.basename(absoluteSource);
-
-        // Sanitize plugin name for filesystem (should already be clean from validation)
-        const sanitizedName = pluginName.replace(/[^a-zA-Z0-9_-]/g, '-');
 
         // Ensure plugins directory exists
         const absolutePluginsDir = path.resolve(PLUGINS_DIR);
         await fs.mkdir(absolutePluginsDir, { recursive: true });
 
-        targetPath = path.join(absolutePluginsDir, sanitizedName);
+        // Use validated name directly (validation ensures [a-zA-Z0-9_-] only)
+        targetPath = path.join(absolutePluginsDir, pluginName);
 
         // Security: Verify target path is within plugins directory
         const absoluteTarget = path.resolve(targetPath);
@@ -197,8 +195,7 @@ function installPlugin(): Command {
         await copyDirectory(absoluteSource, targetPath);
         pluginCopied = true;
 
-        console.log(chalk.green(`✅ Plugin "${pluginName}" installed successfully`));
-        console.log(chalk.dim(`   Location: ${targetPath}`));
+        console.log(chalk.dim(`   Copied to: ${targetPath}`));
 
         // Verify by loading
         const manager = new PluginManager(PLUGINS_DIR);
@@ -207,10 +204,15 @@ function installPlugin(): Command {
         // Verify the specific plugin was loaded
         const loadedPlugin = manager.getPlugin(pluginName);
         if (!loadedPlugin) {
-          throw new Error(`Plugin verification failed: "${pluginName}" was not loaded by manager`);
+          const stats = manager.getStats();
+          throw new Error(
+            `Plugin verification failed: "${pluginName}" was not loaded by PluginManager.\n` +
+              `   Loaded plugins: ${stats.pluginList.map((p) => p.name).join(', ') || 'none'}\n` +
+              `   This might indicate a manifest error or initialization failure.`
+          );
         }
 
-        console.log(chalk.dim('   Plugin loaded and verified'));
+        console.log(chalk.green(`✅ Plugin "${pluginName}" installed and verified successfully`));
       } catch (error) {
         // Cleanup on failure if we already copied files
         if (pluginCopied && targetPath) {
@@ -219,6 +221,7 @@ function installPlugin(): Command {
             console.error(chalk.yellow('   Rolled back installation due to error'));
           } catch {
             console.error(chalk.red('   Warning: Failed to cleanup after error'));
+            console.error(chalk.dim(`   Manual cleanup may be needed: ${targetPath}`));
           }
         }
 
@@ -231,7 +234,8 @@ function installPlugin(): Command {
 }
 
 /**
- * Recursively copy a directory while preserving file permissions
+ * Recursively copy a directory while preserving file permissions.
+ * Skips symlinks for security (prevents symlink attacks).
  *
  * @param source - Source directory path
  * @param target - Target directory path (will be created if doesn't exist)
@@ -245,17 +249,24 @@ async function copyDirectory(source: string, target: string): Promise<void> {
     const sourcePath = path.join(source, entry.name);
     const targetPath = path.join(target, entry.name);
 
+    // Security: Skip symlinks to prevent symlink attacks
+    if (entry.isSymbolicLink()) {
+      console.warn(chalk.yellow(`   Skipping symlink: ${entry.name}`));
+      continue;
+    }
+
     if (entry.isDirectory()) {
       await copyDirectory(sourcePath, targetPath);
-    } else {
-      // Get source file stats for permissions
-      const stats = await fs.stat(sourcePath);
+    } else if (entry.isFile()) {
+      // Use lstat to avoid following symlinks (defense in depth)
+      const stats = await fs.lstat(sourcePath);
 
       // Copy file content
       await fs.copyFile(sourcePath, targetPath);
 
-      // Preserve file permissions (mode)
-      await fs.chmod(targetPath, stats.mode);
+      // Preserve file permissions but remove execute bits for safety
+      const safeMode = stats.mode & 0o666; // Keep read/write, remove execute
+      await fs.chmod(targetPath, safeMode);
     }
   }
 }
