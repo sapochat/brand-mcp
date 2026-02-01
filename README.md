@@ -572,11 +572,13 @@ NODE_ENV=development DEBUG=brand-mcp:* npm start
 ### Built-in Protections
 
 - ✅ Input validation with Zod schemas
-- ✅ Path traversal protection
+- ✅ Path traversal protection with defense-in-depth validation
+- ✅ Symlink attack prevention in plugin system
+- ✅ Execute permission removal for plugin files
 - ✅ Rate limiting (configurable)
 - ✅ Safe error handling
 - ✅ No eval() or dynamic execution
-- ✅ Secure file operations
+- ✅ Secure file operations with lstat protection
 
 ### Best Practices
 
