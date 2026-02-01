@@ -639,7 +639,13 @@ export class McpServerAdapter {
       return lines.join('\n');
     } catch (error) {
       console.error('Failed to generate brand guidelines:', error);
-      return '# Brand Guidelines\n\nFailed to load brand schema.';
+      const errorDetail = error instanceof Error ? error.message : 'Unknown error';
+      return (
+        '# Brand Guidelines\n\n' +
+        'Failed to load brand schema.\n\n' +
+        `Error: ${errorDetail}\n\n` +
+        'Please check your brand schema configuration.'
+      );
     }
   }
 }
