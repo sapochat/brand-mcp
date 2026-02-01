@@ -30,21 +30,21 @@ export class ComplianceEvaluation {
    * Get issues by severity level
    */
   getIssuesBySeverity(severity: IssueSeverity): readonly ComplianceIssue[] {
-    return this.issues.filter(issue => issue.severity === severity);
+    return this.issues.filter((issue) => issue.severity === severity);
   }
 
   /**
    * Get issues by type
    */
   getIssuesByType(type: IssueType): readonly ComplianceIssue[] {
-    return this.issues.filter(issue => issue.type === type);
+    return this.issues.filter((issue) => issue.type === type);
   }
 
   /**
    * Check if there are any high severity issues
    */
   get hasHighSeverityIssues(): boolean {
-    return this.issues.some(issue => issue.severity === IssueSeverity.HIGH);
+    return this.issues.some((issue) => issue.severity === IssueSeverity.HIGH);
   }
 }
 
@@ -68,7 +68,7 @@ export enum IssueType {
   TONE = 'tone',
   VOICE = 'voice',
   TERMINOLOGY = 'terminology',
-  VISUAL = 'visual'
+  VISUAL = 'visual',
 }
 
 /**
@@ -76,6 +76,6 @@ export enum IssueType {
  */
 export enum IssueSeverity {
   LOW = 'low',
-  MEDIUM = 'medium', 
-  HIGH = 'high'
+  MEDIUM = 'medium',
+  HIGH = 'high',
 }

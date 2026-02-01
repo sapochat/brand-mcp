@@ -1,12 +1,21 @@
 import { SafetyEvaluationService } from '../../domain/services/SafetyEvaluationService.js';
 
 /**
+ * Mutable config update object for building partial configuration
+ */
+interface ConfigUpdate {
+  sensitiveKeywords?: string[];
+  allowedTopics?: string[];
+  blockedTopics?: string[];
+  riskTolerances?: Record<string, string>;
+  categories?: string[];
+}
+
+/**
  * Use case for updating safety configuration
  */
 export class UpdateConfigUseCase {
-  constructor(
-    private readonly safetyService: SafetyEvaluationService
-  ) {}
+  constructor(private readonly safetyService: SafetyEvaluationService) {}
 
   async execute(input: UpdateConfigInput): Promise<UpdateConfigResult> {
     try {
@@ -14,7 +23,7 @@ export class UpdateConfigUseCase {
       this.validateConfigInput(input);
 
       // Create partial config from input
-      const configUpdate: any = {};
+      const configUpdate: ConfigUpdate = {};
 
       if (input.sensitiveKeywords !== undefined) {
         configUpdate.sensitiveKeywords = [...input.sensitiveKeywords];
@@ -38,30 +47,32 @@ export class UpdateConfigUseCase {
       return {
         success: true,
         message: 'Brand safety configuration updated successfully',
-        updatedFields: Object.keys(configUpdate)
+        updatedFields: Object.keys(configUpdate),
       };
-
     } catch (error) {
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Unknown error occurred',
-        updatedFields: []
+        updatedFields: [],
       };
     }
   }
 
   private validateConfigInput(input: UpdateConfigInput): void {
     // Validate sensitive keywords
-    if (input.sensitiveKeywords && input.sensitiveKeywords.some(k => !k || k.trim().length === 0)) {
+    if (
+      input.sensitiveKeywords &&
+      input.sensitiveKeywords.some((k) => !k || k.trim().length === 0)
+    ) {
       throw new Error('Sensitive keywords cannot be empty');
     }
 
     // Validate topics
-    if (input.allowedTopics && input.allowedTopics.some(t => !t || t.trim().length === 0)) {
+    if (input.allowedTopics && input.allowedTopics.some((t) => !t || t.trim().length === 0)) {
       throw new Error('Allowed topics cannot be empty');
     }
 
-    if (input.blockedTopics && input.blockedTopics.some(t => !t || t.trim().length === 0)) {
+    if (input.blockedTopics && input.blockedTopics.some((t) => !t || t.trim().length === 0)) {
       throw new Error('Blocked topics cannot be empty');
     }
 

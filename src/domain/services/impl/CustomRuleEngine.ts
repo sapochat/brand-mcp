@@ -21,7 +21,7 @@ export class CustomRuleEngine {
    */
   addRuleGroup(group: RuleGroup): void {
     this.ruleGroups.set(group.id, group);
-    group.rules.forEach(rule => this.addRule(rule));
+    group.rules.forEach((rule) => this.addRule(rule));
   }
 
   /**
@@ -37,7 +37,7 @@ export class CustomRuleEngine {
 
     // Get applicable rules
     const applicableRules = this.getApplicableRules(context, options);
-    
+
     // Execute rules
     const results: RuleExecutionResult[] = [];
     const violations: RuleViolation[] = [];
@@ -51,14 +51,14 @@ export class CustomRuleEngine {
         passes.push({
           ruleId: rule.id,
           ruleName: rule.name,
-          score: result.score
+          score: result.score,
         });
       } else {
         violations.push(...result.violations);
       }
 
       // Early exit on critical violation if configured
-      if (options?.stopOnCritical && result.violations.some(v => v.severity === 'critical')) {
+      if (options?.stopOnCritical && result.violations.some((v) => v.severity === 'critical')) {
         break;
       }
     }
@@ -66,7 +66,7 @@ export class CustomRuleEngine {
     // Calculate overall score
     const overallScore = this.calculateOverallScore(results);
     const summary = this.generateSummary(results, violations, passes);
-    
+
     // Generate recommendations
     const recommendations = this.generateRecommendations(violations, context);
 
@@ -77,7 +77,8 @@ export class CustomRuleEngine {
     return {
       executionId,
       timestamp: new Date(),
-      passed: violations.filter(v => v.severity === 'critical' || v.severity === 'high').length === 0,
+      passed:
+        violations.filter((v) => v.severity === 'critical' || v.severity === 'high').length === 0,
       score: overallScore,
       rulesExecuted: results.length,
       violations,
@@ -85,7 +86,7 @@ export class CustomRuleEngine {
       summary,
       recommendations,
       executionTimeMs: executionTime,
-      details: options?.includeDetails ? results : undefined
+      details: options?.includeDetails ? results : undefined,
     };
   }
 
@@ -99,8 +100,9 @@ export class CustomRuleEngine {
   ): Promise<RuleExecutionResult> {
     // Check cache if enabled
     const cacheKey = this.getCacheKey(rule.id, content, context);
-    if (rule.cacheable && this.ruleCache.has(cacheKey)) {
-      return this.ruleCache.get(cacheKey)!;
+    const cachedResult = this.ruleCache.get(cacheKey);
+    if (rule.cacheable && cachedResult) {
+      return cachedResult;
     }
 
     const startTime = Date.now();
@@ -112,7 +114,7 @@ export class CustomRuleEngine {
       // Execute conditions
       for (const condition of rule.conditions) {
         const conditionResult = await this.evaluateCondition(condition, content, context);
-        
+
         if (!conditionResult.met) {
           passed = false;
           score -= condition.weight || 10;
@@ -125,7 +127,7 @@ export class CustomRuleEngine {
               severity: rule.severity,
               message: conditionResult.message || `Condition not met: ${condition.description}`,
               evidence: conditionResult.evidence,
-              position: conditionResult.position
+              position: conditionResult.position,
             });
           }
         }
@@ -145,7 +147,7 @@ export class CustomRuleEngine {
         score: Math.max(0, score),
         violations,
         executionTimeMs: Date.now() - startTime,
-        metadata: rule.metadata
+        metadata: rule.metadata,
       };
 
       // Cache result if cacheable
@@ -154,23 +156,24 @@ export class CustomRuleEngine {
       }
 
       return result;
-
     } catch (error) {
       return {
         ruleId: rule.id,
         ruleName: rule.name,
         passed: false,
         score: 0,
-        violations: [{
-          ruleId: rule.id,
-          ruleName: rule.name,
-          condition: 'Rule Execution Error',
-          severity: 'high',
-          message: `Error executing rule: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          evidence: []
-        }],
+        violations: [
+          {
+            ruleId: rule.id,
+            ruleName: rule.name,
+            condition: 'Rule Execution Error',
+            severity: 'high',
+            message: `Error executing rule: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            evidence: [],
+          },
+        ],
         executionTimeMs: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -186,19 +189,19 @@ export class CustomRuleEngine {
     switch (condition.type) {
       case 'pattern':
         return this.evaluatePatternCondition(condition as PatternCondition, content);
-      
+
       case 'length':
         return this.evaluateLengthCondition(condition as LengthCondition, content);
-      
+
       case 'contains':
         return this.evaluateContainsCondition(condition as ContainsCondition, content);
-      
+
       case 'custom':
         return this.evaluateCustomCondition(condition as CustomCondition, content, context);
-      
+
       case 'composite':
         return this.evaluateCompositeCondition(condition as CompositeCondition, content, context);
-      
+
       default:
         return { met: false, message: `Unknown condition type: ${condition.type}` };
     }
@@ -207,10 +210,7 @@ export class CustomRuleEngine {
   /**
    * Evaluate pattern condition
    */
-  private evaluatePatternCondition(
-    condition: PatternCondition,
-    content: string
-  ): ConditionResult {
+  private evaluatePatternCondition(condition: PatternCondition, content: string): ConditionResult {
     const regex = new RegExp(condition.pattern, condition.flags || 'gi');
     const matches = content.match(regex);
     const matchCount = matches ? matches.length : 0;
@@ -238,23 +238,21 @@ export class CustomRuleEngine {
       met,
       message: met ? undefined : `Pattern "${condition.pattern}" ${condition.operator} failed`,
       evidence: matches || [],
-      position: matches && matches.length > 0 ? {
-        start: content.indexOf(matches[0]),
-        end: content.indexOf(matches[0]) + matches[0].length
-      } : undefined
+      position:
+        matches && matches.length > 0
+          ? {
+              start: content.indexOf(matches[0]),
+              end: content.indexOf(matches[0]) + matches[0].length,
+            }
+          : undefined,
     };
   }
 
   /**
    * Evaluate length condition
    */
-  private evaluateLengthCondition(
-    condition: LengthCondition,
-    content: string
-  ): ConditionResult {
-    const length = condition.unit === 'characters' ? 
-      content.length : 
-      content.split(/\s+/).length;
+  private evaluateLengthCondition(condition: LengthCondition, content: string): ConditionResult {
+    const length = condition.unit === 'characters' ? content.length : content.split(/\s+/).length;
 
     let met = false;
     switch (condition.operator) {
@@ -268,13 +266,15 @@ export class CustomRuleEngine {
         met = length < condition.value;
         break;
       case 'between':
-        met = length >= condition.min! && length <= condition.max!;
+        met = length >= (condition.min ?? 0) && length <= (condition.max ?? Infinity);
         break;
     }
 
     return {
       met,
-      message: met ? undefined : `Content ${condition.unit} count (${length}) ${condition.operator} ${condition.value} failed`
+      message: met
+        ? undefined
+        : `Content ${condition.unit} count (${length}) ${condition.operator} ${condition.value} failed`,
     };
   }
 
@@ -313,7 +313,7 @@ export class CustomRuleEngine {
     return {
       met,
       message: met ? undefined : `Content must ${condition.mode} of: ${condition.terms.join(', ')}`,
-      evidence: condition.mode === 'none' ? found : missing
+      evidence: condition.mode === 'none' ? found : missing,
     };
   }
 
@@ -330,12 +330,12 @@ export class CustomRuleEngine {
       return {
         met: result.passed,
         message: result.message,
-        evidence: result.evidence || []
+        evidence: result.evidence || [],
       };
     } catch (error) {
       return {
         met: false,
-        message: `Custom condition error: ${error instanceof Error ? error.message : 'Unknown'}`
+        message: `Custom condition error: ${error instanceof Error ? error.message : 'Unknown'}`,
       };
     }
   }
@@ -349,7 +349,7 @@ export class CustomRuleEngine {
     context?: RuleContext
   ): Promise<ConditionResult> {
     const results: ConditionResult[] = [];
-    
+
     for (const subCondition of condition.conditions) {
       const result = await this.evaluateCondition(subCondition, content, context);
       results.push(result);
@@ -358,10 +358,10 @@ export class CustomRuleEngine {
     let met = false;
     switch (condition.operator) {
       case 'AND':
-        met = results.every(r => r.met);
+        met = results.every((r) => r.met);
         break;
       case 'OR':
-        met = results.some(r => r.met);
+        met = results.some((r) => r.met);
         break;
       case 'NOT':
         met = !results[0].met;
@@ -371,7 +371,7 @@ export class CustomRuleEngine {
     return {
       met,
       message: met ? undefined : `Composite condition (${condition.operator}) failed`,
-      evidence: results.filter(r => !r.met).flatMap(r => r.evidence || [])
+      evidence: results.filter((r) => !r.met).flatMap((r) => r.evidence || []),
     };
   }
 
@@ -386,19 +386,19 @@ export class CustomRuleEngine {
   ): Promise<void> {
     switch (action.type) {
       case 'log':
-        console.log(`Rule Action: ${action.message}`);
+        console.error(`Rule Action: ${action.message}`);
         break;
-      
+
       case 'modify_score':
         // Score modification handled in rule execution
         break;
-      
+
       case 'add_metadata':
-        violations.forEach(v => {
+        violations.forEach((v) => {
           v.metadata = { ...v.metadata, ...action.metadata };
         });
         break;
-      
+
       case 'custom':
         if (action.handler) {
           await action.handler(content, context, violations);
@@ -410,34 +410,30 @@ export class CustomRuleEngine {
   /**
    * Get applicable rules based on context
    */
-  private getApplicableRules(
-    context?: RuleContext,
-    options?: ExecutionOptions
-  ): Rule[] {
+  private getApplicableRules(context?: RuleContext, options?: ExecutionOptions): Rule[] {
     let rules = Array.from(this.rules.values());
 
     // Filter by tags
     if (options?.tags && options.tags.length > 0) {
-      rules = rules.filter(rule => 
-        rule.tags?.some(tag => options.tags!.includes(tag))
-      );
+      const tagsToFilter = options.tags;
+      rules = rules.filter((rule) => rule.tags?.some((tag) => tagsToFilter.includes(tag)));
     }
 
     // Filter by groups
     if (options?.groups && options.groups.length > 0) {
       const groupRules = new Set<string>();
-      options.groups.forEach(groupId => {
+      options.groups.forEach((groupId) => {
         const group = this.ruleGroups.get(groupId);
         if (group) {
-          group.rules.forEach(rule => groupRules.add(rule.id));
+          group.rules.forEach((rule) => groupRules.add(rule.id));
         }
       });
-      rules = rules.filter(rule => groupRules.has(rule.id));
+      rules = rules.filter((rule) => groupRules.has(rule.id));
     }
 
     // Filter by context
     if (context) {
-      rules = rules.filter(rule => this.isRuleApplicable(rule, context));
+      rules = rules.filter((rule) => this.isRuleApplicable(rule, context));
     }
 
     // Sort by priority
@@ -487,7 +483,7 @@ export class CustomRuleEngine {
     const weightedScore = results.reduce((sum, r) => {
       const rule = this.rules.get(r.ruleId);
       const weight = rule?.weight || 1;
-      return sum + (r.score * weight);
+      return sum + r.score * weight;
     }, 0);
 
     return Math.round(weightedScore / totalWeight);
@@ -502,7 +498,7 @@ export class CustomRuleEngine {
     passes: RulePass[]
   ): RuleSummary {
     const violationsBySeverity = new Map<string, number>();
-    violations.forEach(v => {
+    violations.forEach((v) => {
       violationsBySeverity.set(v.severity, (violationsBySeverity.get(v.severity) || 0) + 1);
     });
 
@@ -512,21 +508,18 @@ export class CustomRuleEngine {
       failed: results.length - passes.length,
       violations: violations.length,
       violationsBySeverity: Object.fromEntries(violationsBySeverity),
-      criticalViolations: violations.filter(v => v.severity === 'critical').length,
-      averageScore: results.reduce((sum, r) => sum + r.score, 0) / results.length
+      criticalViolations: violations.filter((v) => v.severity === 'critical').length,
+      averageScore: results.reduce((sum, r) => sum + r.score, 0) / results.length,
     };
   }
 
   /**
    * Generate recommendations
    */
-  private generateRecommendations(
-    violations: RuleViolation[],
-    _context?: RuleContext
-  ): string[] {
+  private generateRecommendations(violations: RuleViolation[], _context?: RuleContext): string[] {
     const recommendations = new Set<string>();
 
-    violations.forEach(violation => {
+    violations.forEach((violation) => {
       const rule = this.rules.get(violation.ruleId);
       if (rule?.recommendation) {
         recommendations.add(rule.recommendation);
@@ -534,7 +527,7 @@ export class CustomRuleEngine {
     });
 
     // Add severity-based recommendations
-    if (violations.some(v => v.severity === 'critical')) {
+    if (violations.some((v) => v.severity === 'critical')) {
       recommendations.add('Address critical violations immediately');
     }
 
@@ -578,7 +571,7 @@ export class CustomRuleEngine {
     let hash = 0;
     for (let i = 0; i < content.length; i++) {
       const char = content.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash;
     }
     return hash.toString(36);
@@ -603,9 +596,9 @@ export class CustomRuleEngine {
       id: executionId,
       timestamp: new Date(),
       rulesExecuted: results.length,
-      passed: results.filter(r => r.passed).length,
-      failed: results.filter(r => !r.passed).length,
-      executionTimeMs: executionTime
+      passed: results.filter((r) => r.passed).length,
+      failed: results.filter((r) => !r.passed).length,
+      executionTimeMs: executionTime,
     });
 
     // Keep only last 100 executions
@@ -627,7 +620,7 @@ export class CustomRuleEngine {
   exportRules(): string {
     const exportData = {
       rules: Array.from(this.rules.values()),
-      groups: Array.from(this.ruleGroups.values())
+      groups: Array.from(this.ruleGroups.values()),
     };
     return JSON.stringify(exportData, null, 2);
   }
@@ -637,11 +630,11 @@ export class CustomRuleEngine {
    */
   importRules(json: string): void {
     const data = JSON.parse(json);
-    
+
     if (data.rules) {
       data.rules.forEach((rule: Rule) => this.addRule(rule));
     }
-    
+
     if (data.groups) {
       data.groups.forEach((group: RuleGroup) => this.addRuleGroup(group));
     }
@@ -665,7 +658,7 @@ export interface Rule {
   generateViolations?: boolean;
   cacheable?: boolean;
   recommendation?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface RuleGroup {
@@ -707,7 +700,10 @@ export interface ContainsCondition extends RuleCondition {
 
 export interface CustomCondition extends RuleCondition {
   type: 'custom';
-  evaluator: (content: string, context?: RuleContext) => Promise<{
+  evaluator: (
+    content: string,
+    context?: RuleContext
+  ) => Promise<{
     passed: boolean;
     message?: string;
     evidence?: string[];
@@ -723,7 +719,7 @@ export interface CompositeCondition extends RuleCondition {
 export interface RuleAction {
   type: 'log' | 'modify_score' | 'add_metadata' | 'custom';
   message?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   handler?: (content: string, context?: RuleContext, violations?: RuleViolation[]) => Promise<void>;
 }
 
@@ -732,7 +728,7 @@ export interface RuleContext {
   industry?: string;
   region?: string;
   contentType?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface RuleApplicability {
@@ -770,7 +766,7 @@ export interface RuleExecutionResult {
   score: number;
   violations: RuleViolation[];
   executionTimeMs: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   error?: string;
 }
 
@@ -782,7 +778,7 @@ export interface RuleViolation {
   message: string;
   evidence?: string[];
   position?: { start: number; end: number };
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface RulePass {

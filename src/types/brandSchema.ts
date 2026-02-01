@@ -2,7 +2,7 @@
 export interface BrandSchema {
   name: string;
   description: string;
-  
+
   toneGuidelines: {
     primaryTone: string;
     secondaryTones: string[];
@@ -10,7 +10,7 @@ export interface BrandSchema {
     tonalShift: Record<string, string>;
     examples: Record<string, string>;
   };
-  
+
   voiceGuidelines: {
     personality: string;
     sentence: {
@@ -24,7 +24,7 @@ export interface BrandSchema {
     };
     examples: Record<string, string>;
   };
-  
+
   visualIdentity: {
     colors: {
       primary: string[];
@@ -34,7 +34,7 @@ export interface BrandSchema {
     typography: {
       headingFont: string;
       bodyFont: string;
-      fontSizes: Record<string, any>;
+      fontSizes: Record<string, string | number>;
     };
     imagery: {
       style: string;
@@ -46,7 +46,7 @@ export interface BrandSchema {
       gridSystem?: string;
     };
   };
-  
+
   contextualVisualRules: Array<{
     contexts: string[];
     applyRules: {
@@ -69,7 +69,7 @@ export interface BrandSchema {
         preferences?: string;
         notes?: string;
       };
-    }
+    };
   }>;
 
   terminologyGuidelines: {
@@ -95,7 +95,7 @@ export interface BrandSchema {
         sentenceStructure?: string;
         usesContractions?: boolean;
       };
-    }
+    };
   }>;
 }
 
@@ -118,4 +118,4 @@ export interface BrandComplianceResult {
   brandName: string;
   context?: string;
   contentType?: string;
-} 
+}

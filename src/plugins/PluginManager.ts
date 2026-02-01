@@ -1,11 +1,11 @@
-import { 
-  Plugin, 
-  EvaluationPlugin, 
-  ContentEnricherPlugin, 
+import {
+  Plugin,
+  EvaluationPlugin,
+  ContentEnricherPlugin,
   FormatterPlugin,
   PluginManifest,
   PluginContext,
-  PluginEvaluationResult
+  PluginEvaluationResult,
 } from './interfaces/Plugin.js';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -18,7 +18,7 @@ export class PluginManager {
   private evaluationPlugins: Map<string, EvaluationPlugin> = new Map();
   private enricherPlugins: ContentEnricherPlugin[] = [];
   private formatterPlugins: Map<string, FormatterPlugin> = new Map();
-  private pluginConfigs: Map<string, any> = new Map();
+  private pluginConfigs: Map<string, Record<string, unknown>> = new Map();
 
   constructor(
     private readonly pluginsDirectory: string = './plugins',
@@ -38,7 +38,7 @@ export class PluginManager {
   private async loadPlugins(): Promise<void> {
     try {
       const pluginDirs = await this.discoverPlugins();
-      
+
       for (const pluginDir of pluginDirs) {
         try {
           await this.loadPlugin(pluginDir);
@@ -61,8 +61,8 @@ export class PluginManager {
     try {
       const entries = await fs.readdir(this.pluginsDirectory, { withFileTypes: true });
       return entries
-        .filter(entry => entry.isDirectory())
-        .map(entry => path.join(this.pluginsDirectory, entry.name));
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => path.join(this.pluginsDirectory, entry.name));
     } catch (error) {
       console.error('Failed to discover plugins:', error);
       return [];
@@ -81,10 +81,10 @@ export class PluginManager {
     // Dynamic import of plugin module
     const modulePath = path.join(pluginPath, manifest.main);
     const pluginModule = await import(modulePath);
-    
+
     // Get the default export or the first exported class
     const PluginClass = pluginModule.default || Object.values(pluginModule)[0];
-    
+
     if (!PluginClass) {
       throw new Error(`No plugin class found in ${modulePath}`);
     }
@@ -94,7 +94,9 @@ export class PluginManager {
 
     // Validate plugin compatibility
     if (!plugin.isCompatible(this.systemVersion)) {
-      throw new Error(`Plugin ${plugin.id} is not compatible with system version ${this.systemVersion}`);
+      throw new Error(
+        `Plugin ${plugin.id} is not compatible with system version ${this.systemVersion}`
+      );
     }
 
     // Register plugin by type
@@ -122,28 +124,28 @@ export class PluginManager {
       await plugin.onLoad();
     }
 
-    console.log(`Loaded plugin: ${plugin.name} (${plugin.id}) v${plugin.version}`);
+    console.error(`Loaded plugin: ${plugin.name} (${plugin.id}) v${plugin.version}`);
   }
 
   /**
    * Type guards for plugin types
    */
   private isEvaluationPlugin(plugin: Plugin): plugin is EvaluationPlugin {
-    return 'evaluate' in plugin && typeof (plugin as any).evaluate === 'function';
+    return 'evaluate' in plugin && typeof (plugin as EvaluationPlugin).evaluate === 'function';
   }
 
   private isEnricherPlugin(plugin: Plugin): plugin is ContentEnricherPlugin {
-    return 'enrich' in plugin && typeof (plugin as any).enrich === 'function';
+    return 'enrich' in plugin && typeof (plugin as ContentEnricherPlugin).enrich === 'function';
   }
 
   private isFormatterPlugin(plugin: Plugin): plugin is FormatterPlugin {
-    return 'format' in plugin && typeof (plugin as any).format === 'function';
+    return 'format' in plugin && typeof (plugin as FormatterPlugin).format === 'function';
   }
 
   /**
    * Run all enricher plugins on content
    */
-  async enrichContent(content: string, metadata?: any): Promise<string> {
+  async enrichContent(content: string, metadata?: Record<string, unknown>): Promise<string> {
     let enrichedContent = content;
     let accumulatedMetadata = { ...metadata };
 
@@ -164,13 +166,13 @@ export class PluginManager {
    * Run evaluation plugins
    */
   async runEvaluations(
-    content: string, 
+    content: string,
     context?: PluginContext,
     pluginIds?: string[]
   ): Promise<PluginEvaluationResult[]> {
     const results: PluginEvaluationResult[] = [];
-    const pluginsToRun = pluginIds 
-      ? Array.from(this.evaluationPlugins.values()).filter(p => pluginIds.includes(p.id))
+    const pluginsToRun = pluginIds
+      ? Array.from(this.evaluationPlugins.values()).filter((p) => pluginIds.includes(p.id))
       : Array.from(this.evaluationPlugins.values());
 
     for (const plugin of pluginsToRun) {
@@ -188,10 +190,10 @@ export class PluginManager {
   /**
    * Format result using formatter plugin
    */
-  async formatResult(result: any, format: string, pluginId?: string): Promise<string> {
-    const formatter = pluginId 
+  async formatResult(result: unknown, format: string, pluginId?: string): Promise<string> {
+    const formatter = pluginId
       ? this.formatterPlugins.get(pluginId)
-      : Array.from(this.formatterPlugins.values()).find(f => f.supportedFormats.includes(format));
+      : Array.from(this.formatterPlugins.values()).find((f) => f.supportedFormats.includes(format));
 
     if (!formatter) {
       throw new Error(`No formatter plugin found for format: ${format}`);
@@ -217,7 +219,7 @@ export class PluginManager {
   /**
    * Update plugin configuration
    */
-  updatePluginConfig(pluginId: string, config: any): void {
+  updatePluginConfig(pluginId: string, config: Record<string, unknown>): void {
     if (!this.plugins.has(pluginId)) {
       throw new Error(`Plugin ${pluginId} not found`);
     }
@@ -227,7 +229,7 @@ export class PluginManager {
   /**
    * Get plugin configuration
    */
-  getPluginConfig(pluginId: string): any {
+  getPluginConfig(pluginId: string): Record<string, unknown> | undefined {
     return this.pluginConfigs.get(pluginId);
   }
 
@@ -269,7 +271,7 @@ export class PluginManager {
     // Remove from registries
     this.plugins.delete(pluginId);
     this.evaluationPlugins.delete(pluginId);
-    this.enricherPlugins = this.enricherPlugins.filter(p => p.id !== pluginId);
+    this.enricherPlugins = this.enricherPlugins.filter((p) => p.id !== pluginId);
     this.formatterPlugins.delete(pluginId);
     this.pluginConfigs.delete(pluginId);
 
@@ -287,12 +289,12 @@ export class PluginManager {
       evaluationPlugins: this.evaluationPlugins.size,
       enricherPlugins: this.enricherPlugins.length,
       formatterPlugins: this.formatterPlugins.size,
-      pluginList: Array.from(this.plugins.values()).map(p => ({
+      pluginList: Array.from(this.plugins.values()).map((p) => ({
         id: p.id,
         name: p.name,
         version: p.version,
-        type: this.getPluginType(p)
-      }))
+        type: this.getPluginType(p),
+      })),
     };
   }
 

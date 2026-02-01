@@ -6,10 +6,7 @@ export interface ContextAwareValidator {
   /**
    * Validate content with context awareness
    */
-  validate(
-    content: string, 
-    context: ValidationContext
-  ): Promise<ContextAwareValidationResult>;
+  validate(content: string, context: ValidationContext): Promise<ContextAwareValidationResult>;
 
   /**
    * Check if content is appropriate for context
@@ -24,10 +21,7 @@ export interface ContextAwareValidator {
   /**
    * Suggest content improvements for context
    */
-  suggestImprovements(
-    content: string, 
-    context: ValidationContext
-  ): Promise<ContentImprovement[]>;
+  suggestImprovements(content: string, context: ValidationContext): Promise<ContentImprovement[]>;
 }
 
 /**
@@ -154,7 +148,7 @@ export enum CommunicationChannel {
   CUSTOMER_SUPPORT = 'customer_support',
   MARKETING_COPY = 'marketing_copy',
   LEGAL_DOCUMENT = 'legal_document',
-  TECHNICAL_DOCUMENTATION = 'technical_documentation'
+  TECHNICAL_DOCUMENTATION = 'technical_documentation',
 }
 
 /**
@@ -214,7 +208,7 @@ export enum ContentPurpose {
   LEGAL = 'legal',
   TECHNICAL = 'technical',
   COMPLIANCE = 'compliance',
-  BRAND_BUILDING = 'brand_building'
+  BRAND_BUILDING = 'brand_building',
 }
 
 /**
@@ -230,7 +224,7 @@ export enum Industry {
   ENTERTAINMENT = 'entertainment',
   GOVERNMENT = 'government',
   NONPROFIT = 'nonprofit',
-  LEGAL = 'legal'
+  LEGAL = 'legal',
 }
 
 /**
@@ -636,7 +630,7 @@ export interface ProhibitedElement {
 
 export interface ContextConstraint {
   type: string;
-  value: any;
+  value: string | number | boolean | string[] | Record<string, unknown>;
   description: string;
 }
 
@@ -682,7 +676,7 @@ export enum AudienceType {
   CUSTOMERS = 'customers',
   EMPLOYEES = 'employees',
   INVESTORS = 'investors',
-  MEDIA = 'media'
+  MEDIA = 'media',
 }
 
 export enum EducationLevel {
@@ -690,7 +684,7 @@ export enum EducationLevel {
   HIGH_SCHOOL = 'high_school',
   UNDERGRADUATE = 'undergraduate',
   GRADUATE = 'graduate',
-  PROFESSIONAL = 'professional'
+  PROFESSIONAL = 'professional',
 }
 
 export interface ProfessionalBackground {
@@ -704,7 +698,7 @@ export enum TechnicalProficiency {
   BEGINNER = 'beginner',
   INTERMEDIATE = 'intermediate',
   ADVANCED = 'advanced',
-  EXPERT = 'expert'
+  EXPERT = 'expert',
 }
 
 export enum ViolationType {
@@ -715,7 +709,7 @@ export enum ViolationType {
   CULTURAL_INSENSITIVE = 'cultural_insensitive',
   BRAND_INCONSISTENT = 'brand_inconsistent',
   ACCESSIBILITY_ISSUE = 'accessibility_issue',
-  TEMPORAL_INAPPROPRIATE = 'temporal_inappropriate'
+  TEMPORAL_INAPPROPRIATE = 'temporal_inappropriate',
 }
 
 export enum ImprovementType {
@@ -725,5 +719,5 @@ export enum ImprovementType {
   ENHANCEMENT = 'enhancement',
   COMPLIANCE_FIX = 'compliance_fix',
   CULTURAL_ADAPTATION = 'cultural_adaptation',
-  ACCESSIBILITY_IMPROVEMENT = 'accessibility_improvement'
+  ACCESSIBILITY_IMPROVEMENT = 'accessibility_improvement',
 }

@@ -23,8 +23,9 @@ export class SafetyEvaluation {
    * Get evaluations with significant risk (MEDIUM or higher)
    */
   get significantRisks(): readonly CategoryEvaluation[] {
-    return this.categoryEvaluations.filter(evaluation => 
-      evaluation.riskLevel !== RiskLevel.NONE && evaluation.riskLevel !== RiskLevel.LOW
+    return this.categoryEvaluations.filter(
+      (evaluation) =>
+        evaluation.riskLevel !== RiskLevel.NONE && evaluation.riskLevel !== RiskLevel.LOW
     );
   }
 
@@ -32,7 +33,7 @@ export class SafetyEvaluation {
    * Get evaluation for a specific category
    */
   getCategoryEvaluation(category: string): CategoryEvaluation | undefined {
-    return this.categoryEvaluations.find(evaluation => evaluation.category === category);
+    return this.categoryEvaluations.find((evaluation) => evaluation.category === category);
   }
 }
 
@@ -53,8 +54,8 @@ export class CategoryEvaluation {
  */
 export enum RiskLevel {
   NONE = 'NONE',
-  LOW = 'LOW', 
+  LOW = 'LOW',
   MEDIUM = 'MEDIUM',
   HIGH = 'HIGH',
-  VERY_HIGH = 'VERY_HIGH'
+  VERY_HIGH = 'VERY_HIGH',
 }

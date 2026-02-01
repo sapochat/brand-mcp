@@ -19,11 +19,11 @@ export class CombinedEvaluationResult {
     if (this.combinedScore !== undefined) {
       return this.combinedScore >= 70;
     }
-    
+
     // If no combined score, check individual evaluations
     const safetyCompliant = !this.safetyEvaluation || this.safetyEvaluation.isSafe;
     const brandCompliant = !this.complianceEvaluation || this.complianceEvaluation.isCompliant;
-    
+
     return safetyCompliant && brandCompliant;
   }
 
@@ -32,7 +32,7 @@ export class CombinedEvaluationResult {
    */
   get summary(): string {
     if (this.combinedScore !== undefined) {
-      return this.isCompliant 
+      return this.isCompliant
         ? `COMPLIANT: Content achieves a combined score of ${this.combinedScore}.`
         : `NON-COMPLIANT: Content has a combined score of ${this.combinedScore}.`;
     }

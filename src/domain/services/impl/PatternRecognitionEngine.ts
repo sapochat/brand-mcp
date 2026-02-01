@@ -26,11 +26,11 @@ export class PatternRecognitionEngine {
         /\b(buy now|limited time|act fast|don't miss|exclusive offer)\b/gi,
         /\b(50%|75%|90%) off\b/gi,
         /\b(free|bonus|gift|prize)\b.*\b(today|now|immediately)\b/gi,
-        /!!+|URGENT|AMAZING|INCREDIBLE/g
+        /!!+|URGENT|AMAZING|INCREDIBLE/g,
       ],
       threshold: 3,
       severity: 'medium',
-      description: 'Content contains excessive promotional language'
+      description: 'Content contains excessive promotional language',
     });
 
     // Clickbait patterns
@@ -44,11 +44,11 @@ export class PatternRecognitionEngine {
         /doctors hate (him|her|this)/gi,
         /what happened next/gi,
         /number \d+ will shock you/gi,
-        /\bshocking\b.*\btruth\b/gi
+        /\bshocking\b.*\btruth\b/gi,
       ],
       threshold: 1,
       severity: 'high',
-      description: 'Content uses clickbait tactics'
+      description: 'Content uses clickbait tactics',
     });
 
     // Financial risk patterns
@@ -62,11 +62,11 @@ export class PatternRecognitionEngine {
         /get rich quick/gi,
         /double your money/gi,
         /\b(100%|absolutely) guaranteed\b/gi,
-        /no risk/gi
+        /no risk/gi,
       ],
       threshold: 1,
       severity: 'critical',
-      description: 'Content makes risky financial claims'
+      description: 'Content makes risky financial claims',
     });
 
     // Medical claims patterns
@@ -79,11 +79,11 @@ export class PatternRecognitionEngine {
         /miracle cure/gi,
         /FDA approved/gi,
         /clinically proven/gi,
-        /\b(treats?|prevents?|cures?)\b.*\b(disease|illness|condition)\b/gi
+        /\b(treats?|prevents?|cures?)\b.*\b(disease|illness|condition)\b/gi,
       ],
       threshold: 1,
       severity: 'critical',
-      description: 'Content makes unsubstantiated medical claims'
+      description: 'Content makes unsubstantiated medical claims',
     });
 
     // Spam patterns
@@ -97,11 +97,11 @@ export class PatternRecognitionEngine {
         /\bmillion(s)? (of )?dollars?\b/gi,
         /\b(dear|beloved) (friend|customer|winner)\b/gi,
         /click here now/gi,
-        /unsubscribe/gi
+        /unsubscribe/gi,
       ],
       threshold: 2,
       severity: 'high',
-      description: 'Content contains spam indicators'
+      description: 'Content contains spam indicators',
     });
 
     // Urgency manipulation
@@ -114,11 +114,11 @@ export class PatternRecognitionEngine {
         /\blast chance\b/gi,
         /\bonly \d+ left\b/gi,
         /\btime is running out\b/gi,
-        /\bact now before/gi
+        /\bact now before/gi,
       ],
       threshold: 2,
       severity: 'medium',
-      description: 'Content uses manipulative urgency tactics'
+      description: 'Content uses manipulative urgency tactics',
     });
 
     // Legal disclaimer patterns
@@ -130,13 +130,11 @@ export class PatternRecognitionEngine {
         /investment advice/gi,
         /financial recommendation/gi,
         /medical advice/gi,
-        /legal advice/gi
+        /legal advice/gi,
       ],
-      mustInclude: [
-        /disclaimer|disclosure|not (financial|medical|legal) advice/gi
-      ],
+      mustInclude: [/disclaimer|disclosure|not (financial|medical|legal) advice/gi],
       severity: 'high',
-      description: 'Content requires disclaimer but none found'
+      description: 'Content requires disclaimer but none found',
     });
   }
 
@@ -153,9 +151,9 @@ export class PatternRecognitionEngine {
   async detectPatterns(content: string, context?: PatternContext): Promise<PatternDetectionResult> {
     const detectedPatterns: DetectedPattern[] = [];
     const anomalies: ContentAnomaly[] = [];
-    
+
     // Check built-in patterns
-    for (const [_id, pattern] of this.patterns) {
+    for (const [, pattern] of this.patterns) {
       const detection = this.checkPattern(content, pattern, context);
       if (detection) {
         detectedPatterns.push(detection);
@@ -163,7 +161,7 @@ export class PatternRecognitionEngine {
     }
 
     // Check custom patterns
-    for (const [_id, pattern] of this.customPatterns) {
+    for (const [, pattern] of this.customPatterns) {
       const detection = this.checkCustomPattern(content, pattern, context);
       if (detection) {
         detectedPatterns.push(detection);
@@ -188,7 +186,7 @@ export class PatternRecognitionEngine {
       riskScore,
       riskLevel: this.determineRiskLevel(riskScore),
       recommendations,
-      summary: this.generateSummary(detectedPatterns, anomalies)
+      summary: this.generateSummary(detectedPatterns, anomalies),
     };
   }
 
@@ -196,15 +194,15 @@ export class PatternRecognitionEngine {
    * Check a specific pattern
    */
   private checkPattern(
-    content: string, 
-    pattern: ContentPattern, 
+    content: string,
+    pattern: ContentPattern,
     _context?: PatternContext
   ): DetectedPattern | null {
     // Check if pattern requires certain conditions
     if (pattern.requiredWhen) {
-      const requirementMet = pattern.requiredWhen.some(req => req.test(content));
+      const requirementMet = pattern.requiredWhen.some((req) => req.test(content));
       if (requirementMet && pattern.mustInclude) {
-        const includesMet = pattern.mustInclude.some(inc => inc.test(content));
+        const includesMet = pattern.mustInclude.some((inc) => inc.test(content));
         if (!includesMet) {
           return {
             pattern,
@@ -213,7 +211,7 @@ export class PatternRecognitionEngine {
             confidence: 100,
             severity: pattern.severity,
             locations: [],
-            context: `Required disclaimer missing for ${pattern.name}`
+            context: `Required disclaimer missing for ${pattern.name}`,
           };
         }
       }
@@ -222,7 +220,7 @@ export class PatternRecognitionEngine {
     // Check pattern indicators
     if (pattern.indicators) {
       const matches: PatternMatch[] = [];
-      
+
       for (const indicator of pattern.indicators) {
         const indicatorMatches = content.matchAll(indicator);
         for (const match of indicatorMatches) {
@@ -230,9 +228,9 @@ export class PatternRecognitionEngine {
             text: match[0],
             position: {
               start: match.index || 0,
-              end: (match.index || 0) + match[0].length
+              end: (match.index || 0) + match[0].length,
             },
-            indicator: indicator.source
+            indicator: indicator.source,
           });
         }
       }
@@ -244,8 +242,8 @@ export class PatternRecognitionEngine {
           count: matches.length,
           confidence: Math.min(100, (matches.length / (pattern.threshold || 1)) * 50),
           severity: pattern.severity,
-          locations: matches.map(m => m.position),
-          context: pattern.description
+          locations: matches.map((m) => m.position),
+          context: pattern.description,
         };
       }
     }
@@ -268,14 +266,14 @@ export class PatternRecognitionEngine {
           name: pattern.name,
           category: pattern.category,
           severity: pattern.severity,
-          description: pattern.description
+          description: pattern.description,
         },
         matches: [],
         count: 1,
         confidence: pattern.confidence || 80,
         severity: pattern.severity,
         locations: [],
-        context: pattern.description
+        context: pattern.description,
       };
     }
     return null;
@@ -284,32 +282,31 @@ export class PatternRecognitionEngine {
   /**
    * Calculate overall risk score
    */
-  private calculateRiskScore(
-    patterns: DetectedPattern[], 
-    anomalies: ContentAnomaly[]
-  ): number {
+  private calculateRiskScore(patterns: DetectedPattern[], anomalies: ContentAnomaly[]): number {
     let score = 0;
-    
+
     // Score from patterns
     for (const pattern of patterns) {
-      const severityScore = {
-        'low': 10,
-        'medium': 25,
-        'high': 50,
-        'critical': 100
-      }[pattern.severity] || 10;
-      
+      const severityScore =
+        {
+          low: 10,
+          medium: 25,
+          high: 50,
+          critical: 100,
+        }[pattern.severity] || 10;
+
       score += severityScore * (pattern.confidence / 100);
     }
 
     // Score from anomalies
     for (const anomaly of anomalies) {
-      const severityScore = {
-        'low': 5,
-        'medium': 15,
-        'high': 30
-      }[anomaly.severity] || 5;
-      
+      const severityScore =
+        {
+          low: 5,
+          medium: 15,
+          high: 30,
+        }[anomaly.severity] || 5;
+
       score += severityScore * (anomaly.confidence / 100);
     }
 
@@ -343,10 +340,14 @@ export class PatternRecognitionEngine {
         // Generate default recommendations
         recommendations.push({
           type: 'pattern_fix',
-          priority: pattern.severity === 'critical' ? 'high' : 
-                   pattern.severity === 'high' ? 'medium' : 'low',
+          priority:
+            pattern.severity === 'critical'
+              ? 'high'
+              : pattern.severity === 'high'
+                ? 'medium'
+                : 'low',
           description: `Review and address: ${pattern.pattern.description}`,
-          action: `Remove or modify content matching pattern: ${pattern.pattern.name}`
+          action: `Remove or modify content matching pattern: ${pattern.pattern.name}`,
         });
       }
     }
@@ -372,10 +373,7 @@ export class PatternRecognitionEngine {
         );
       }
       if (pattern.severity) {
-        severityCounts.set(
-          pattern.severity,
-          (severityCounts.get(pattern.severity) || 0) + 1
-        );
+        severityCounts.set(pattern.severity, (severityCounts.get(pattern.severity) || 0) + 1);
       }
     }
 
@@ -384,11 +382,11 @@ export class PatternRecognitionEngine {
       totalAnomalies: anomalies.length,
       categoryCounts: Object.fromEntries(categoryCounts),
       severityCounts: Object.fromEntries(severityCounts),
-      criticalIssues: patterns.filter(p => p.severity === 'critical').length,
+      criticalIssues: patterns.filter((p) => p.severity === 'critical').length,
       highPriorityActions: patterns
-        .filter(p => p.severity === 'critical' || p.severity === 'high')
-        .map(p => p.pattern.name || '')
-        .filter(n => n !== '')
+        .filter((p) => p.severity === 'critical' || p.severity === 'high')
+        .map((p) => p.pattern.name || '')
+        .filter((n) => n !== ''),
     };
   }
 
@@ -411,8 +409,16 @@ export class PatternRecognitionEngine {
    */
   async train(examples: TrainingExample[]): Promise<void> {
     // This would implement pattern learning in a real system
-    // For now, it's a placeholder for future ML integration
-    console.log(`Training with ${examples.length} examples`);
+    // For now, it validates examples and prepares for future ML integration
+    if (examples.length === 0) {
+      return;
+    }
+    // Validate that examples have required structure
+    for (const example of examples) {
+      if (!example.content || !example.patterns) {
+        throw new Error('Invalid training example: missing content or patterns');
+      }
+    }
   }
 }
 
@@ -446,7 +452,7 @@ export interface PatternContext {
   domain?: string;
   audience?: string;
   channel?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, string | number | boolean | null>;
 }
 
 export interface PatternDetectionResult {

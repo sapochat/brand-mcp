@@ -1,6 +1,11 @@
 import { CheckSafetyUseCase, CheckSafetyInput } from './CheckSafetyUseCase.js';
 import { CheckComplianceUseCase, CheckComplianceInput } from './CheckComplianceUseCase.js';
-import { CombinedEvaluationResult, EvaluationWeights } from '../../domain/value-objects/EvaluationResult.js';
+import {
+  CombinedEvaluationResult,
+  EvaluationWeights,
+} from '../../domain/value-objects/EvaluationResult.js';
+import { SafetyEvaluation } from '../../domain/entities/SafetyEvaluation.js';
+import { ComplianceEvaluation } from '../../domain/entities/ComplianceEvaluation.js';
 
 /**
  * Use case for performing combined safety and compliance evaluation
@@ -21,7 +26,7 @@ export class CombinedEvaluationUseCase {
     // Perform evaluations concurrently based on flags
     const [safetyResult, complianceResult] = await Promise.all([
       includeSafety ? this.safetyUseCase.execute(safetyInput) : Promise.resolve(undefined),
-      includeBrand ? this.complianceUseCase.execute(complianceInput) : Promise.resolve(undefined)
+      includeBrand ? this.complianceUseCase.execute(complianceInput) : Promise.resolve(undefined),
     ]);
 
     // Calculate combined score if both evaluations were performed
@@ -43,17 +48,17 @@ export class CombinedEvaluationUseCase {
   }
 
   private calculateCombinedScore(
-    safetyEvaluation: any,
-    complianceEvaluation: any,
+    safetyEvaluation: SafetyEvaluation,
+    complianceEvaluation: ComplianceEvaluation,
     weights: EvaluationWeights
   ): number {
     // Convert safety risk level to numeric score (inverse - higher is better)
     const safetyLevels: Record<string, number> = {
-      'NONE': 100,
-      'LOW': 80,
-      'MEDIUM': 60,
-      'HIGH': 30,
-      'VERY_HIGH': 0
+      NONE: 100,
+      LOW: 80,
+      MEDIUM: 60,
+      HIGH: 30,
+      VERY_HIGH: 0,
     };
 
     const safetyScore = safetyLevels[safetyEvaluation.overallRisk] || 50;

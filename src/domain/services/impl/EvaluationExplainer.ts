@@ -41,16 +41,12 @@ export class EvaluationExplainer {
     const examples = this.generateExamples(evaluation);
 
     // Build narrative
-    const narrative = this.buildNarrative(
-      contextualExplanation,
-      breakdowns,
-      insights
-    );
+    const narrative = this.buildNarrative(contextualExplanation, breakdowns, insights);
 
     // Simplify if requested
-    const finalExplanation = options?.simplify ? 
-      await this.simplifier.simplify(narrative, options.targetAudience) : 
-      narrative;
+    const finalExplanation = options?.simplify
+      ? await this.simplifier.simplify(narrative, options.targetAudience)
+      : narrative;
 
     return {
       summary: finalExplanation.summary,
@@ -63,8 +59,8 @@ export class EvaluationExplainer {
         generationTime: Date.now() - startTime,
         complexity: this.assessComplexity(finalExplanation),
         readingTime: this.estimateReadingTime(finalExplanation),
-        confidence: evaluation.confidence || 0
-      }
+        confidence: evaluation.confidence || 0,
+      },
     };
   }
 
@@ -82,19 +78,19 @@ export class EvaluationExplainer {
         value: evaluation.score,
         interpretation: scoreInterpretation.description,
         category: scoreInterpretation.category,
-        comparison: scoreInterpretation.comparison
+        comparison: scoreInterpretation.comparison,
       },
       complianceExplanation: {
         status: evaluation.isCompliant,
         interpretation: complianceStatus.description,
-        impact: complianceStatus.impact
+        impact: complianceStatus.impact,
       },
       riskExplanation: {
         level: evaluation.riskLevel,
         interpretation: riskAssessment.description,
-        implications: riskAssessment.implications
+        implications: riskAssessment.implications,
       },
-      keyFactors: this.identifyKeyFactors(evaluation)
+      keyFactors: this.identifyKeyFactors(evaluation),
     };
   }
 
@@ -103,15 +99,15 @@ export class EvaluationExplainer {
    */
   private generateHeadline(evaluation: EvaluationResult): string {
     if (evaluation.isCompliant && evaluation.score >= 90) {
-      return "Excellent! Content meets all brand safety requirements";
+      return 'Excellent! Content meets all brand safety requirements';
     } else if (evaluation.isCompliant && evaluation.score >= 70) {
-      return "Good - Content is compliant with minor improvements possible";
+      return 'Good - Content is compliant with minor improvements possible';
     } else if (!evaluation.isCompliant && evaluation.score >= 50) {
-      return "Attention needed - Content has compliance issues to address";
+      return 'Attention needed - Content has compliance issues to address';
     } else if (!evaluation.isCompliant && evaluation.score < 50) {
-      return "Significant issues - Content requires substantial revision";
+      return 'Significant issues - Content requires substantial revision';
     }
-    return "Content evaluation complete - Review required";
+    return 'Content evaluation complete - Review required';
   }
 
   /**
@@ -158,12 +154,12 @@ export class EvaluationExplainer {
     if (isCompliant) {
       return {
         description: 'Content meets all mandatory compliance requirements',
-        impact: 'Safe for publication and distribution'
+        impact: 'Safe for publication and distribution',
       };
     } else {
       return {
         description: 'Content violates one or more compliance requirements',
-        impact: 'Must be revised before publication to avoid potential issues'
+        impact: 'Must be revised before publication to avoid potential issues',
       };
     }
   }
@@ -173,26 +169,38 @@ export class EvaluationExplainer {
    */
   private interpretRisk(riskLevel: string): RiskInterpretation {
     const interpretations: Record<string, RiskInterpretation> = {
-      'NONE': {
+      NONE: {
         description: 'No significant risks identified',
-        implications: ['Content is safe for all audiences', 'No brand safety concerns']
+        implications: ['Content is safe for all audiences', 'No brand safety concerns'],
       },
-      'LOW': {
+      LOW: {
         description: 'Minor risks that are easily manageable',
-        implications: ['Minimal chance of negative impact', 'Simple adjustments may enhance safety']
+        implications: [
+          'Minimal chance of negative impact',
+          'Simple adjustments may enhance safety',
+        ],
       },
-      'MEDIUM': {
+      MEDIUM: {
         description: 'Moderate risks requiring attention',
-        implications: ['Could impact brand perception', 'Recommended to address before publication']
+        implications: [
+          'Could impact brand perception',
+          'Recommended to address before publication',
+        ],
       },
-      'HIGH': {
+      HIGH: {
         description: 'Significant risks that must be addressed',
-        implications: ['High probability of negative impact', 'Essential to revise before publication']
+        implications: [
+          'High probability of negative impact',
+          'Essential to revise before publication',
+        ],
       },
-      'VERY_HIGH': {
+      VERY_HIGH: {
         description: 'Critical risks with severe potential impact',
-        implications: ['Will damage brand reputation', 'Content must not be published without major revision']
-      }
+        implications: [
+          'Will damage brand reputation',
+          'Content must not be published without major revision',
+        ],
+      },
     };
 
     return interpretations[riskLevel] || interpretations['MEDIUM'];
@@ -210,19 +218,19 @@ export class EvaluationExplainer {
         type: 'positive',
         name: 'Strong Compliance',
         impact: 'high',
-        description: 'Content demonstrates strong adherence to guidelines'
+        description: 'Content demonstrates strong adherence to guidelines',
       });
     }
 
     // Negative factors
     if (evaluation.violations && evaluation.violations.length > 0) {
-      const criticalViolations = evaluation.violations.filter(v => v.severity === 'critical');
+      const criticalViolations = evaluation.violations.filter((v) => v.severity === 'critical');
       if (criticalViolations.length > 0) {
         factors.push({
           type: 'negative',
           name: 'Critical Violations',
           impact: 'critical',
-          description: `${criticalViolations.length} critical issue(s) must be resolved`
+          description: `${criticalViolations.length} critical issue(s) must be resolved`,
         });
       }
     }
@@ -233,7 +241,7 @@ export class EvaluationExplainer {
         type: 'neutral',
         name: 'Warnings Present',
         impact: 'medium',
-        description: `${evaluation.warnings.length} warning(s) to consider`
+        description: `${evaluation.warnings.length} warning(s) to consider`,
       });
     }
 
@@ -254,8 +262,8 @@ export class EvaluationExplainer {
           name: this.humanizeComponentName(component),
           value: value as number,
           weight: this.getComponentWeight(component),
-          status: this.getComponentStatus(value as number)
-        }))
+          status: this.getComponentStatus(value as number),
+        })),
       });
     }
 
@@ -264,12 +272,12 @@ export class EvaluationExplainer {
       const violationsByType = this.groupViolationsByType(evaluation.violations);
       breakdowns.push({
         category: 'Violations by Type',
-        items: violationsByType.map(group => ({
+        items: violationsByType.map((group) => ({
           name: group.type,
           value: group.count,
           weight: group.severity === 'critical' ? 3 : group.severity === 'high' ? 2 : 1,
-          status: 'negative'
-        }))
+          status: 'negative',
+        })),
       });
     }
 
@@ -281,8 +289,8 @@ export class EvaluationExplainer {
           name: this.humanizeComponentName(category),
           value: score as number,
           weight: 1,
-          status: this.getComponentStatus(score as number)
-        }))
+          status: this.getComponentStatus(score as number),
+        })),
       });
     }
 
@@ -307,9 +315,9 @@ export class EvaluationExplainer {
           { min: 0, max: 50, color: 'red', label: 'Poor' },
           { min: 50, max: 70, color: 'orange', label: 'Fair' },
           { min: 70, max: 90, color: 'yellow', label: 'Good' },
-          { min: 90, max: 100, color: 'green', label: 'Excellent' }
-        ]
-      }
+          { min: 90, max: 100, color: 'green', label: 'Excellent' },
+        ],
+      },
     });
 
     // Risk radar
@@ -320,8 +328,8 @@ export class EvaluationExplainer {
         data: {
           categories: Object.keys(evaluation.riskBreakdown),
           values: Object.values(evaluation.riskBreakdown),
-          maxValue: 100
-        }
+          maxValue: 100,
+        },
       });
     }
 
@@ -334,9 +342,9 @@ export class EvaluationExplainer {
           points: evaluation.historicalScores.map((score, index) => ({
             x: index,
             y: score,
-            label: `Evaluation ${index + 1}`
-          }))
-        }
+            label: `Evaluation ${index + 1}`,
+          })),
+        },
       });
     }
 
@@ -351,7 +359,7 @@ export class EvaluationExplainer {
 
     // High priority insights
     if (evaluation.violations) {
-      const criticalViolations = evaluation.violations.filter(v => v.severity === 'critical');
+      const criticalViolations = evaluation.violations.filter((v) => v.severity === 'critical');
       if (criticalViolations.length > 0) {
         insights.push({
           priority: 'high',
@@ -361,7 +369,7 @@ export class EvaluationExplainer {
           action: 'Address these violations immediately before publication',
           impact: 'Resolving will prevent potential legal or reputational issues',
           effort: 'high',
-          timeframe: 'immediate'
+          timeframe: 'immediate',
         });
       }
     }
@@ -376,7 +384,7 @@ export class EvaluationExplainer {
         action: 'Review and implement suggested improvements',
         impact: `Could increase score by ${Math.min(20, 90 - evaluation.score)} points`,
         effort: 'medium',
-        timeframe: '1-2 days'
+        timeframe: '1-2 days',
       });
     }
 
@@ -390,7 +398,7 @@ export class EvaluationExplainer {
         action: 'Consider implementing for best-in-class content',
         impact: 'Marginal improvements to overall quality',
         effort: 'low',
-        timeframe: 'as time permits'
+        timeframe: 'as time permits',
       });
     }
 
@@ -415,7 +423,7 @@ export class EvaluationExplainer {
         before: sampleViolation.evidence?.original || 'Original content',
         after: sampleViolation.evidence?.suggested || 'Suggested improvement',
         explanation: sampleViolation.description,
-        impact: `Fixing this would improve score by approximately ${Math.round(100 / evaluation.violations.length)} points`
+        impact: `Fixing this would improve score by approximately ${Math.round(100 / evaluation.violations.length)} points`,
       });
     }
 
@@ -427,7 +435,7 @@ export class EvaluationExplainer {
         before: '',
         after: evaluation.successes[0],
         explanation: 'This demonstrates good practice',
-        impact: 'Continue this approach in future content'
+        impact: 'Continue this approach in future content',
       });
     }
 
@@ -448,39 +456,40 @@ export class EvaluationExplainer {
     sections.push({
       type: 'opening',
       content: core.headline,
-      emphasis: 'high'
+      emphasis: 'high',
     });
 
     // Score section
     sections.push({
       type: 'score',
       content: `Your content scored ${core.scoreExplanation.value} out of 100. ${core.scoreExplanation.interpretation}`,
-      emphasis: 'medium'
+      emphasis: 'medium',
     });
 
     // Compliance section
     sections.push({
       type: 'compliance',
       content: core.complianceExplanation.interpretation,
-      emphasis: core.complianceExplanation.status ? 'low' : 'high'
+      emphasis: core.complianceExplanation.status ? 'low' : 'high',
     });
 
     // Risk section
     sections.push({
       type: 'risk',
       content: `Risk Assessment: ${core.riskExplanation.interpretation}`,
-      emphasis: core.riskExplanation.level === 'HIGH' || core.riskExplanation.level === 'VERY_HIGH' ? 'high' : 'low'
+      emphasis:
+        core.riskExplanation.level === 'HIGH' || core.riskExplanation.level === 'VERY_HIGH'
+          ? 'high'
+          : 'low',
     });
 
     // Key factors section
     if (core.keyFactors.length > 0) {
-      const factorText = core.keyFactors
-        .map(f => `${f.name}: ${f.description}`)
-        .join('. ');
+      const factorText = core.keyFactors.map((f) => `${f.name}: ${f.description}`).join('. ');
       sections.push({
         type: 'factors',
         content: `Key Factors: ${factorText}`,
-        emphasis: 'medium'
+        emphasis: 'medium',
       });
     }
 
@@ -490,22 +499,22 @@ export class EvaluationExplainer {
       sections.push({
         type: 'action',
         content: `Next Step: ${priorityInsight.action}`,
-        emphasis: 'high'
+        emphasis: 'high',
       });
     }
 
     // Build summary
     const summary = sections
-      .filter(s => s.emphasis === 'high')
-      .map(s => s.content)
+      .filter((s) => s.emphasis === 'high')
+      .map((s) => s.content)
       .join(' ');
 
     return {
       summary,
       sections,
-      narrative: sections.map(s => s.content).join('\n\n'),
+      narrative: sections.map((s) => s.content).join('\n\n'),
       readingLevel: 'professional',
-      tone: 'informative'
+      tone: 'informative',
     };
   }
 
@@ -517,7 +526,7 @@ export class EvaluationExplainer {
       .replace(/_/g, ' ')
       .replace(/([a-z])([A-Z])/g, '$1 $2')
       .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ');
   }
 
@@ -527,7 +536,7 @@ export class EvaluationExplainer {
       safety: 2.5,
       brand: 2,
       quality: 1.5,
-      other: 1
+      other: 1,
     };
     return weights[component] || 1;
   }
@@ -538,19 +547,22 @@ export class EvaluationExplainer {
     return 'negative';
   }
 
-  private groupViolationsByType(violations: any[]): any[] {
-    const grouped = new Map<string, any>();
-    
-    violations.forEach(v => {
+  private groupViolationsByType(violations: EvaluationViolation[]): GroupedViolation[] {
+    const grouped = new Map<string, GroupedViolation>();
+
+    violations.forEach((v) => {
       const key = v.type || 'other';
       if (!grouped.has(key)) {
         grouped.set(key, {
           type: key,
           count: 0,
-          severity: v.severity
+          severity: v.severity,
         });
       }
-      grouped.get(key)!.count++;
+      const group = grouped.get(key);
+      if (group) {
+        group.count++;
+      }
     });
 
     return Array.from(grouped.values());
@@ -571,36 +583,12 @@ export class EvaluationExplainer {
 }
 
 /**
- * Explanation Template Engine
+ * Context for explanation contextualization
  */
-// @ts-ignore - Unused class for future implementation
-class ExplanationTemplateEngine {
-  private templates: Map<string, string> = new Map();
-
-  constructor() {
-    this.initializeTemplates();
-  }
-
-  private initializeTemplates(): void {
-    this.templates.set('violation_critical', 
-      'Critical Issue: {description}. This must be resolved immediately as it {impact}.');
-    
-    this.templates.set('violation_high',
-      'Important Issue: {description}. Addressing this will {impact}.');
-    
-    this.templates.set('improvement',
-      'Suggestion: {description}. This would {impact}.');
-  }
-
-  renderTemplate(templateId: string, data: Record<string, any>): string {
-    let template = this.templates.get(templateId) || '';
-    
-    Object.entries(data).forEach(([key, value]) => {
-      template = template.replace(`{${key}}`, String(value));
-    });
-    
-    return template;
-  }
+interface ExplanationContext {
+  readonly industry?: string;
+  readonly audience?: string;
+  readonly format?: string;
 }
 
 /**
@@ -609,7 +597,7 @@ class ExplanationTemplateEngine {
 class ExplanationContextualizer {
   async contextualize(
     explanation: CoreExplanation,
-    context?: any
+    context?: ExplanationContext
   ): Promise<CoreExplanation> {
     if (!context) return explanation;
 
@@ -644,7 +632,7 @@ class ExplanationSimplifier {
     }
 
     narrative.readingLevel = targetAudience || 'professional';
-    
+
     return narrative;
   }
 }
@@ -652,12 +640,44 @@ class ExplanationSimplifier {
 /**
  * Types and interfaces
  */
+export interface ViolationEvidence {
+  original?: string;
+  suggested?: string;
+}
+
+export interface EvaluationViolation {
+  type: string;
+  severity: string;
+  description: string;
+  location?: string;
+  evidence?: ViolationEvidence;
+}
+
+export interface EvaluationWarning {
+  type: string;
+  message: string;
+  severity?: string;
+}
+
+export interface GroupedViolation {
+  type: string;
+  count: number;
+  severity: string;
+}
+
+export interface EvaluationResultContext {
+  industry?: string;
+  audience?: string;
+  format?: string;
+  [key: string]: string | undefined;
+}
+
 export interface EvaluationResult {
   score: number;
   isCompliant: boolean;
   riskLevel: string;
-  violations?: any[];
-  warnings?: any[];
+  violations?: EvaluationViolation[];
+  warnings?: EvaluationWarning[];
   recommendations?: string[];
   scoreBreakdown?: Record<string, number>;
   categoryScores?: Record<string, number>;
@@ -665,7 +685,7 @@ export interface EvaluationResult {
   historicalScores?: number[];
   successes?: string[];
   confidence?: number;
-  context?: any;
+  context?: EvaluationResultContext;
 }
 
 export interface ExplanationOptions {
@@ -729,10 +749,54 @@ export interface DetailedBreakdown {
   }>;
 }
 
+export interface GaugeZone {
+  min: number;
+  max: number;
+  color: string;
+  label: string;
+}
+
+export interface GaugeData {
+  value: number;
+  min: number;
+  max: number;
+  zones: GaugeZone[];
+}
+
+export interface RadarData {
+  categories: string[];
+  values: number[];
+  maxValue: number;
+}
+
+export interface LinePoint {
+  x: number;
+  y: number;
+  label: string;
+}
+
+export interface LineData {
+  points: LinePoint[];
+}
+
+export interface BarDataItem {
+  label: string;
+  value: number;
+  color?: string;
+}
+
+export interface PieDataItem {
+  label: string;
+  value: number;
+  color?: string;
+}
+
+export type VisualData = GaugeData | RadarData | LineData | BarDataItem[] | PieDataItem[];
+
 export interface ExplanationVisual {
   type: 'gauge' | 'radar' | 'bar' | 'line' | 'pie';
   title: string;
-  data: any;
+  data: VisualData;
 }
 
 export interface ActionableInsight {

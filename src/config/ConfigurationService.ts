@@ -40,7 +40,7 @@ export interface AppConfig {
  */
 const DEFAULT_CONFIG: AppConfig = {
   brand: {
-    autoReload: false
+    autoReload: false,
   },
   safety: {
     categories: [],
@@ -59,26 +59,26 @@ const DEFAULT_CONFIG: AppConfig = {
       POLITICAL: RiskLevel.MEDIUM,
       RELIGION: RiskLevel.MEDIUM,
       SENTIMENT_ANALYSIS: RiskLevel.MEDIUM,
-      CONTEXTUAL_ANALYSIS: RiskLevel.MEDIUM
-    }
+      CONTEXTUAL_ANALYSIS: RiskLevel.MEDIUM,
+    },
   },
   performance: {
     cacheTTL: 600000, // 10 minutes
     maxCacheSize: 100,
-    enableCaching: true
+    enableCaching: true,
   },
   security: {
     maxContentLength: 100000,
     rateLimit: {
       maxRequests: 100,
-      windowMs: 60000
-    }
+      windowMs: 60000,
+    },
   },
   logging: {
     level: 'info',
     format: 'json',
-    destination: 'console'
-  }
+    destination: 'console',
+  },
 };
 
 /**
@@ -90,14 +90,14 @@ export class ConfigurationService {
   private configPath: string;
   private brandSchema: BrandSchema | null = null;
   private fileWatcher: fs.FSWatcher | null = null;
-  
+
   private constructor(configPath?: string) {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     this.configPath = configPath || path.resolve(__dirname, '../../config.json');
     this.config = { ...DEFAULT_CONFIG };
     this.loadConfiguration();
   }
-  
+
   /**
    * Get singleton instance
    */
@@ -107,7 +107,7 @@ export class ConfigurationService {
     }
     return ConfigurationService.instance;
   }
-  
+
   /**
    * Load configuration from file
    */
@@ -116,26 +116,26 @@ export class ConfigurationService {
       // Validate path security
       const __dirname = path.dirname(fileURLToPath(import.meta.url));
       const projectRoot = path.resolve(__dirname, '../..');
-      
+
       if (!validatePath(this.configPath, projectRoot)) {
         throw new SafeError(
           'Configuration path is outside project directory',
           'CONFIG_PATH_INVALID'
         );
       }
-      
+
       // Check if config file exists
       if (fs.existsSync(this.configPath)) {
         const configContent = fs.readFileSync(this.configPath, 'utf-8');
         const loadedConfig = JSON.parse(configContent) as Partial<AppConfig>;
-        
+
         // Deep merge with defaults
-        this.config = this.deepMerge(DEFAULT_CONFIG, loadedConfig) as AppConfig;
+        this.config = this.deepMerge(DEFAULT_CONFIG, loadedConfig);
       } else {
         // Create default config file
         this.saveConfiguration();
       }
-      
+
       // Set up file watching if enabled
       if (this.config.brand.autoReload) {
         this.setupFileWatcher();
@@ -151,7 +151,7 @@ export class ConfigurationService {
       );
     }
   }
-  
+
   /**
    * Save configuration to file
    */
@@ -161,12 +161,8 @@ export class ConfigurationService {
       if (!fs.existsSync(configDir)) {
         fs.mkdirSync(configDir, { recursive: true, mode: 0o750 });
       }
-      
-      fs.writeFileSync(
-        this.configPath,
-        JSON.stringify(this.config, null, 2),
-        { mode: 0o600 }
-      );
+
+      fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2), { mode: 0o600 });
     } catch (error) {
       throw new SafeError(
         'Failed to save configuration',
@@ -175,57 +171,57 @@ export class ConfigurationService {
       );
     }
   }
-  
+
   /**
    * Get full configuration
    */
   getConfig(): AppConfig {
     return { ...this.config };
   }
-  
+
   /**
    * Get brand configuration
    */
   getBrandConfig(): AppConfig['brand'] {
     return { ...this.config.brand };
   }
-  
+
   /**
    * Get safety configuration
    */
   getSafetyConfig(): BrandSafetyConfig {
     return { ...this.config.safety };
   }
-  
+
   /**
    * Get performance configuration
    */
   getPerformanceConfig(): AppConfig['performance'] {
     return { ...this.config.performance };
   }
-  
+
   /**
    * Get security configuration
    */
   getSecurityConfig(): AppConfig['security'] {
     return { ...this.config.security };
   }
-  
+
   /**
    * Get logging configuration
    */
   getLoggingConfig(): AppConfig['logging'] {
     return { ...this.config.logging };
   }
-  
+
   /**
    * Update configuration
    */
   updateConfig(updates: Partial<AppConfig>): void {
-    this.config = this.deepMerge(this.config, updates) as AppConfig;
+    this.config = this.deepMerge(this.config, updates);
     this.saveConfiguration();
   }
-  
+
   /**
    * Update brand configuration
    */
@@ -233,7 +229,7 @@ export class ConfigurationService {
     this.config.brand = { ...this.config.brand, ...updates };
     this.saveConfiguration();
   }
-  
+
   /**
    * Update safety configuration
    */
@@ -241,21 +237,21 @@ export class ConfigurationService {
     this.config.safety = { ...this.config.safety, ...updates };
     this.saveConfiguration();
   }
-  
+
   /**
    * Get brand schema
    */
   getBrandSchema(): BrandSchema | null {
     return this.brandSchema;
   }
-  
+
   /**
    * Set brand schema
    */
   setBrandSchema(schema: BrandSchema): void {
     this.brandSchema = schema;
   }
-  
+
   /**
    * Load brand schema from configured path
    */
@@ -263,7 +259,7 @@ export class ConfigurationService {
     if (!this.config.brand.schemaPath) {
       return null;
     }
-    
+
     try {
       const { loadBrandSchema } = await import('../utils/brandSchemaLoader.js');
       this.brandSchema = await loadBrandSchema();
@@ -276,7 +272,7 @@ export class ConfigurationService {
       );
     }
   }
-  
+
   /**
    * Set up file watcher for configuration changes
    */
@@ -284,7 +280,7 @@ export class ConfigurationService {
     if (this.fileWatcher) {
       this.fileWatcher.close();
     }
-    
+
     this.fileWatcher = fs.watch(this.configPath, (eventType) => {
       if (eventType === 'change') {
         this.loadConfiguration();
@@ -292,7 +288,7 @@ export class ConfigurationService {
       }
     });
   }
-  
+
   /**
    * Handle configuration changes
    */
@@ -300,27 +296,32 @@ export class ConfigurationService {
     // Emit event or notify services about config change
     // This could be implemented with EventEmitter
     if (process.env.NODE_ENV !== 'production') {
-      console.log('Configuration reloaded');
+      console.error('Configuration reloaded');
     }
   }
-  
+
   /**
    * Deep merge objects
    */
-  private deepMerge(target: any, source: any): any {
-    const result = { ...target };
-    
+  private deepMerge<T extends object>(target: T, source: Partial<T>): T {
+    const result = { ...target } as T;
+
     for (const key in source) {
-      if (source[key] instanceof Object && !Array.isArray(source[key])) {
-        result[key] = this.deepMerge(target[key] || {}, source[key]);
+      const sourceValue = source[key];
+      const targetValue = target[key];
+      if (sourceValue !== null && typeof sourceValue === 'object' && !Array.isArray(sourceValue)) {
+        (result as Record<string, unknown>)[key] = this.deepMerge(
+          (targetValue as object) || {},
+          sourceValue as Partial<object>
+        );
       } else {
-        result[key] = source[key];
+        (result as Record<string, unknown>)[key] = sourceValue;
       }
     }
-    
+
     return result;
   }
-  
+
   /**
    * Reset to default configuration
    */
@@ -328,7 +329,7 @@ export class ConfigurationService {
     this.config = { ...DEFAULT_CONFIG };
     this.saveConfiguration();
   }
-  
+
   /**
    * Destroy the configuration service
    */

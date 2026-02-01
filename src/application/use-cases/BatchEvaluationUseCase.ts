@@ -1,6 +1,29 @@
 import { CheckSafetyUseCase } from './CheckSafetyUseCase.js';
 import { CheckComplianceUseCase } from './CheckComplianceUseCase.js';
 import { CombinedEvaluationUseCase } from './CombinedEvaluationUseCase.js';
+import { SafetyEvaluation } from '../../domain/entities/SafetyEvaluation.js';
+import { ComplianceEvaluation } from '../../domain/entities/ComplianceEvaluation.js';
+import { CombinedEvaluationResult } from '../../domain/value-objects/EvaluationResult.js';
+
+/**
+ * Result types from different evaluation use cases
+ */
+type EvaluationResult = SafetyEvaluation | ComplianceEvaluation | CombinedEvaluationResult;
+
+/**
+ * Issue structure for extracting common issues
+ */
+interface EvaluationIssue {
+  readonly type: string;
+  readonly description: string;
+}
+
+/**
+ * Result with issues for type narrowing
+ */
+interface ResultWithIssues {
+  readonly issues: readonly EvaluationIssue[];
+}
 
 /**
  * Use case for batch evaluation of multiple content pieces
@@ -23,7 +46,7 @@ export class BatchEvaluationUseCase {
     if (input.items.length === 0) {
       throw new Error('Batch cannot be empty');
     }
-    
+
     if (input.items.length > this.MAX_BATCH_SIZE) {
       throw new Error(`Batch size exceeds maximum of ${this.MAX_BATCH_SIZE} items`);
     }
@@ -34,33 +57,34 @@ export class BatchEvaluationUseCase {
 
     // Process items in chunks for better performance
     const chunks = this.chunkArray(input.items, this.MAX_CONCURRENT);
-    
+
     for (const chunk of chunks) {
       const chunkPromises = chunk.map(async (item, index) => {
         const itemId = item.id || `item_${index}`;
-        
+
         try {
           // Determine evaluation type
-          let result: any;
-          
+          let result: EvaluationResult;
+
           switch (input.evaluationType) {
             case 'safety':
               result = await this.safetyUseCase.execute({
                 content: item.content,
                 context: item.context,
-                metadata: item.metadata
+                metadata: item.metadata,
               });
               break;
-              
-            case 'compliance':
+
+            case 'compliance': {
               const complianceResult = await this.complianceUseCase.execute({
                 content: item.content,
                 context: item.context,
-                metadata: item.metadata
+                metadata: item.metadata,
               });
               result = complianceResult.evaluation;
               break;
-              
+            }
+
             case 'combined':
             default:
               result = await this.combinedUseCase.execute({
@@ -69,7 +93,7 @@ export class BatchEvaluationUseCase {
                 includeSafety: input.options?.includeSafety !== false,
                 includeBrand: input.options?.includeBrand !== false,
                 weights: input.options?.weights,
-                metadata: item.metadata
+                metadata: item.metadata,
               });
               break;
           }
@@ -77,15 +101,14 @@ export class BatchEvaluationUseCase {
           results.push({
             id: itemId,
             status: 'success',
-            result
+            result,
           });
-
         } catch (error) {
           errors.push({
             id: itemId,
             status: 'error',
             error: error instanceof Error ? error.message : 'Unknown error',
-            content: item.content.substring(0, 50) + '...'
+            content: item.content.substring(0, 50) + '...',
           });
         }
       });
@@ -110,7 +133,7 @@ export class BatchEvaluationUseCase {
       processingTimeMs,
       results,
       errors,
-      summary
+      summary,
     };
   }
 
@@ -118,8 +141,8 @@ export class BatchEvaluationUseCase {
    * Generate batch summary statistics
    */
   private generateSummary(
-    results: BatchItemResult[], 
-    errors: BatchItemError[], 
+    results: BatchItemResult[],
+    errors: BatchItemError[],
     processingTimeMs: number
   ): BatchSummary {
     const totalProcessed = results.length + errors.length;
@@ -132,22 +155,22 @@ export class BatchEvaluationUseCase {
 
     if (results.length > 0) {
       const complianceScores: number[] = [];
-      
-      results.forEach(item => {
+
+      results.forEach((item) => {
         if (item.result) {
           // Handle different result types
           if ('complianceScore' in item.result) {
             complianceScores.push(item.result.complianceScore);
             if (item.result.isCompliant) compliantCount++;
           }
-          
+
           if ('overallRisk' in item.result) {
             if (['HIGH', 'VERY_HIGH'].includes(item.result.overallRisk)) {
               highRiskCount++;
             }
           }
-          
-          if ('combinedScore' in item.result) {
+
+          if ('combinedScore' in item.result && item.result.combinedScore !== undefined) {
             complianceScores.push(item.result.combinedScore);
             if (item.result.isCompliant) compliantCount++;
           }
@@ -165,8 +188,15 @@ export class BatchEvaluationUseCase {
       averageComplianceScore: avgComplianceScore,
       highRiskCount,
       compliantCount,
-      commonIssues: this.extractCommonIssues(results)
+      commonIssues: this.extractCommonIssues(results),
     };
+  }
+
+  /**
+   * Type guard to check if result has issues
+   */
+  private hasIssues(result: EvaluationResult): result is EvaluationResult & ResultWithIssues {
+    return 'issues' in result && Array.isArray(result.issues);
   }
 
   /**
@@ -175,9 +205,9 @@ export class BatchEvaluationUseCase {
   private extractCommonIssues(results: BatchItemResult[]): CommonIssue[] {
     const issueFrequency = new Map<string, number>();
 
-    results.forEach(item => {
-      if (item.result && 'issues' in item.result && Array.isArray(item.result.issues)) {
-        item.result.issues.forEach((issue: any) => {
+    results.forEach((item) => {
+      if (item.result && this.hasIssues(item.result)) {
+        item.result.issues.forEach((issue: EvaluationIssue) => {
           const key = `${issue.type}:${issue.description}`;
           issueFrequency.set(key, (issueFrequency.get(key) || 0) + 1);
         });
@@ -191,9 +221,7 @@ export class BatchEvaluationUseCase {
       commonIssues.push({ type, description, frequency: count });
     });
 
-    return commonIssues
-      .sort((a, b) => b.frequency - a.frequency)
-      .slice(0, 5); // Top 5 issues
+    return commonIssues.sort((a, b) => b.frequency - a.frequency).slice(0, 5); // Top 5 issues
   }
 
   /**
@@ -232,13 +260,20 @@ export interface BatchEvaluationInput {
 }
 
 /**
+ * Metadata type for batch items
+ */
+export interface BatchItemMetadata {
+  readonly [key: string]: string | number | boolean | null | undefined;
+}
+
+/**
  * Single item in batch
  */
 export interface BatchItem {
   readonly id?: string;
   readonly content: string;
   readonly context?: string;
-  readonly metadata?: any;
+  readonly metadata?: BatchItemMetadata;
 }
 
 /**
@@ -263,7 +298,7 @@ export interface BatchEvaluationResult {
 export interface BatchItemResult {
   readonly id: string;
   readonly status: 'success';
-  readonly result: any; // Can be SafetyEvaluation, ComplianceEvaluation, or CombinedResult
+  readonly result: EvaluationResult;
 }
 
 /**
