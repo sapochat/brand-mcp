@@ -45,7 +45,9 @@ function deepMergeInternal(target: object, source: object, seen: WeakMap<object,
       continue;
     }
 
-    const targetValue = (target as Record<string, unknown>)[key];
+    const targetValue = Object.prototype.hasOwnProperty.call(target, key)
+      ? (target as Record<string, unknown>)[key]
+      : undefined;
 
     // Skip null/undefined source values - they won't override existing values
     if (sourceValue === null || sourceValue === undefined) {

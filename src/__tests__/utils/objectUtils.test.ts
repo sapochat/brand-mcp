@@ -84,6 +84,22 @@ describe('objectUtils', () => {
       expect(result).toEqual({ own: true });
     });
 
+    it('does not read or merge inherited target properties', () => {
+      const targetPrototype = Object.create(null, {
+        nested: {
+          enumerable: true,
+          get: () => {
+            throw new Error('inherited target getter must not run');
+          },
+        },
+      });
+      const target = Object.create(targetPrototype) as { nested?: { safe?: boolean } };
+
+      const result = deepMerge(target, { nested: { safe: true } });
+
+      expect(result).toEqual({ nested: { safe: true } });
+    });
+
     it('replaces non-plain values instead of converting them to plain objects', () => {
       class Marker {
         constructor(readonly value: string) {}
