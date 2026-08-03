@@ -111,5 +111,16 @@ describe('objectUtils', () => {
       expect(result).toEqual({ nested: { safe: true } });
       expect(Object.prototype).not.toHaveProperty('polluted');
     });
+
+    it('handles cyclic plain records without overflowing the stack', () => {
+      type Cyclic = { safe?: boolean; self?: Cyclic };
+      const source: Cyclic = { safe: true };
+      source.self = source;
+
+      const result = deepMerge<Cyclic>({}, source);
+
+      expect(result.safe).toBe(true);
+      expect(result.self).toBe(result);
+    });
   });
 });

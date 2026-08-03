@@ -28,7 +28,17 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
  * @returns A new object with merged values
  */
 export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
-  const result = { ...target } as T;
+  return deepMergeInternal(target, source, new WeakMap<object, object>()) as T;
+}
+
+function deepMergeInternal(target: object, source: object, seen: WeakMap<object, object>): object {
+  const cached = seen.get(source);
+  if (cached) {
+    return cached;
+  }
+
+  const result = { ...target };
+  seen.set(source, result);
 
   for (const [key, sourceValue] of Object.entries(source)) {
     if (UNSAFE_MERGE_KEYS.has(key)) {
@@ -47,7 +57,7 @@ export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
     if (isPlainRecord(sourceValue)) {
       const mergeTarget = isPlainRecord(targetValue) ? targetValue : {};
 
-      (result as Record<string, unknown>)[key] = deepMerge(mergeTarget as object, sourceValue);
+      (result as Record<string, unknown>)[key] = deepMergeInternal(mergeTarget, sourceValue, seen);
     } else {
       // Replace value (including arrays)
       (result as Record<string, unknown>)[key] = sourceValue;
