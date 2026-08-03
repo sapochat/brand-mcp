@@ -74,6 +74,23 @@ describe('objectUtils', () => {
       }
     );
 
+    it.each(['__proto__', 'constructor', 'prototype'])(
+      'rejects unsafe key %s before evaluating its getter',
+      (unsafeKey) => {
+        let getterCalls = 0;
+        const source = Object.defineProperty({}, unsafeKey, {
+          enumerable: true,
+          get: () => {
+            getterCalls += 1;
+            throw new Error('unsafe getter must not run');
+          },
+        });
+
+        expect(() => deepMerge({}, source)).not.toThrow();
+        expect(getterCalls).toBe(0);
+      }
+    );
+
     it('does not merge inherited enumerable properties from source prototypes', () => {
       const sourcePrototype = { inherited: true };
       const source = Object.create(sourcePrototype) as Partial<{ own?: boolean }>;

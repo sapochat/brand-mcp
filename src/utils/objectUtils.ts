@@ -40,10 +40,12 @@ function deepMergeInternal(target: object, source: object, seen: WeakMap<object,
   const result = { ...target };
   seen.set(source, result);
 
-  for (const [key, sourceValue] of Object.entries(source)) {
+  for (const key of Object.keys(source)) {
     if (UNSAFE_MERGE_KEYS.has(key)) {
       continue;
     }
+
+    const sourceValue = (source as Record<string, unknown>)[key];
 
     const targetValue = Object.prototype.hasOwnProperty.call(target, key)
       ? (target as Record<string, unknown>)[key]
