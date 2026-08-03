@@ -2,6 +2,8 @@
  * Object utility functions
  */
 
+const UNSAFE_MERGE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 /**
  * Deep merge two objects recursively.
  * Arrays are replaced, not merged.
@@ -19,9 +21,12 @@
 export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
   const result = { ...target } as T;
 
-  for (const key in source) {
-    const sourceValue = source[key];
-    const targetValue = target[key];
+  for (const [key, sourceValue] of Object.entries(source)) {
+    if (UNSAFE_MERGE_KEYS.has(key)) {
+      continue;
+    }
+
+    const targetValue = (target as Record<string, unknown>)[key];
 
     // Skip null/undefined source values - they won't override existing values
     if (sourceValue === null || sourceValue === undefined) {
@@ -29,15 +34,14 @@ export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
     }
 
     // Recursively merge nested objects (but not arrays)
-    if (
-      typeof sourceValue === 'object' &&
-      !Array.isArray(sourceValue) &&
-      typeof targetValue === 'object' &&
-      targetValue !== null &&
-      !Array.isArray(targetValue)
-    ) {
+    if (typeof sourceValue === 'object' && !Array.isArray(sourceValue)) {
+      const mergeTarget =
+        typeof targetValue === 'object' && targetValue !== null && !Array.isArray(targetValue)
+          ? targetValue
+          : {};
+
       (result as Record<string, unknown>)[key] = deepMerge(
-        targetValue as object,
+        mergeTarget as object,
         sourceValue as Partial<object>
       );
     } else {
