@@ -37,7 +37,17 @@ function deepMergeInternal(target: object, source: object, seen: WeakMap<object,
     return cached;
   }
 
-  const result = { ...target };
+  const result: Record<PropertyKey, unknown> = {};
+  for (const key of Object.keys(target)) {
+    if (!UNSAFE_MERGE_KEYS.has(key)) {
+      result[key] = (target as Record<string, unknown>)[key];
+    }
+  }
+  for (const symbol of Object.getOwnPropertySymbols(target)) {
+    if (Object.prototype.propertyIsEnumerable.call(target, symbol)) {
+      result[symbol] = (target as Record<PropertyKey, unknown>)[symbol];
+    }
+  }
   seen.set(source, result);
 
   for (const key of Object.keys(source)) {
@@ -47,9 +57,7 @@ function deepMergeInternal(target: object, source: object, seen: WeakMap<object,
 
     const sourceValue = (source as Record<string, unknown>)[key];
 
-    const targetValue = Object.prototype.hasOwnProperty.call(target, key)
-      ? (target as Record<string, unknown>)[key]
-      : undefined;
+    const targetValue = result[key];
 
     // Skip null/undefined source values - they won't override existing values
     if (sourceValue === null || sourceValue === undefined) {
@@ -61,10 +69,10 @@ function deepMergeInternal(target: object, source: object, seen: WeakMap<object,
     if (isPlainRecord(sourceValue)) {
       const mergeTarget = isPlainRecord(targetValue) ? targetValue : {};
 
-      (result as Record<string, unknown>)[key] = deepMergeInternal(mergeTarget, sourceValue, seen);
+      result[key] = deepMergeInternal(mergeTarget, sourceValue, seen);
     } else {
       // Replace value (including arrays)
-      (result as Record<string, unknown>)[key] = sourceValue;
+      result[key] = sourceValue;
     }
   }
 

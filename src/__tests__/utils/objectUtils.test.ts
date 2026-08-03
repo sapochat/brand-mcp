@@ -117,6 +117,43 @@ describe('objectUtils', () => {
       expect(result).toEqual({ nested: { safe: true } });
     });
 
+    it.each(['__proto__', 'constructor', 'prototype'])(
+      'rejects unsafe target key %s before evaluating root and nested getters',
+      (unsafeKey) => {
+        let getterCalls = 0;
+        const unsafeGetter = {
+          enumerable: true,
+          get: () => {
+            getterCalls += 1;
+            throw new Error('unsafe target getter must not run');
+          },
+        };
+        const nested = Object.defineProperty(
+          { keep: true } as { keep?: boolean; added?: boolean },
+          unsafeKey,
+          unsafeGetter
+        );
+        const target = Object.defineProperty({ nested }, unsafeKey, unsafeGetter);
+
+        const result = deepMerge(target, { nested: { added: true } });
+
+        expect(getterCalls).toBe(0);
+        expect(Object.prototype.hasOwnProperty.call(result, unsafeKey)).toBe(false);
+        expect(Object.prototype.hasOwnProperty.call(result.nested, unsafeKey)).toBe(false);
+        expect(result).toEqual({ nested: { keep: true, added: true } });
+      }
+    );
+
+    it('removes parsed target __proto__ data before downstream assignment', () => {
+      const target = JSON.parse('{"__proto__":{"polluted":true},"safe":true}');
+      const result = deepMerge(target, {});
+      const assigned = Object.assign({}, result);
+
+      expect(Object.prototype.hasOwnProperty.call(result, '__proto__')).toBe(false);
+      expect(Object.getPrototypeOf(assigned)).toBe(Object.prototype);
+      expect((assigned as { polluted?: boolean }).polluted).toBeUndefined();
+    });
+
     it('replaces non-plain values instead of converting them to plain objects', () => {
       class Marker {
         constructor(readonly value: string) {}
