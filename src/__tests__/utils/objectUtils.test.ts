@@ -138,5 +138,23 @@ describe('objectUtils', () => {
       expect(result.safe).toBe(true);
       expect(result.self).toBe(result);
     });
+
+    it('merges shared source records independently into distinct targets', () => {
+      type Branch = { keepFirst?: boolean; keepSecond?: boolean; added?: boolean };
+      const shared: Branch = { added: true };
+      const result = deepMerge(
+        {
+          first: { keepFirst: true } as Branch,
+          second: { keepSecond: true } as Branch,
+        },
+        { first: shared, second: shared }
+      );
+
+      expect(result).toEqual({
+        first: { keepFirst: true, added: true },
+        second: { keepSecond: true, added: true },
+      });
+      expect(result.first).not.toBe(result.second);
+    });
   });
 });

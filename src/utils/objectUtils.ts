@@ -66,5 +66,8 @@ function deepMergeInternal(target: object, source: object, seen: WeakMap<object,
     }
   }
 
+  // Track only the active recursion path. Reusing a source object under two
+  // different target branches must still merge each branch independently.
+  seen.delete(source);
   return result;
 }
