@@ -13,6 +13,36 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return prototype === Object.prototype || prototype === null;
 }
 
+function copySafeTarget(
+  target: object,
+  seen: WeakMap<object, Record<PropertyKey, unknown>> = new WeakMap()
+): Record<PropertyKey, unknown> {
+  const cached = seen.get(target);
+  if (cached) {
+    return cached;
+  }
+
+  const result: Record<PropertyKey, unknown> = {};
+  seen.set(target, result);
+
+  for (const key of Object.keys(target)) {
+    if (UNSAFE_MERGE_KEYS.has(key)) {
+      continue;
+    }
+    const value = (target as Record<string, unknown>)[key];
+    result[key] = isPlainRecord(value) ? copySafeTarget(value, seen) : value;
+  }
+
+  for (const symbol of Object.getOwnPropertySymbols(target)) {
+    if (Object.prototype.propertyIsEnumerable.call(target, symbol)) {
+      const value = (target as Record<PropertyKey, unknown>)[symbol];
+      result[symbol] = isPlainRecord(value) ? copySafeTarget(value, seen) : value;
+    }
+  }
+
+  return result;
+}
+
 /**
  * Deep merge two objects recursively.
  * Arrays are replaced, not merged.
@@ -37,17 +67,7 @@ function deepMergeInternal(target: object, source: object, seen: WeakMap<object,
     return cached;
   }
 
-  const result: Record<PropertyKey, unknown> = {};
-  for (const key of Object.keys(target)) {
-    if (!UNSAFE_MERGE_KEYS.has(key)) {
-      result[key] = (target as Record<string, unknown>)[key];
-    }
-  }
-  for (const symbol of Object.getOwnPropertySymbols(target)) {
-    if (Object.prototype.propertyIsEnumerable.call(target, symbol)) {
-      result[symbol] = (target as Record<PropertyKey, unknown>)[symbol];
-    }
-  }
+  const result = copySafeTarget(target);
   seen.set(source, result);
 
   for (const key of Object.keys(source)) {

@@ -154,6 +154,21 @@ describe('objectUtils', () => {
       expect((assigned as { polluted?: boolean }).polluted).toBeUndefined();
     });
 
+    it('sanitizes untouched nested target records, aliases, and cycles', () => {
+      const shared = JSON.parse('{"__proto__":{"polluted":true},"safe":true}');
+      const target: Record<string, unknown> = { first: shared, second: shared };
+      target.self = target;
+
+      const result = deepMerge(target, {});
+      const first = result.first as Record<string, unknown>;
+      const second = result.second as Record<string, unknown>;
+
+      expect(Object.prototype.hasOwnProperty.call(first, '__proto__')).toBe(false);
+      expect(first).toBe(second);
+      expect(result.self).toBe(result);
+      expect(Object.getPrototypeOf(Object.assign({}, first))).toBe(Object.prototype);
+    });
+
     it('replaces non-plain values instead of converting them to plain objects', () => {
       class Marker {
         constructor(readonly value: string) {}
