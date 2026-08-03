@@ -123,7 +123,7 @@ describe('objectUtils', () => {
         let getterCalls = 0;
         const unsafeGetter = {
           enumerable: true,
-          get: () => {
+          get: (): never => {
             getterCalls += 1;
             throw new Error('unsafe target getter must not run');
           },
