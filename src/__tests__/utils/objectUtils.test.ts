@@ -169,6 +169,23 @@ describe('objectUtils', () => {
       expect(Object.getPrototypeOf(Object.assign({}, first))).toBe(Object.prototype);
     });
 
+    it('preserves target aliases and back-references when a branch is merged', () => {
+      type SharedBranch = { keep?: boolean; added?: boolean };
+      const shared: SharedBranch = { keep: true, added: false };
+      const target: {
+        first: SharedBranch;
+        second: SharedBranch;
+        self?: unknown;
+      } = { first: shared, second: shared };
+      target.self = target;
+
+      const result = deepMerge(target, { first: { added: true } });
+
+      expect(result.first).toBe(result.second);
+      expect(result.first).toEqual({ keep: true, added: true });
+      expect(result.self).toBe(result);
+    });
+
     it('replaces non-plain values instead of converting them to plain objects', () => {
       class Marker {
         constructor(readonly value: string) {}

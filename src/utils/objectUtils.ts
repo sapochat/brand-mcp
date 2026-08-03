@@ -47,6 +47,9 @@ function copySafeTarget(
  * Deep merge two objects recursively.
  * Arrays are replaced, not merged.
  * Null/undefined source values are skipped (won't override target values).
+ * Prototype-unsafe keys are filtered only on plain-record branches traversed
+ * by the merge. Arrays and non-plain values are intentionally opaque so their
+ * historical replacement and identity semantics remain intact.
  *
  * @example
  * deepMerge({ a: 1, b: 2 }, { b: 3, c: 4 }) // { a: 1, b: 3, c: 4 }
@@ -58,16 +61,17 @@ function copySafeTarget(
  * @returns A new object with merged values
  */
 export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
-  return deepMergeInternal(target, source, new WeakMap<object, object>()) as T;
+  const safeTarget = copySafeTarget(target);
+  return mergeSource(safeTarget, source, new WeakMap<object, object>()) as T;
 }
 
-function deepMergeInternal(target: object, source: object, seen: WeakMap<object, object>): object {
+function mergeSource(target: object, source: object, seen: WeakMap<object, object>): object {
   const cached = seen.get(source);
   if (cached) {
     return cached;
   }
 
-  const result = copySafeTarget(target);
+  const result = target as Record<PropertyKey, unknown>;
   seen.set(source, result);
 
   for (const key of Object.keys(source)) {
@@ -89,7 +93,7 @@ function deepMergeInternal(target: object, source: object, seen: WeakMap<object,
     if (isPlainRecord(sourceValue)) {
       const mergeTarget = isPlainRecord(targetValue) ? targetValue : {};
 
-      result[key] = deepMergeInternal(mergeTarget, sourceValue, seen);
+      result[key] = mergeSource(mergeTarget, sourceValue, seen);
     } else {
       // Replace value (including arrays)
       result[key] = sourceValue;
