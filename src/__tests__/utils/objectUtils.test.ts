@@ -83,5 +83,33 @@ describe('objectUtils', () => {
 
       expect(result).toEqual({ own: true });
     });
+
+    it('replaces non-plain values instead of converting them to plain objects', () => {
+      class Marker {
+        constructor(readonly value: string) {}
+      }
+
+      const date = new Date('2026-08-03T00:00:00.000Z');
+      const marker = new Marker('source');
+      const result = deepMerge(
+        { date: new Date('2020-01-01T00:00:00.000Z'), marker: new Marker('target') },
+        { date, marker }
+      );
+
+      expect(result.date).toBe(date);
+      expect(result.marker).toBe(marker);
+      expect(result.marker).toBeInstanceOf(Marker);
+    });
+
+    it('sanitizes a plain source record when it replaces a primitive target', () => {
+      const source = JSON.parse(
+        '{"nested":{"safe":true,"constructor":{"prototype":{"polluted":true}}}}'
+      ) as Partial<{ nested: unknown }>;
+
+      const result = deepMerge<{ nested: unknown }>({ nested: 'old' }, source);
+
+      expect(result).toEqual({ nested: { safe: true } });
+      expect(Object.prototype).not.toHaveProperty('polluted');
+    });
   });
 });

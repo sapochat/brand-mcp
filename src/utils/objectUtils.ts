@@ -4,6 +4,15 @@
 
 const UNSAFE_MERGE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
 /**
  * Deep merge two objects recursively.
  * Arrays are replaced, not merged.
@@ -33,17 +42,12 @@ export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
       continue;
     }
 
-    // Recursively merge nested objects (but not arrays)
-    if (typeof sourceValue === 'object' && !Array.isArray(sourceValue)) {
-      const mergeTarget =
-        typeof targetValue === 'object' && targetValue !== null && !Array.isArray(targetValue)
-          ? targetValue
-          : {};
+    // Recursively merge only plain records. Dates, maps, sets, and class
+    // instances retain the historical replacement semantics.
+    if (isPlainRecord(sourceValue)) {
+      const mergeTarget = isPlainRecord(targetValue) ? targetValue : {};
 
-      (result as Record<string, unknown>)[key] = deepMerge(
-        mergeTarget as object,
-        sourceValue as Partial<object>
-      );
+      (result as Record<string, unknown>)[key] = deepMerge(mergeTarget as object, sourceValue);
     } else {
       // Replace value (including arrays)
       (result as Record<string, unknown>)[key] = sourceValue;
