@@ -23,7 +23,8 @@ export async function loadBrandSchema(): Promise<BrandSchema> {
     return schema;
   } catch (error) {
     throw new Error(
-      `Failed to load brand schema: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to load brand schema: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error }
     );
   }
 }

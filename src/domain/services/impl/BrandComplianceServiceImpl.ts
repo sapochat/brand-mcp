@@ -78,7 +78,6 @@ export class BrandComplianceServiceImpl implements BrandComplianceService {
 
     this.currentBrand = brand;
     const issues: ComplianceIssue[] = [];
-    let complianceScore = 100;
 
     // Apply contextual adjustments if available
     const effectiveGuidelines = this.applyContextualAdjustments(brand, context);
@@ -100,7 +99,7 @@ export class BrandComplianceServiceImpl implements BrandComplianceService {
     issues.push(...terminologyIssues);
 
     // Calculate compliance score based on issues
-    complianceScore = this.calculateComplianceScore(issues);
+    const complianceScore = this.calculateComplianceScore(issues);
 
     // Generate summary
     const summary = this.generateComplianceSummary(complianceScore, issues, brand.name);
