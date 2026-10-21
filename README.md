@@ -157,7 +157,7 @@ Built-in validators for regulated content:
 
 ### Requirements
 
-- Node.js 18+ (LTS recommended)
+- Node.js 22.12+ (LTS recommended)
 - TypeScript 5.3+
 - npm or yarn
 
